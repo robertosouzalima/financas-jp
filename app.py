@@ -5,75 +5,94 @@ import pandas as pd
 import streamlit as st
 
 # ==========================================
-# 1. CONFIGURAÇÃO DA PÁGINA & DESIGN PREMIUM
+# 1. DESIGN PROFISSIONAL & ESTILO APP NATIVO
 # ==========================================
 st.set_page_config(
     page_title="Finanças 18",
-    page_icon="💜",
+    page_icon="⚡",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-# CSS Profissional Estilo Fintech
+# Injeção de CSS para transformar em App de Celular Premium
 st.markdown(
     """
     <style>
-    /* Fundo Escuro Moderno */
-    .stApp { background-color: #0D0F12; }
-    
-    /* Ocultar elementos padrão do Streamlit */
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
 
-    /* Espaçamento Celular Perfeito */
+    * { font-family: 'Inter', sans-serif !important; }
+
+    /* Fundo Dark Profundo */
+    .stApp { background-color: #0B0E14; }
+    
+    /* Ocultar elementos nativos de site do Streamlit */
+    #MainMenu, footer, header { visibility: hidden; display: none !important; }
+
+    /* Layout responsivo para celular sem scroll lateral */
     .block-container {
-        padding-top: 1.5rem !important;
+        padding-top: 1rem !important;
         padding-bottom: 2rem !important;
-        padding-left: 1rem !important;
-        padding-right: 1rem !important;
+        padding-left: 0.8rem !important;
+        padding-right: 0.8rem !important;
     }
 
-    /* Cards Estilo Neumorphism / Fintech */
+    /* Cartões Neon Fintech */
     .card-base {
-        background: linear-gradient(145deg, #161A22, #111319);
-        padding: 18px;
-        border-radius: 16px;
-        margin-bottom: 12px;
-        border: 1px solid #222732;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        background: linear-gradient(135deg, #151922 0%, #0F1218 100%);
+        padding: 16px;
+        border-radius: 18px;
+        margin-bottom: 10px;
+        border: 1px solid #1F2633;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
     }
     .card-saldo { border-left: 5px solid #00D4FF; }
-    .card-futuro { border-left: 5px solid #8A05BE; }
-    .card-sonho { border-left: 5px solid #FF9900; }
-    .card-total { border-left: 5px solid #00E676; }
+    .card-futuro { border-left: 5px solid #A855F7; }
+    .card-sonho { border-left: 5px solid #F59E0B; }
+    .card-total { border-left: 5px solid #10B981; }
 
     .titulo-card { 
         font-size: 11px; 
-        color: #8B949E; 
+        color: #9CA3AF; 
         font-weight: 700; 
         text-transform: uppercase; 
-        letter-spacing: 1px; 
+        letter-spacing: 0.8px; 
     }
     .valor-card { 
-        font-size: 26px; 
+        font-size: 24px; 
         font-weight: 800; 
         color: #FFFFFF; 
-        margin-top: 6px; 
-        letter-spacing: -0.5px;
+        margin-top: 4px; 
     }
     
-    /* Botões Modernos e Arredondados */
+    /* Botões Dinâmicos Estilo App */
     .stButton>button {
         width: 100%;
-        border-radius: 14px;
-        height: 52px;
-        font-weight: 700;
+        border-radius: 16px;
+        height: 54px;
+        font-weight: 800;
         font-size: 16px;
-        background: linear-gradient(90deg, #8A05BE 0%, #5B0382 100%);
-        color: white;
+        background: linear-gradient(90deg, #8B5CF6 0%, #6D28D9 100%);
+        color: #FFFFFF;
         border: none;
-        box-shadow: 0 4px 12px rgba(138, 5, 190, 0.3);
+        box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
+        transition: all 0.2s ease;
+    }
+
+    /* Ajuste de Abas */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 6px;
+        background-color: #11151F;
+        padding: 6px;
+        border-radius: 14px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        border-radius: 10px;
+        color: #9CA3AF;
+        font-weight: 600;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #1F2937 !important;
+        color: #FFFFFF !important;
     }
     </style>
 """,
@@ -83,7 +102,7 @@ st.markdown(
 ARQUIVO_DADOS = "dados_financas.json"
 
 # ==========================================
-# 2. DADOS INICIAIS
+# 2. GERENCIAMENTO DE DADOS
 # ==========================================
 DADOS_INICIAIS = {
     "saldo_conta": 100.00,
@@ -95,7 +114,7 @@ DADOS_INICIAIS = {
             "Tipo": "Entrada",
             "Origem": "Pai (Pix)",
             "Valor": 445.00,
-            "Categoria": "Aporte Extra",
+            "Categoria": "Mesada Extra",
         },
         {
             "Data": "2026-10-03",
@@ -135,10 +154,10 @@ def salvar_dados(dados):
 dados = carregar_dados()
 
 # ==========================================
-# 3. CABEÇALHO DO PAINEL
+# 3. CABEÇALHO PRINCIPAL DO APP
 # ==========================================
 st.title("⚡ Projeto 18 Anos")
-st.caption("Seu gerenciador financeiro pessoal")
+st.caption("Seu assistente financeiro pessoal de alta performance")
 
 patrimonio_total = (
     dados["saldo_conta"]
@@ -146,7 +165,7 @@ patrimonio_total = (
     + dados["caixinha_sonho"]
 )
 
-# Grade de Saldos 2x2 para Celular
+# Grid 2x2 para telas de celular
 col1, col2 = st.columns(2)
 col3, col4 = st.columns(2)
 
@@ -186,41 +205,41 @@ with col4:
         unsafe_allow_html=True,
     )
 
-# Barra de Progresso Visual
+# Progresso da Meta
 progresso_meta = min(patrimonio_total / 62000.0, 1.0)
 st.write(
-    f"🎯 **Meta R$ 62.000,00:** `{progresso_meta * 100:.2f}%` concluído"
+    f"🎯 **Progresso Meta (R$ 62.000):** `{progresso_meta * 100:.2f}%` atingido"
 )
 st.progress(progresso_meta)
 st.divider()
 
 # ==========================================
-# 4. ABAS DE NAVEGAÇÃO
+# 4. NAVEGAÇÃO POR ABAS
 # ==========================================
 aba_lancamento, aba_guia, aba_extrato, aba_projecao = st.tabs(
-    ["➕ Lançar", "📍 Onde Investir", "📑 Extrato", "📈 Projeção"]
+    ["➕ Lançar", "📍 Investir", "📑 Extrato", "📈 Projeção"]
 )
 
 # ------------------------------------------
-# ABA 1: LANÇAMENTOS
+# ABA 1: LANÇAR MOVIMENTAÇÕES
 # ------------------------------------------
 with aba_lancamento:
-    st.subheader("Nova Movimentação")
+    st.subheader("Registrar Valor")
 
     opcao = st.radio(
-        "Operação:",
+        "Selecione a ação:",
         ["💸 Gastei Dinheiro", "📥 Recebi Dinheiro", "🔒 Guardei na Caixinha"],
         horizontal=True,
     )
 
     valor_input = st.number_input(
-        "Valor (R$):", min_value=1.00, step=5.00, value=50.00
+        "Valor da operação (R$):", min_value=1.00, step=5.00, value=50.00
     )
     descricao_input = st.text_input(
-        "Descrição:", placeholder="Ex: Lanche, Mesada, Jogo"
+        "Descrição:", placeholder="Ex: Mesada, Sorvete, Jogo"
     )
 
-    if st.button("🚀 Confirmar e Salvar"):
+    if st.button("🚀 Confirmar Lançamento"):
         data_hoje = str(pd.Timestamp.now().strftime("%Y-%m-%d"))
 
         if opcao == "📥 Recebi Dinheiro":
@@ -236,9 +255,7 @@ with aba_lancamento:
             )
             salvar_dados(dados)
             st.balloons()
-            st.success(
-                f"R$ {valor_input:.2f} adicionados ao seu Saldo Livre na Conta!"
-            )
+            st.success(f"R$ {valor_input:.2f} adicionados ao seu Saldo Livre!")
 
         elif opcao == "🔒 Guardei na Caixinha":
             if valor_input > dados["saldo_conta"]:
@@ -258,7 +275,7 @@ with aba_lancamento:
                 salvar_dados(dados)
                 st.snow()
                 st.success(
-                    f"R$ {valor_input:.2f} transferidos para a Caixinha Futuro!"
+                    f"R$ {valor_input:.2f} investidos na Caixinha Futuro!"
                 )
 
         elif opcao == "💸 Gastei Dinheiro":
@@ -279,22 +296,22 @@ with aba_lancamento:
         st.rerun()
 
 # ------------------------------------------
-# ABA 2: ONDE INVESTIR
+# ABA 2: ONDE INVESTIR (LIMPO E INTELIGENTE)
 # ------------------------------------------
 with aba_guia:
-    st.subheader("🤖 Recomendação de Investimento")
+    st.subheader("🤖 Recomendação do Seu Assistente")
 
     if dados["saldo_conta"] > 100.00:
         excesso = dados["saldo_conta"] - 100.00
         st.markdown(
             f"""
-            <div style="background-color: #161A22; padding: 18px; border-radius: 14px; border: 2px solid #00E676;">
-                <h4 style="color: #00E676; margin:0;">🎯 HORA DE INVESTIR!</h4>
-                <p style="color: #FFFFFF; font-size: 15px; margin-top: 8px;">
-                    Você tem <b>R$ {dados['saldo_conta']:.2f}</b> na conta. Como sua reserva do mês é de R$ 100,00, você pode guardar o restante!
+            <div style="background-color: #111827; padding: 20px; border-radius: 16px; border: 2px solid #10B981;">
+                <h4 style="color: #10B981; margin:0;">🎯 HORA DE INVESTIR!</h4>
+                <p style="color: #F3F4F6; font-size: 15px; margin-top: 10px;">
+                    Você está com <b>R$ {dados['saldo_conta']:.2f}</b> no saldo livre. Como sua reserva do mês é de R$ 100,00, você pode investir o restante!
                 </p>
-                <hr style="border-color: #222732;">
-                <p style="color: #00D4FF; font-size: 16px; font-weight: bold;">
+                <hr style="border-color: #1F2937;">
+                <p style="color: #38BDF8; font-size: 16px; font-weight: bold; margin: 0;">
                     👉 Abra o app do Nubank e transfira R$ {excesso:.2f} para a Caixinha "Futuro" (100% CDI).
                 </p>
             </div>
@@ -304,14 +321,14 @@ with aba_guia:
     elif dados["saldo_conta"] == 100.00:
         st.markdown(
             """
-            <div style="background-color: #161A22; padding: 18px; border-radius: 14px; border: 2px solid #00D4FF;">
-                <h4 style="color: #00D4FF; margin:0;">✅ CONTA PERFEITA!</h4>
-                <p style="color: #FFFFFF; font-size: 15px; margin-top: 8px;">
-                    Seus R$ 100,00 estão exatamente no Saldo Livre para você gastar no mês.
+            <div style="background-color: #111827; padding: 20px; border-radius: 16px; border: 2px solid #38BDF8;">
+                <h4 style="color: #38BDF8; margin:0;">✅ CONTA TOTALMENTE EQUILIBRADA!</h4>
+                <p style="color: #F3F4F6; font-size: 15px; margin-top: 10px;">
+                    Seus R$ 100,00 estão garantidos no Saldo Livre para seus gastos do mês.
                 </p>
-                <hr style="border-color: #222732;">
-                <p style="color: #8B949E; font-size: 14px;">
-                    Todo o restante do seu dinheiro já está rendendo 100% do CDI nas Caixinhas!
+                <hr style="border-color: #1F2937;">
+                <p style="color: #9CA3AF; font-size: 14px; margin: 0;">
+                    Todo o restante do seu dinheiro já está trabalhando para você nas Caixinhas!
                 </p>
             </div>
         """,
@@ -319,17 +336,19 @@ with aba_guia:
         )
     else:
         st.warning(
-            f"Você tem R$ {dados['saldo_conta']:.2f} livres na conta. Lembre-se de repor para os R$ 100,00 na próxima mesada!"
+            f"Você tem R$ {dados['saldo_conta']:.2f} no Saldo Livre. Lembre-se de completar os R$ 100,00 na próxima entrada!"
         )
 
-    st.markdown("---")
-    st.markdown("### 📌 Mapeamento do seu Dinheiro:")
-    st.markdown(
-        """
-    * **Saldo em Conta:** Manter R$ 100,00 livres para lanches e pequenos gastos do mês[span_0](start_span)[span_0](end_span).
-    * **Caixinha 'Futuro' (100% CDI):** Caixinha principal de resgate diário[span_1](start_span)[span_1](end_span)[span_2](start_span)[span_2](end_span). Todos os novos aportes vão para cá[span_3](start_span)[span_3](end_span)[span_4](start_span)[span_4](end_span)!
-    * **Caixinha 'Sonho' (RDB):** Guardada até Novembro/2026[span_5](start_span)[span_5](end_span)[span_6](start_span)[span_6](end_span). Quando vencer, transfira tudo para a Caixinha Futuro[span_7](start_span)[span_7](end_span).
-    """
+    st.markdown("<br>", unsafe_allow_html=True)
+    st.markdown("### 📌 Mapeamento das Suas Contas:")
+    st.write(
+        "• **Saldo em Conta:** Manter R$ 100,00 livres para lanches e gastos do mês."
+    )
+    st.write(
+        "• **Caixinha 'Futuro' (100% CDI):** Caixinha principal de resgate diário. Guarde todos os aportes novos aqui."
+    )
+    st.write(
+        "• **Caixinha 'Sonho' (RDB):** Mantida até Novembro/2026. Quando vencer, consolide tudo na Caixinha Futuro."
     )
 
 # ------------------------------------------
@@ -345,7 +364,7 @@ with aba_extrato:
 # ABA 4: PROJEÇÃO 18 ANOS
 # ------------------------------------------
 with aba_projecao:
-    st.subheader("Projeção do Seu Patrimônio")
+    st.subheader("Evolução Esperada Até os 18 Anos")
 
     anos = list(range(2026, 2033))
     valores = [patrimonio_total]
@@ -361,5 +380,5 @@ with aba_projecao:
     st.area_chart(df_proj.set_index("Ano"))
 
     st.success(
-        f"🚀 **Projeção para os 18 Anos (2032):** ~R$ {valores[-1]:,.2f}"
+        f"🚀 **Estimativa aos 18 Anos (2032):** ~R$ {valores[-1]:,.2f}"
     )
