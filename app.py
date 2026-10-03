@@ -5,91 +5,103 @@ import pandas as pd
 import streamlit as st
 
 # ==========================================
-# 1. DESIGN PROFISSIONAL & ESTILO APP NATIVO
+# 1. ESTILIZAÇÃO NATIVA DE BANCO DIGITAL (DARK LUXURY)
 # ==========================================
 st.set_page_config(
     page_title="Finanças 18",
-    page_icon="⚡",
+    page_icon="💎",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-# Injeção de CSS para transformar em App de Celular Premium
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
 
-    * { font-family: 'Inter', sans-serif !important; }
+    html, body, [class*="css"] {
+        font-family: 'Plus Jakarta Sans', sans-serif !important;
+        background-color: #080A0E !important;
+        color: #F3F4F6;
+    }
 
-    /* Fundo Dark Profundo */
-    .stApp { background-color: #0B0E14; }
-    
-    /* Ocultar elementos nativos de site do Streamlit */
-    #MainMenu, footer, header { visibility: hidden; display: none !important; }
+    /* Oculta completamente elementos de site */
+    #MainMenu, footer, header, .stDeployButton { visibility: hidden !important; display: none !important; }
 
-    /* Layout responsivo para celular sem scroll lateral */
+    /* Ajuste de margens ultra-preciso para Mobile */
     .block-container {
-        padding-top: 1rem !important;
+        padding-top: 1.2rem !important;
         padding-bottom: 2rem !important;
-        padding-left: 0.8rem !important;
-        padding-right: 0.8rem !important;
+        padding-left: 0.9rem !important;
+        padding-right: 0.9rem !important;
     }
 
-    /* Cartões Neon Fintech */
-    .card-base {
-        background: linear-gradient(135deg, #151922 0%, #0F1218 100%);
-        padding: 16px;
-        border-radius: 18px;
-        margin-bottom: 10px;
-        border: 1px solid #1F2633;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-    }
-    .card-saldo { border-left: 5px solid #00D4FF; }
-    .card-futuro { border-left: 5px solid #A855F7; }
-    .card-sonho { border-left: 5px solid #F59E0B; }
-    .card-total { border-left: 5px solid #10B981; }
-
-    .titulo-card { 
-        font-size: 11px; 
-        color: #9CA3AF; 
-        font-weight: 700; 
-        text-transform: uppercase; 
-        letter-spacing: 0.8px; 
-    }
-    .valor-card { 
-        font-size: 24px; 
-        font-weight: 800; 
-        color: #FFFFFF; 
-        margin-top: 4px; 
+    /* Cards Neumórficos de Alta Tecnologia */
+    .bank-card {
+        background: linear-gradient(160deg, #121620 0%, #0A0C10 100%);
+        border: 1px solid #1E2638;
+        border-radius: 20px;
+        padding: 16px 18px;
+        margin-bottom: 12px;
+        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
     }
     
-    /* Botões Dinâmicos Estilo App */
+    .card-accent-blue { border-top: 3px solid #00D4FF; }
+    .card-accent-purple { border-top: 3px solid #A855F7; }
+    .card-accent-gold { border-top: 3px solid #F59E0B; }
+    .card-accent-green { border-top: 3px solid #10B981; }
+
+    .card-label {
+        font-size: 10px;
+        font-weight: 700;
+        color: #9CA3AF;
+        text-transform: uppercase;
+        letter-spacing: 1.2px;
+    }
+    
+    .card-value {
+        font-size: 25px;
+        font-weight: 800;
+        color: #FFFFFF;
+        margin-top: 4px;
+        letter-spacing: -0.5px;
+    }
+
+    /* Botão Principal Estilo Apple Pay / Fintech */
     .stButton>button {
         width: 100%;
         border-radius: 16px;
-        height: 54px;
+        height: 56px;
         font-weight: 800;
         font-size: 16px;
-        background: linear-gradient(90deg, #8B5CF6 0%, #6D28D9 100%);
+        background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
         color: #FFFFFF;
         border: none;
-        box-shadow: 0 4px 14px rgba(139, 92, 246, 0.4);
-        transition: all 0.2s ease;
+        box-shadow: 0 8px 20px rgba(139, 92, 246, 0.35);
+        transition: all 0.15s ease-in-out;
     }
 
-    /* Ajuste de Abas */
+    .stButton>button:active {
+        transform: scale(0.98);
+    }
+
+    /* Abas Customizadas */
     .stTabs [data-baseweb="tab-list"] {
         gap: 6px;
-        background-color: #11151F;
+        background-color: #0F131D;
         padding: 6px;
-        border-radius: 14px;
+        border-radius: 16px;
+        border: 1px solid #1A202C;
     }
+
     .stTabs [data-baseweb="tab"] {
-        border-radius: 10px;
+        height: 42px;
+        border-radius: 12px;
         color: #9CA3AF;
-        font-weight: 600;
+        font-weight: 700;
+        font-size: 13px;
     }
+
     .stTabs [aria-selected="true"] {
         background-color: #1F2937 !important;
         color: #FFFFFF !important;
@@ -102,7 +114,7 @@ st.markdown(
 ARQUIVO_DADOS = "dados_financas.json"
 
 # ==========================================
-# 2. GERENCIAMENTO DE DADOS
+# 2. BASE DE DADOS
 # ==========================================
 DADOS_INICIAIS = {
     "saldo_conta": 100.00,
@@ -154,10 +166,22 @@ def salvar_dados(dados):
 dados = carregar_dados()
 
 # ==========================================
-# 3. CABEÇALHO PRINCIPAL DO APP
+# 3. PAINEL PRINCIPAL (DASHBOARD)
 # ==========================================
-st.title("⚡ Projeto 18 Anos")
-st.caption("Seu assistente financeiro pessoal de alta performance")
+st.markdown(
+    """
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div>
+            <h2 style="margin:0; font-weight: 800; font-size: 22px; color: #FFF;">Finanças 18</h2>
+            <p style="margin:0; color: #6B7280; font-size: 12px;">Seu Assistente de Patrimônio</p>
+        </div>
+        <div style="background-color: #1E293B; padding: 6px 12px; border-radius: 20px; border: 1px solid #334155; font-size: 11px; font-weight: 700; color: #38BDF8;">
+            PRO 💎
+        </div>
+    </div>
+""",
+    unsafe_allow_html=True,
+)
 
 patrimonio_total = (
     dados["saldo_conta"]
@@ -165,81 +189,78 @@ patrimonio_total = (
     + dados["caixinha_sonho"]
 )
 
-# Grid 2x2 para telas de celular
 col1, col2 = st.columns(2)
 col3, col4 = st.columns(2)
 
 with col1:
     st.markdown(
-        f"""<div class="card-base card-saldo">
-            <div class="titulo-card">💳 Saldo Livre</div>
-            <div class="valor-card">R$ {dados['saldo_conta']:.2f}</div>
+        f"""<div class="bank-card card-accent-blue">
+            <div class="card-label">💳 Saldo Livre</div>
+            <div class="card-value">R$ {dados['saldo_conta']:.2f}</div>
         </div>""",
         unsafe_allow_html=True,
     )
 
 with col2:
     st.markdown(
-        f"""<div class="card-base card-futuro">
-            <div class="titulo-card">🚀 Caixinha Futuro</div>
-            <div class="valor-card">R$ {dados['caixinha_futuro']:.2f}</div>
+        f"""<div class="bank-card card-accent-purple">
+            <div class="card-label">🚀 Caixinha Futuro</div>
+            <div class="card-value">R$ {dados['caixinha_futuro']:.2f}</div>
         </div>""",
         unsafe_allow_html=True,
     )
 
 with col3:
     st.markdown(
-        f"""<div class="card-base card-sonho">
-            <div class="titulo-card">🔒 Caixinha Sonho</div>
-            <div class="valor-card">R$ {dados['caixinha_sonho']:.2f}</div>
+        f"""<div class="bank-card card-accent-gold">
+            <div class="card-label">🔒 Caixinha Sonho</div>
+            <div class="card-value">R$ {dados['caixinha_sonho']:.2f}</div>
         </div>""",
         unsafe_allow_html=True,
     )
 
 with col4:
     st.markdown(
-        f"""<div class="card-base card-total">
-            <div class="titulo-card">🌟 Patrimônio Total</div>
-            <div class="valor-card">R$ {patrimonio_total:.2f}</div>
+        f"""<div class="bank-card card-accent-green">
+            <div class="card-label">🌟 Patrimônio</div>
+            <div class="card-value">R$ {patrimonio_total:.2f}</div>
         </div>""",
         unsafe_allow_html=True,
     )
 
-# Progresso da Meta
-progresso_meta = min(patrimonio_total / 62000.0, 1.0)
+# Barra de Progresso Real
+progresso = min(patrimonio_total / 62000.0, 1.0)
 st.write(
-    f"🎯 **Progresso Meta (R$ 62.000):** `{progresso_meta * 100:.2f}%` atingido"
+    f"🎯 **Progresso da Meta (R$ 62.000):** `{progresso * 100:.2f}%` atingido"
 )
-st.progress(progresso_meta)
-st.divider()
+st.progress(progresso)
+st.markdown("<br>", unsafe_allow_html=True)
 
 # ==========================================
-# 4. NAVEGAÇÃO POR ABAS
+# 4. OPERAÇÕES E NAVEGAÇÃO
 # ==========================================
 aba_lancamento, aba_guia, aba_extrato, aba_projecao = st.tabs(
-    ["➕ Lançar", "📍 Investir", "📑 Extrato", "📈 Projeção"]
+    ["➕ Lançar", "📍 Investir", "📑 Extrato", "📈 Meta 18"]
 )
 
-# ------------------------------------------
-# ABA 1: LANÇAR MOVIMENTAÇÕES
-# ------------------------------------------
+# ABA 1: LANÇAMENTOS
 with aba_lancamento:
-    st.subheader("Registrar Valor")
+    st.subheader("Nova Operação")
 
     opcao = st.radio(
-        "Selecione a ação:",
+        "Selecione o tipo:",
         ["💸 Gastei Dinheiro", "📥 Recebi Dinheiro", "🔒 Guardei na Caixinha"],
         horizontal=True,
     )
 
     valor_input = st.number_input(
-        "Valor da operação (R$):", min_value=1.00, step=5.00, value=50.00
+        "Valor (R$):", min_value=1.00, step=5.00, value=50.00
     )
     descricao_input = st.text_input(
         "Descrição:", placeholder="Ex: Mesada, Sorvete, Jogo"
     )
 
-    if st.button("🚀 Confirmar Lançamento"):
+    if st.button("🚀 Confirmar e Salvar"):
         data_hoje = str(pd.Timestamp.now().strftime("%Y-%m-%d"))
 
         if opcao == "📥 Recebi Dinheiro":
@@ -295,24 +316,22 @@ with aba_lancamento:
         time.sleep(1)
         st.rerun()
 
-# ------------------------------------------
-# ABA 2: ONDE INVESTIR (LIMPO E INTELIGENTE)
-# ------------------------------------------
+# ABA 2: ONDE INVESTIR (RECOMENDAÇÃO PRÁTICA)
 with aba_guia:
-    st.subheader("🤖 Recomendação do Seu Assistente")
+    st.subheader("🤖 Recomendação de Aporte")
 
     if dados["saldo_conta"] > 100.00:
         excesso = dados["saldo_conta"] - 100.00
         st.markdown(
             f"""
-            <div style="background-color: #111827; padding: 20px; border-radius: 16px; border: 2px solid #10B981;">
-                <h4 style="color: #10B981; margin:0;">🎯 HORA DE INVESTIR!</h4>
-                <p style="color: #F3F4F6; font-size: 15px; margin-top: 10px;">
-                    Você está com <b>R$ {dados['saldo_conta']:.2f}</b> no saldo livre. Como sua reserva do mês é de R$ 100,00, você pode investir o restante!
+            <div style="background-color: #0F172A; padding: 20px; border-radius: 18px; border: 2px solid #10B981;">
+                <h4 style="color: #10B981; margin:0; font-weight: 800;">🎯 HORA DE APORTAR!</h4>
+                <p style="color: #E2E8F0; font-size: 14px; margin-top: 8px;">
+                    Seu saldo livre está em <b>R$ {dados['saldo_conta']:.2f}</b>. Como sua reserva do mês é de R$ 100,00, invista a diferença!
                 </p>
-                <hr style="border-color: #1F2937;">
-                <p style="color: #38BDF8; font-size: 16px; font-weight: bold; margin: 0;">
-                    👉 Abra o app do Nubank e transfira R$ {excesso:.2f} para a Caixinha "Futuro" (100% CDI).
+                <hr style="border-color: #1E293B; margin: 12px 0;">
+                <p style="color: #38BDF8; font-size: 15px; font-weight: 700; margin: 0;">
+                    👉 Transfira R$ {excesso:.2f} para a Caixinha "Futuro" (100% CDI) no app do Nubank.
                 </p>
             </div>
         """,
@@ -321,14 +340,14 @@ with aba_guia:
     elif dados["saldo_conta"] == 100.00:
         st.markdown(
             """
-            <div style="background-color: #111827; padding: 20px; border-radius: 16px; border: 2px solid #38BDF8;">
-                <h4 style="color: #38BDF8; margin:0;">✅ CONTA TOTALMENTE EQUILIBRADA!</h4>
-                <p style="color: #F3F4F6; font-size: 15px; margin-top: 10px;">
+            <div style="background-color: #0F172A; padding: 20px; border-radius: 18px; border: 2px solid #38BDF8;">
+                <h4 style="color: #38BDF8; margin:0; font-weight: 800;">✅ CONTA BALANCEADA!</h4>
+                <p style="color: #E2E8F0; font-size: 14px; margin-top: 8px;">
                     Seus R$ 100,00 estão garantidos no Saldo Livre para seus gastos do mês.
                 </p>
-                <hr style="border-color: #1F2937;">
-                <p style="color: #9CA3AF; font-size: 14px; margin: 0;">
-                    Todo o restante do seu dinheiro já está trabalhando para você nas Caixinhas!
+                <hr style="border-color: #1E293B; margin: 12px 0;">
+                <p style="color: #94A3B8; font-size: 13px; margin: 0;">
+                    Todo o restante do seu patrimônio já está rendendo 100% do CDI nas Caixinhas.
                 </p>
             </div>
         """,
@@ -336,37 +355,36 @@ with aba_guia:
         )
     else:
         st.warning(
-            f"Você tem R$ {dados['saldo_conta']:.2f} no Saldo Livre. Lembre-se de completar os R$ 100,00 na próxima entrada!"
+            f"Seu saldo livre está em R$ {dados['saldo_conta']:.2f}. Complete para R$ 100,00 na próxima entrada!"
         )
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("### 📌 Mapeamento das Suas Contas:")
+    st.markdown("### 📌 Estrutura do Seu Plano:")
     st.write(
-        "• **Saldo em Conta:** Manter R$ 100,00 livres para lanches e gastos do mês."
+        "• **Saldo em Conta:** Manter R$ 100,00 para lanches e saídas do mês."
     )
     st.write(
-        "• **Caixinha 'Futuro' (100% CDI):** Caixinha principal de resgate diário. Guarde todos os aportes novos aqui."
+        "• **Caixinha 'Futuro' (100% CDI):** Guardar todas as mesadas e valores acumulados."
     )
     st.write(
-        "• **Caixinha 'Sonho' (RDB):** Mantida até Novembro/2026. Quando vencer, consolide tudo na Caixinha Futuro."
+        "• **Caixinha 'Sonho' (RDB):** Manter até Novembro/2026 e consolidar tudo na Caixinha Futuro no vencimento."
     )
 
-# ------------------------------------------
 # ABA 3: EXTRATO
-# ------------------------------------------
 with aba_extrato:
     st.subheader("Histórico do Seu Dinheiro")
     if len(dados["transacoes"]) > 0:
         df = pd.DataFrame(dados["transacoes"])
         st.dataframe(df, use_container_width=True, hide_index=True)
 
-# ------------------------------------------
-# ABA 4: PROJEÇÃO 18 ANOS
-# ------------------------------------------
+# ABA 4: PROJEÇÃO LIMPA (SEM GRÁFICOS INTERATIVOS QUE BUGAM)
 with aba_projecao:
-    st.subheader("Evolução Esperada Até os 18 Anos")
+    st.subheader("📈 Projeção do Patrimônio")
+    st.caption(
+        "Simulação baseada nos aportes de R$ 600/mês + 100% do CDI acumulado"
+    )
 
-    anos = list(range(2026, 2033))
+    anos = [2026, 2027, 2028, 2029, 2030, 2031, 2032]
     valores = [patrimonio_total]
     acumulado = patrimonio_total
 
@@ -374,11 +392,23 @@ with aba_projecao:
         acumulado = (acumulado + (600 * 12)) * 1.095
         valores.append(acumulado)
 
-    df_proj = pd.DataFrame(
-        {"Ano": anos, "Patrimônio Estimado (R$)": valores}
-    )
-    st.area_chart(df_proj.set_index("Ano"))
+    for ano, val in zip(anos, valores):
+        pct = min(val / 62000.0, 1.0)
+        st.markdown(
+            f"""
+            <div style="background-color: #0F172A; padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; border: 1px solid #1E293B;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="color: #94A3B8; font-weight: 700;">Ano {ano}</span>
+                    <span style="color: #10B981; font-weight: 800;">R$ {val:,.2f}</span>
+                </div>
+                <div style="background-color: #1E293B; height: 6px; border-radius: 3px; overflow: hidden;">
+                    <div style="background-color: #8B5CF6; width: {pct * 100}%; height: 100%;"></div>
+                </div>
+            </div>
+        """,
+            unsafe_allow_html=True,
+        )
 
     st.success(
-        f"🚀 **Estimativa aos 18 Anos (2032):** ~R$ {valores[-1]:,.2f}"
+        f"🚀 **Estimativa Final aos 18 Anos (2032):** ~R$ {valores[-1]:,.2f}"
     )
