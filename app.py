@@ -535,3 +535,4 @@ with aba_projecao:
         )
 
     st.success(f"🚀 **Estimativa Final aos 18 Anos (2032):** ~R$ {valores[-1]:,.2f}")
+    
