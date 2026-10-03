@@ -25,10 +25,10 @@ st.markdown(
         color: #F3F4F6;
     }
 
-    /* Oculta completamente elementos de site */
+    /* Oculta elementos nativos de site */
     #MainMenu, footer, header, .stDeployButton { visibility: hidden !important; display: none !important; }
 
-    /* Ajuste de margens ultra-preciso para Mobile */
+    /* Ajuste Mobile */
     .block-container {
         padding-top: 1.2rem !important;
         padding-bottom: 2rem !important;
@@ -36,7 +36,7 @@ st.markdown(
         padding-right: 0.9rem !important;
     }
 
-    /* Cards Neumórficos de Alta Tecnologia */
+    /* Cards Neumórficos */
     .bank-card {
         background: linear-gradient(160deg, #121620 0%, #0A0C10 100%);
         border: 1px solid #1E2638;
@@ -67,7 +67,7 @@ st.markdown(
         letter-spacing: -0.5px;
     }
 
-    /* Botão Principal Estilo Apple Pay / Fintech */
+    /* Botão Principal */
     .stButton>button {
         width: 100%;
         border-radius: 16px;
@@ -114,7 +114,7 @@ st.markdown(
 ARQUIVO_DADOS = "dados_financas.json"
 
 # ==========================================
-# 2. BASE DE DADOS
+# 2. BASE DE DADOS E DADOS INICIAIS
 # ==========================================
 DADOS_INICIAIS = {
     "saldo_conta": 100.00,
@@ -165,8 +165,14 @@ def salvar_dados(dados):
 
 dados = carregar_dados()
 
+# Garantir que chaves existam caso venham de versões antigas
+if "caixinha_futuro" not in dados:
+    dados["caixinha_futuro"] = 0.0
+if "caixinha_sonho" not in dados:
+    dados["caixinha_sonho"] = 0.0
+
 # ==========================================
-# 3. PAINEL PRINCIPAL (DASHBOARD)
+# 3. PAINEL PRINCIPAL COM CARDS DINÂMICOS
 # ==========================================
 st.markdown(
     """
@@ -189,44 +195,47 @@ patrimonio_total = (
     + dados["caixinha_sonho"]
 )
 
-col1, col2 = st.columns(2)
-col3, col4 = st.columns(2)
+# Renderização Dinâmica: Monta a lista de cards ativos
+cards_ativos = []
 
-with col1:
-    st.markdown(
-        f"""<div class="bank-card card-accent-blue">
-            <div class="card-label">💳 Saldo Livre</div>
-            <div class="card-value">R$ {dados['saldo_conta']:.2f}</div>
-        </div>""",
-        unsafe_allow_html=True,
-    )
+cards_ativos.append(
+    f"""<div class="bank-card card-accent-blue">
+        <div class="card-label">💳 Saldo Livre</div>
+        <div class="card-value">R$ {dados['saldo_conta']:.2f}</div>
+    </div>"""
+)
 
-with col2:
-    st.markdown(
+if dados["caixinha_futuro"] > 0:
+    cards_ativos.append(
         f"""<div class="bank-card card-accent-purple">
             <div class="card-label">🚀 Caixinha Futuro</div>
             <div class="card-value">R$ {dados['caixinha_futuro']:.2f}</div>
-        </div>""",
-        unsafe_allow_html=True,
+        </div>"""
     )
 
-with col3:
-    st.markdown(
+if dados["caixinha_sonho"] > 0:
+    cards_ativos.append(
         f"""<div class="bank-card card-accent-gold">
             <div class="card-label">🔒 Caixinha Sonho</div>
             <div class="card-value">R$ {dados['caixinha_sonho']:.2f}</div>
-        </div>""",
-        unsafe_allow_html=True,
+        </div>"""
     )
 
-with col4:
-    st.markdown(
-        f"""<div class="bank-card card-accent-green">
-            <div class="card-label">🌟 Patrimônio</div>
-            <div class="card-value">R$ {patrimonio_total:.2f}</div>
-        </div>""",
-        unsafe_allow_html=True,
-    )
+cards_ativos.append(
+    f"""<div class="bank-card card-accent-green">
+        <div class="card-label">🌟 Patrimônio</div>
+        <div class="card-value">R$ {patrimonio_total:.2f}</div>
+    </div>"""
+)
+
+# Exibe os cards organizados em 2 colunas dinamicamente
+for i in range(0, len(cards_ativos), 2):
+    c1, c2 = st.columns(2)
+    with c1:
+        st.markdown(cards_ativos[i], unsafe_allow_html=True)
+    if i + 1 < len(cards_ativos):
+        with c2:
+            st.markdown(cards_ativos[i + 1], unsafe_allow_html=True)
 
 # Barra de Progresso Real
 progresso = min(patrimonio_total / 62000.0, 1.0)
@@ -243,24 +252,50 @@ aba_lancamento, aba_guia, aba_extrato, aba_projecao = st.tabs(
     ["➕ Lançar", "📍 Investir", "📑 Extrato", "📈 Meta 18"]
 )
 
-# ABA 1: LANÇAMENTOS
+# ABA 1: LANÇAMENTOS DINÂMICOS COM RESGATE
 with aba_lancamento:
     st.subheader("Nova Operação")
 
     opcao = st.radio(
-        "Selecione o tipo:",
-        ["💸 Gastei Dinheiro", "📥 Recebi Dinheiro", "🔒 Guardei na Caixinha"],
+        "Selecione a ação:",
+        [
+            "💸 Gastei Dinheiro",
+            "📥 Recebi Dinheiro",
+            "🔒 Guardar na Caixinha",
+            "🔓 Resgatar da Caixinha",
+        ],
         horizontal=True,
     )
+
+    # Formulário adaptativo dependendo da escolha
+    if opcao == "🔒 Guardar na Caixinha":
+        caixinha_destino = st.selectbox(
+            "Qual Caixinha quer alimentar?",
+            ["Caixinha Futuro", "Caixinha Sonho"],
+        )
+    elif opcao == "🔓 Resgatar da Caixinha":
+        caixinhas_disponiveis = []
+        if dados["caixinha_futuro"] > 0:
+            caixinhas_disponiveis.append("Caixinha Futuro")
+        if dados["caixinha_sonho"] > 0:
+            caixinhas_disponiveis.append("Caixinha Sonho")
+
+        if not caixinhas_disponiveis:
+            st.warning("⚠️ Você não possui saldo em nenhuma Caixinha para resgatar.")
+            caixinha_origem = None
+        else:
+            caixinha_origem = st.selectbox(
+                "De qual Caixinha quer resgatar?", caixinhas_disponiveis
+            )
 
     valor_input = st.number_input(
         "Valor (R$):", min_value=1.00, step=5.00, value=50.00
     )
     descricao_input = st.text_input(
-        "Descrição:", placeholder="Ex: Mesada, Sorvete, Jogo"
+        "Descrição / Motivo:", placeholder="Ex: Mesada, Sorvete, Resgate urgente"
     )
 
-    if st.button("🚀 Confirmar e Salvar"):
+    if st.button("🚀 Confirmar Operação"):
         data_hoje = str(pd.Timestamp.now().strftime("%Y-%m-%d"))
 
         if opcao == "📥 Recebi Dinheiro":
@@ -275,29 +310,69 @@ with aba_lancamento:
                 }
             )
             salvar_dados(dados)
+            st.session_state["ultima_acao"] = (
+                f"receber|{valor_input}|{dados['saldo_conta']}"
+            )
             st.balloons()
-            st.success(f"R$ {valor_input:.2f} adicionados ao seu Saldo Livre!")
 
-        elif opcao == "🔒 Guardei na Caixinha":
+        elif opcao == "🔒 Guardar na Caixinha":
             if valor_input > dados["saldo_conta"]:
-                st.error("⚠️ Saldo em conta insuficiente para este aporte!")
+                st.error("⚠️ Saldo Livre na conta insuficiente para investir esse valor!")
             else:
                 dados["saldo_conta"] -= valor_input
-                dados["caixinha_futuro"] += valor_input
+                if caixinha_destino == "Caixinha Futuro":
+                    dados["caixinha_futuro"] += valor_input
+                else:
+                    dados["caixinha_sonho"] += valor_input
+
                 dados["transacoes"].append(
                     {
                         "Data": data_hoje,
                         "Tipo": "Aporte",
-                        "Origem": "Caixinha Futuro",
+                        "Origem": caixinha_destino,
                         "Valor": valor_input,
-                        "Categoria": descricao_input or "Aporte Caixinha",
+                        "Categoria": descricao_input or "Investimento",
                     }
                 )
                 salvar_dados(dados)
-                st.snow()
-                st.success(
-                    f"R$ {valor_input:.2f} investidos na Caixinha Futuro!"
+                st.session_state["ultima_acao"] = (
+                    f"guardar|{valor_input}|{caixinha_destino}"
                 )
+                st.snow()
+
+        elif opcao == "🔓 Resgatar da Caixinha":
+            if caixinha_origem is None:
+                st.error("Nenhuma Caixinha disponível.")
+            else:
+                saldo_disponivel = (
+                    dados["caixinha_futuro"]
+                    if caixinha_origem == "Caixinha Futuro"
+                    else dados["caixinha_sonho"]
+                )
+                if valor_input > saldo_disponivel:
+                    st.error(
+                        f"⚠️ Valor maior do que o disponível na {caixinha_origem} (R$ {saldo_disponivel:.2f})."
+                    )
+                else:
+                    if caixinha_origem == "Caixinha Futuro":
+                        dados["caixinha_futuro"] -= valor_input
+                    else:
+                        dados["caixinha_sonho"] -= valor_input
+
+                    dados["saldo_conta"] += valor_input
+                    dados["transacoes"].append(
+                        {
+                            "Data": data_hoje,
+                            "Tipo": "Resgate",
+                            "Origem": caixinha_origem,
+                            "Valor": valor_input,
+                            "Categoria": descricao_input or "Resgate de investimento",
+                        }
+                    )
+                    salvar_dados(dados)
+                    st.session_state["ultima_acao"] = (
+                        f"resgatar|{valor_input}|{caixinha_origem}"
+                    )
 
         elif opcao == "💸 Gastei Dinheiro":
             dados["saldo_conta"] -= valor_input
@@ -311,12 +386,65 @@ with aba_lancamento:
                 }
             )
             salvar_dados(dados)
-            st.warning(f"Gasto de R$ {valor_input:.2f} registrado.")
+            st.session_state["ultima_acao"] = f"gastar|{valor_input}"
 
-        time.sleep(1)
+        time.sleep(0.5)
         st.rerun()
 
-# ABA 2: ONDE INVESTIR (RECOMENDAÇÃO PRÁTICA)
+    # Exibe caixa de instruções personalizada após a última ação
+    if "ultima_acao" in st.session_state:
+        partes = st.session_state["ultima_acao"].split("|")
+        tipo_acao = partes[0]
+
+        if tipo_acao == "receber":
+            v, saldo_atual = float(partes[1]), float(partes[2])
+            excesso = max(0.0, saldo_atual - 100.0)
+            st.markdown(
+                f"""
+                <div style="background-color: #0F172A; padding: 18px; border-radius: 16px; border: 2px solid #10B981; margin-top: 15px;">
+                    <h4 style="color: #10B981; margin:0;">🎉 DINHEIRO RECEBIDO! (+R$ {v:.2f})</h4>
+                    <p style="color: #E2E8F0; font-size: 14px; margin-top: 8px;">
+                        Passo 1: Mantenha R$ 100,00 na conta para seus gastos.<br>
+                        👉 <b>Passo 2 (Ação no Nubank):</b> Transfira R$ {excesso:.2f} para a Caixinha "Futuro" para rende 100% do CDI!
+                    </p>
+                </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+        elif tipo_acao == "guardar":
+            v, dest = float(partes[1]), partes[2]
+            st.markdown(
+                f"""
+                <div style="background-color: #0F172A; padding: 18px; border-radius: 16px; border: 2px solid #8B5CF6; margin-top: 15px;">
+                    <h4 style="color: #A855F7; margin:0;">🔒 INVESTIMENTO REGISTRADO!</h4>
+                    <p style="color: #E2E8F0; font-size: 14px; margin-top: 8px;">
+                        👉 <b>Ação no Nubank:</b> Abra o app do Nubank, acesse as Caixinhas e guarde <b>R$ {v:.2f}</b> na <b>{dest}</b>.
+                    </p>
+                </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+        elif tipo_acao == "resgatar":
+            v, orig = float(partes[1]), partes[2]
+            st.markdown(
+                f"""
+                <div style="background-color: #0F172A; padding: 18px; border-radius: 16px; border: 2px solid #F59E0B; margin-top: 15px;">
+                    <h4 style="color: #F59E0B; margin:0;">🔓 RESGATE REGISTRADO!</h4>
+                    <p style="color: #E2E8F0; font-size: 14px; margin-top: 8px;">
+                        👉 <b>Ação no Nubank:</b> Abra o app do Nubank, vá na <b>{orig}</b> e clique em <b>Resgatar R$ {v:.2f}</b> para seu Saldo Livre.
+                    </p>
+                </div>
+            """,
+                unsafe_allow_html=True,
+            )
+
+        elif tipo_acao == "gastar":
+            v = float(partes[1])
+            st.warning(f"💸 Gasto de R$ {v:.2f} descontado do seu Saldo Livre em Conta.")
+
+# ABA 2: GUIA DE INVESTIMENTO DINÂMICO
 with aba_guia:
     st.subheader("🤖 Recomendação de Aporte")
 
@@ -360,29 +488,26 @@ with aba_guia:
 
     st.markdown("<br>", unsafe_allow_html=True)
     st.markdown("### 📌 Estrutura do Seu Plano:")
-    st.write(
-        "• **Saldo em Conta:** Manter R$ 100,00 para lanches e saídas do mês."
-    )
+    st.write("• **Saldo em Conta:** Manter R$ 100,00 para lanches e saídas do mês.")
     st.write(
         "• **Caixinha 'Futuro' (100% CDI):** Guardar todas as mesadas e valores acumulados."
     )
-    st.write(
-        "• **Caixinha 'Sonho' (RDB):** Manter até Novembro/2026 e consolidar tudo na Caixinha Futuro no vencimento."
-    )
+    if dados["caixinha_sonho"] > 0:
+        st.write(
+            "• **Caixinha 'Sonho' (RDB):** Manter até Novembro/2026 e consolidar tudo na Caixinha Futuro no vencimento."
+        )
 
-# ABA 3: EXTRATO
+# ABA 3: EXTRATO COMPLETO
 with aba_extrato:
     st.subheader("Histórico do Seu Dinheiro")
     if len(dados["transacoes"]) > 0:
         df = pd.DataFrame(dados["transacoes"])
         st.dataframe(df, use_container_width=True, hide_index=True)
 
-# ABA 4: PROJEÇÃO LIMPA (SEM GRÁFICOS INTERATIVOS QUE BUGAM)
+# ABA 4: PROJEÇÃO LIMPA
 with aba_projecao:
     st.subheader("📈 Projeção do Patrimônio")
-    st.caption(
-        "Simulação baseada nos aportes de R$ 600/mês + 100% do CDI acumulado"
-    )
+    st.caption("Simulação baseada nos aportes de R$ 600/mês + 100% do CDI acumulado")
 
     anos = [2026, 2027, 2028, 2029, 2030, 2031, 2032]
     valores = [patrimonio_total]
@@ -409,6 +534,4 @@ with aba_projecao:
             unsafe_allow_html=True,
         )
 
-    st.success(
-        f"🚀 **Estimativa Final aos 18 Anos (2032):** ~R$ {valores[-1]:,.2f}"
-    )
+    st.success(f"🚀 **Estimativa Final aos 18 Anos (2032):** ~R$ {valores[-1]:,.2f}")
