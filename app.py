@@ -1,538 +1,604 @@
-import json
-import os
-import time
-import pandas as pd
-import streamlit as st
-
-# ==========================================
-# 1. ESTILIZAÇÃO NATIVA DE BANCO DIGITAL (DARK LUXURY)
-# ==========================================
-st.set_page_config(
-    page_title="Finanças 18",
-    page_icon="💎",
-    layout="wide",
-    initial_sidebar_state="collapsed",
-)
-
-st.markdown(
-    """
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Finanças 18</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap');
+        :root {
+            --bg-main: #07090E;
+            --card-bg: rgba(21, 26, 38, 0.7);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --accent-blue: #00D4FF;
+            --accent-purple: #A855F7;
+            --accent-gold: #F59E0B;
+            --accent-green: #10B981;
+            --text-primary: #FFFFFF;
+            --text-secondary: #9CA3AF;
+        }
 
-    html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', sans-serif !important;
-        background-color: #080A0E !important;
-        color: #F3F4F6;
-    }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', -apple-system, blinkmacsystemfont, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-    /* Oculta elementos nativos de site */
-    #MainMenu, footer, header, .stDeployButton { visibility: hidden !important; display: none !important; }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            padding: 20px 16px 120px 16px;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
 
-    /* Ajuste Mobile */
-    .block-container {
-        padding-top: 1.2rem !important;
-        padding-bottom: 2rem !important;
-        padding-left: 0.9rem !important;
-        padding-right: 0.9rem !important;
-    }
+        /* Top Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-top: env(safe-area-inset-top, 10px);
+        }
 
-    /* Cards Neumórficos */
-    .bank-card {
-        background: linear-gradient(160deg, #121620 0%, #0A0C10 100%);
-        border: 1px solid #1E2638;
-        border-radius: 20px;
-        padding: 16px 18px;
-        margin-bottom: 12px;
-        box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
-    }
-    
-    .card-accent-blue { border-top: 3px solid #00D4FF; }
-    .card-accent-purple { border-top: 3px solid #A855F7; }
-    .card-accent-gold { border-top: 3px solid #F59E0B; }
-    .card-accent-green { border-top: 3px solid #10B981; }
+        .header h1 {
+            font-size: 22px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
 
-    .card-label {
-        font-size: 10px;
-        font-weight: 700;
-        color: #9CA3AF;
-        text-transform: uppercase;
-        letter-spacing: 1.2px;
-    }
-    
-    .card-value {
-        font-size: 25px;
-        font-weight: 800;
-        color: #FFFFFF;
-        margin-top: 4px;
-        letter-spacing: -0.5px;
-    }
+        .header p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
 
-    /* Botão Principal */
-    .stButton>button {
-        width: 100%;
-        border-radius: 16px;
-        height: 56px;
-        font-weight: 800;
-        font-size: 16px;
-        background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
-        color: #FFFFFF;
-        border: none;
-        box-shadow: 0 8px 20px rgba(139, 92, 246, 0.35);
-        transition: all 0.15s ease-in-out;
-    }
+        .badge-pro {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(139, 92, 246, 0.2));
+            border: 1px solid rgba(56, 189, 248, 0.4);
+            color: #38BDF8;
+            font-size: 11px;
+            font-weight: 800;
+            padding: 5px 12px;
+            border-radius: 20px;
+        }
 
-    .stButton>button:active {
-        transform: scale(0.98);
-    }
+        /* Balance Cards Grid */
+        .grid-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
 
-    /* Abas Customizadas */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 6px;
-        background-color: #0F131D;
-        padding: 6px;
-        border-radius: 16px;
-        border: 1px solid #1A202C;
-    }
+        .bank-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+            transition: transform 0.2s ease, opacity 0.3s ease;
+        }
 
-    .stTabs [data-baseweb="tab"] {
-        height: 42px;
-        border-radius: 12px;
-        color: #9CA3AF;
-        font-weight: 700;
-        font-size: 13px;
-    }
+        .bank-card:active {
+            transform: scale(0.98);
+        }
 
-    .stTabs [aria-selected="true"] {
-        background-color: #1F2937 !important;
-        color: #FFFFFF !important;
-    }
+        .card-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-value {
+            font-size: 22px;
+            font-weight: 800;
+            margin-top: 6px;
+            letter-spacing: -0.5px;
+        }
+
+        .card-blue { border-top: 3px solid var(--accent-blue); }
+        .card-purple { border-top: 3px solid var(--accent-purple); }
+        .card-gold { border-top: 3px solid var(--accent-gold); }
+        .card-green { border-top: 3px solid var(--accent-green); }
+
+        /* Meta Progress */
+        .progress-box {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 14px 16px;
+            margin-bottom: 24px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .progress-bar-bg {
+            background: rgba(255, 255, 255, 0.08);
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8B5CF6, #38BDF8);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+
+        /* Sections & Views */
+        .view-section {
+            display: none;
+            animation: fadeIn 0.25s ease-in-out;
+        }
+
+        .view-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(6px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Form Components */
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        input, select {
+            width: 100%;
+            background: rgba(18, 24, 38, 0.8);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 14px;
+            color: #FFF;
+            font-size: 15px;
+            font-weight: 600;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--accent-purple);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
+            color: #FFF;
+            border: none;
+            border-radius: 16px;
+            height: 54px;
+            font-size: 16px;
+            font-weight: 800;
+            box-shadow: 0 8px 20px rgba(139, 92, 246, 0.35);
+            cursor: pointer;
+            transition: transform 0.1s ease;
+        }
+
+        .btn-primary:active {
+            transform: scale(0.97);
+        }
+
+        /* Dynamic Feedback Card */
+        .alert-card {
+            background: rgba(15, 23, 42, 0.9);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 16px;
+            border: 1.5px solid var(--accent-purple);
+        }
+
+        .alert-card h4 { font-size: 14px; font-weight: 800; margin-bottom: 4px; }
+        .alert-card p { font-size: 13px; color: #E2E8F0; line-height: 1.4; }
+
+        /* iOS 18 Liquid Glass Floating Tab Bar (Exata da imagem!) */
+        .floating-tab-bar {
+            position: fixed;
+            bottom: max(20px, env(safe-area-inset-bottom, 20px));
+            left: 50%;
+            transform: translateX(-50%);
+            width: calc(100% - 32px);
+            max-width: 420px;
+            height: 64px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            border-radius: 35px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 0 8px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            z-index: 9999;
+        }
+
+        .tab-item {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            height: 48px;
+            border-radius: 24px;
+            color: rgba(255, 255, 255, 0.7);
+            text-decoration: none;
+            font-size: 10px;
+            font-weight: 700;
+            transition: color 0.2s ease;
+            cursor: pointer;
+        }
+
+        .tab-item svg {
+            width: 20px;
+            height: 20px;
+            margin-bottom: 2px;
+            fill: currentColor;
+        }
+
+        .tab-item.active {
+            color: #FFFFFF;
+            background: rgba(0, 0, 0, 0.7);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+
+        /* History Table */
+        .history-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .history-item {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 14px;
+            padding: 12px 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .history-type { font-size: 13px; font-weight: 700; }
+        .history-date { font-size: 11px; color: var(--text-secondary); }
+        .history-val { font-size: 14px; font-weight: 800; }
     </style>
-""",
-    unsafe_allow_html=True,
-)
+</head>
+<body>
 
-ARQUIVO_DADOS = "dados_financas.json"
-
-# ==========================================
-# 2. BASE DE DADOS E DADOS INICIAIS
-# ==========================================
-DADOS_INICIAIS = {
-    "saldo_conta": 100.00,
-    "caixinha_futuro": 966.55,
-    "caixinha_sonho": 971.85,
-    "transacoes": [
-        {
-            "Data": "2026-10-03",
-            "Tipo": "Entrada",
-            "Origem": "Pai (Pix)",
-            "Valor": 445.00,
-            "Categoria": "Mesada Extra",
-        },
-        {
-            "Data": "2026-10-03",
-            "Tipo": "Entrada",
-            "Origem": "Mãe (Pix)",
-            "Valor": 100.00,
-            "Categoria": "Mesada Livre",
-        },
-        {
-            "Data": "2026-10-03",
-            "Tipo": "Aporte",
-            "Origem": "Caixinha Futuro",
-            "Valor": 966.55,
-            "Categoria": "Investimento 100% CDI",
-        },
-    ],
-}
-
-
-def carregar_dados():
-    if os.path.exists(ARQUIVO_DADOS):
-        try:
-            with open(ARQUIVO_DADOS, "r", encoding="utf-8") as f:
-                return json.load(f)
-        except:
-            return DADOS_INICIAIS
-    else:
-        salvar_dados(DADOS_INICIAIS)
-        return DADOS_INICIAIS
-
-
-def salvar_dados(dados):
-    with open(ARQUIVO_DADOS, "w", encoding="utf-8") as f:
-        json.dump(dados, f, indent=4, ensure_ascii=False)
-
-
-dados = carregar_dados()
-
-# Garantir que chaves existam caso venham de versões antigas
-if "caixinha_futuro" not in dados:
-    dados["caixinha_futuro"] = 0.0
-if "caixinha_sonho" not in dados:
-    dados["caixinha_sonho"] = 0.0
-
-# ==========================================
-# 3. PAINEL PRINCIPAL COM CARDS DINÂMICOS
-# ==========================================
-st.markdown(
-    """
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+    <!-- Header -->
+    <div class="header">
         <div>
-            <h2 style="margin:0; font-weight: 800; font-size: 22px; color: #FFF;">Finanças 18</h2>
-            <p style="margin:0; color: #6B7280; font-size: 12px;">Seu Assistente de Patrimônio</p>
+            <h1>Finanças 18</h1>
+            <p>Seu Assistente de Patrimônio</p>
         </div>
-        <div style="background-color: #1E293B; padding: 6px 12px; border-radius: 20px; border: 1px solid #334155; font-size: 11px; font-weight: 700; color: #38BDF8;">
-            PRO 💎
+        <div class="badge-pro">PRO 💎</div>
+    </div>
+
+    <!-- Cards de Saldo Dinâmicos -->
+    <div class="grid-cards" id="cardsGrid">
+        <!-- Renderizado dinamicamente via JS -->
+    </div>
+
+    <!-- Barra de Progresso Meta -->
+    <div class="progress-box">
+        <div class="progress-header">
+            <span>Meta R$ 62.000,00</span>
+            <span id="progresoTexto">0%</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progresoBarra" style="width: 0%;"></div>
         </div>
     </div>
-""",
-    unsafe_allow_html=True,
-)
 
-patrimonio_total = (
-    dados["saldo_conta"]
-    + dados["caixinha_futuro"]
-    + dados["caixinha_sonho"]
-)
+    <!-- ABAS / TELAS DO APP -->
 
-# Renderização Dinâmica: Monta a lista de cards ativos
-cards_ativos = []
+    <!-- ABA 1: INÍCIO / RESUMO -->
+    <div id="viewHome" class="view-section active">
+        <div class="alert-card" style="border-color: var(--accent-blue);">
+            <h4 style="color: var(--accent-blue);">⚡ Painel de Controle</h4>
+            <p>Acompanhe seu saldo livre em conta e os aportes das Caixinhas em tempo real.</p>
+        </div>
+    </div>
 
-cards_ativos.append(
-    f"""<div class="bank-card card-accent-blue">
-        <div class="card-label">💳 Saldo Livre</div>
-        <div class="card-value">R$ {dados['saldo_conta']:.2f}</div>
-    </div>"""
-)
+    <!-- ABA 2: LANÇAR -->
+    <div id="viewLancamento" class="view-section">
+        <div class="form-group">
+            <label>Tipo de Operação</label>
+            <select id="selectOperacao" onchange="atualizarFormulario()">
+                <option value="receber">📥 Recebi Dinheiro</option>
+                <option value="guardar">🔒 Guardar na Caixinha</option>
+                <option value="resgatar">🔓 Resgatar da Caixinha</option>
+                <option value="gastar">💸 Gastei Dinheiro</option>
+            </select>
+        </div>
 
-if dados["caixinha_futuro"] > 0:
-    cards_ativos.append(
-        f"""<div class="bank-card card-accent-purple">
-            <div class="card-label">🚀 Caixinha Futuro</div>
-            <div class="card-value">R$ {dados['caixinha_futuro']:.2f}</div>
-        </div>"""
-    )
+        <div class="form-group" id="groupCaixinha" style="display: none;">
+            <label id="labelCaixinha">Caixinha</label>
+            <select id="selectCaixinha">
+                <option value="futuro">Caixinha Futuro (100% CDI)</option>
+                <option value="sonho">Caixinha Sonho (RDB)</option>
+            </select>
+        </div>
 
-if dados["caixinha_sonho"] > 0:
-    cards_ativos.append(
-        f"""<div class="bank-card card-accent-gold">
-            <div class="card-label">🔒 Caixinha Sonho</div>
-            <div class="card-value">R$ {dados['caixinha_sonho']:.2f}</div>
-        </div>"""
-    )
+        <div class="form-group">
+            <label>Valor (R$)</label>
+            <input type="number" id="inputValor" placeholder="50.00" value="50.00">
+        </div>
 
-cards_ativos.append(
-    f"""<div class="bank-card card-accent-green">
-        <div class="card-label">🌟 Patrimônio</div>
-        <div class="card-value">R$ {patrimonio_total:.2f}</div>
-    </div>"""
-)
+        <div class="form-group">
+            <label>Descrição</label>
+            <input type="text" id="inputDescricao" placeholder="Ex: Mesada, Sorvete, Resgate">
+        </div>
 
-# Exibe os cards organizados em 2 colunas dinamicamente
-for i in range(0, len(cards_ativos), 2):
-    c1, c2 = st.columns(2)
-    with c1:
-        st.markdown(cards_ativos[i], unsafe_allow_html=True)
-    if i + 1 < len(cards_ativos):
-        with c2:
-            st.markdown(cards_ativos[i + 1], unsafe_allow_html=True)
+        <button class="btn-primary" onclick="processarOperacao()">🚀 Confirmar Operação</button>
 
-# Barra de Progresso Real
-progresso = min(patrimonio_total / 62000.0, 1.0)
-st.write(
-    f"🎯 **Progresso da Meta (R$ 62.000):** `{progresso * 100:.2f}%` atingido"
-)
-st.progress(progresso)
-st.markdown("<br>", unsafe_allow_html=True)
+        <div id="feedbackContainer"></div>
+    </div>
 
-# ==========================================
-# 4. OPERAÇÕES E NAVEGAÇÃO
-# ==========================================
-aba_lancamento, aba_guia, aba_extrato, aba_projecao = st.tabs(
-    ["➕ Lançar", "📍 Investir", "📑 Extrato", "📈 Meta 18"]
-)
+    <!-- ABA 3: ONDE INVESTIR -->
+    <div id="viewInvestir" class="view-section">
+        <div id="recomencacaoBox"></div>
+    </div>
 
-# ABA 1: LANÇAMENTOS DINÂMICOS COM RESGATE
-with aba_lancamento:
-    st.subheader("Nova Operação")
+    <!-- ABA 4: EXTRATO -->
+    <div id="viewExtrato" class="view-section">
+        <div class="history-list" id="historicoLista">
+            <!-- Transações dinâmicas -->
+        </div>
+    </div>
 
-    opcao = st.radio(
-        "Selecione a ação:",
-        [
-            "💸 Gastei Dinheiro",
-            "📥 Recebi Dinheiro",
-            "🔒 Guardar na Caixinha",
-            "🔓 Resgatar da Caixinha",
-        ],
-        horizontal=True,
-    )
+    <!-- ABA 5: PROJEÇÃO METAS -->
+    <div id="viewProjecao" class="view-section">
+        <h3 style="font-size: 16px; margin-bottom: 12px;">Evolução Estimada até os 18 Anos</h3>
+        <div id="projecaoLista"></div>
+    </div>
 
-    # Formulário adaptativo dependendo da escolha
-    if opcao == "🔒 Guardar na Caixinha":
-        caixinha_destino = st.selectbox(
-            "Qual Caixinha quer alimentar?",
-            ["Caixinha Futuro", "Caixinha Sonho"],
-        )
-    elif opcao == "🔓 Resgatar da Caixinha":
-        caixinhas_disponiveis = []
-        if dados["caixinha_futuro"] > 0:
-            caixinhas_disponiveis.append("Caixinha Futuro")
-        if dados["caixinha_sonho"] > 0:
-            caixinhas_disponiveis.append("Caixinha Sonho")
+    <!-- LIQUID GLASS FLOATING TAB BAR (Estilo iOS 18 da Imagem!) -->
+    <nav class="floating-tab-bar">
+        <div class="tab-item active" onclick="trocarAba('Home', this)">
+            <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+            <span>Início</span>
+        </div>
+        <div class="tab-item" onclick="trocarAba('Lancamento', this)">
+            <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+            <span>Lançar</span>
+        </div>
+        <div class="tab-item" onclick="trocarAba('Investir', this)">
+            <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 16h-2v-2h2v2zm0-4h-2V7h2v7z"/></svg>
+            <span>Guia</span>
+        </div>
+        <div class="tab-item" onclick="trocarAba('Extrato', this)">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+            <span>Extrato</span>
+        </div>
+        <div class="tab-item" onclick="trocarAba('Projecao', this)">
+            <svg viewBox="0 0 24 24"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg>
+            <span>Projeção</span>
+        </div>
+    </nav>
 
-        if not caixinhas_disponiveis:
-            st.warning("⚠️ Você não possui saldo em nenhuma Caixinha para resgatar.")
-            caixinha_origem = None
-        else:
-            caixinha_origem = st.selectbox(
-                "De qual Caixinha quer resgatar?", caixinhas_disponiveis
-            )
+    <script>
+        // Dados Iniciais do Usuário
+        let dados = JSON.parse(localStorage.getItem('financas_18')) || {
+            saldo_conta: 100.00,
+            caixinha_futuro: 966.55,
+            caixinha_sonho: 971.85,
+            transacoes: [
+                { data: '2026-10-03', tipo: 'Entrada', valor: 445.00, cat: 'Mesada Extra' },
+                { data: '2026-10-03', tipo: 'Entrada', valor: 100.00, cat: 'Mesada Livre' },
+                { data: '2026-10-03', tipo: 'Aporte', valor: 966.55, cat: 'Caixinha Futuro' }
+            ]
+        };
 
-    valor_input = st.number_input(
-        "Valor (R$):", min_value=1.00, step=5.00, value=50.00
-    )
-    descricao_input = st.text_input(
-        "Descrição / Motivo:", placeholder="Ex: Mesada, Sorvete, Resgate urgente"
-    )
+        function salvarDados() {
+            localStorage.setItem('financas_18', JSON.stringify(dados));
+            renderizarApp();
+        }
 
-    if st.button("🚀 Confirmar Operação"):
-        data_hoje = str(pd.Timestamp.now().strftime("%Y-%m-%d"))
+        function renderizarApp() {
+            const grid = document.getElementById('cardsGrid');
+            grid.innerHTML = '';
 
-        if opcao == "📥 Recebi Dinheiro":
-            dados["saldo_conta"] += valor_input
-            dados["transacoes"].append(
-                {
-                    "Data": data_hoje,
-                    "Tipo": "Entrada",
-                    "Origem": "Conta",
-                    "Valor": valor_input,
-                    "Categoria": descricao_input or "Recebimento",
-                }
-            )
-            salvar_dados(dados)
-            st.session_state["ultima_acao"] = (
-                f"receber|{valor_input}|{dados['saldo_conta']}"
-            )
-            st.balloons()
+            const patrimonioTotal = dados.saldo_conta + dados.caixinha_futuro + dados.caixinha_sonho;
 
-        elif opcao == "🔒 Guardar na Caixinha":
-            if valor_input > dados["saldo_conta"]:
-                st.error("⚠️ Saldo Livre na conta insuficiente para investir esse valor!")
-            else:
-                dados["saldo_conta"] -= valor_input
-                if caixinha_destino == "Caixinha Futuro":
-                    dados["caixinha_futuro"] += valor_input
-                else:
-                    dados["caixinha_sonho"] += valor_input
-
-                dados["transacoes"].append(
-                    {
-                        "Data": data_hoje,
-                        "Tipo": "Aporte",
-                        "Origem": caixinha_destino,
-                        "Valor": valor_input,
-                        "Categoria": descricao_input or "Investimento",
-                    }
-                )
-                salvar_dados(dados)
-                st.session_state["ultima_acao"] = (
-                    f"guardar|{valor_input}|{caixinha_destino}"
-                )
-                st.snow()
-
-        elif opcao == "🔓 Resgatar da Caixinha":
-            if caixinha_origem is None:
-                st.error("Nenhuma Caixinha disponível.")
-            else:
-                saldo_disponivel = (
-                    dados["caixinha_futuro"]
-                    if caixinha_origem == "Caixinha Futuro"
-                    else dados["caixinha_sonho"]
-                )
-                if valor_input > saldo_disponivel:
-                    st.error(
-                        f"⚠️ Valor maior do que o disponível na {caixinha_origem} (R$ {saldo_disponivel:.2f})."
-                    )
-                else:
-                    if caixinha_origem == "Caixinha Futuro":
-                        dados["caixinha_futuro"] -= valor_input
-                    else:
-                        dados["caixinha_sonho"] -= valor_input
-
-                    dados["saldo_conta"] += valor_input
-                    dados["transacoes"].append(
-                        {
-                            "Data": data_hoje,
-                            "Tipo": "Resgate",
-                            "Origem": caixinha_origem,
-                            "Valor": valor_input,
-                            "Categoria": descricao_input or "Resgate de investimento",
-                        }
-                    )
-                    salvar_dados(dados)
-                    st.session_state["ultima_acao"] = (
-                        f"resgatar|{valor_input}|{caixinha_origem}"
-                    )
-
-        elif opcao == "💸 Gastei Dinheiro":
-            dados["saldo_conta"] -= valor_input
-            dados["transacoes"].append(
-                {
-                    "Data": data_hoje,
-                    "Tipo": "Saída",
-                    "Origem": "Conta",
-                    "Valor": valor_input,
-                    "Categoria": descricao_input or "Gasto Pessoal",
-                }
-            )
-            salvar_dados(dados)
-            st.session_state["ultima_acao"] = f"gastar|{valor_input}"
-
-        time.sleep(0.5)
-        st.rerun()
-
-    # Exibe caixa de instruções personalizada após a última ação
-    if "ultima_acao" in st.session_state:
-        partes = st.session_state["ultima_acao"].split("|")
-        tipo_acao = partes[0]
-
-        if tipo_acao == "receber":
-            v, saldo_atual = float(partes[1]), float(partes[2])
-            excesso = max(0.0, saldo_atual - 100.0)
-            st.markdown(
-                f"""
-                <div style="background-color: #0F172A; padding: 18px; border-radius: 16px; border: 2px solid #10B981; margin-top: 15px;">
-                    <h4 style="color: #10B981; margin:0;">🎉 DINHEIRO RECEBIDO! (+R$ {v:.2f})</h4>
-                    <p style="color: #E2E8F0; font-size: 14px; margin-top: 8px;">
-                        Passo 1: Mantenha R$ 100,00 na conta para seus gastos.<br>
-                        👉 <b>Passo 2 (Ação no Nubank):</b> Transfira R$ {excesso:.2f} para a Caixinha "Futuro" para rende 100% do CDI!
-                    </p>
+            // Renderiza apenas as Caixinhas com saldo > 0
+            grid.innerHTML += `
+                <div class="bank-card card-blue">
+                    <div class="card-label">💳 Saldo Livre</div>
+                    <div class="card-value">R$ ${dados.saldo_conta.toFixed(2)}</div>
                 </div>
-            """,
-                unsafe_allow_html=True,
-            )
+            `;
 
-        elif tipo_acao == "guardar":
-            v, dest = float(partes[1]), partes[2]
-            st.markdown(
-                f"""
-                <div style="background-color: #0F172A; padding: 18px; border-radius: 16px; border: 2px solid #8B5CF6; margin-top: 15px;">
-                    <h4 style="color: #A855F7; margin:0;">🔒 INVESTIMENTO REGISTRADO!</h4>
-                    <p style="color: #E2E8F0; font-size: 14px; margin-top: 8px;">
-                        👉 <b>Ação no Nubank:</b> Abra o app do Nubank, acesse as Caixinhas e guarde <b>R$ {v:.2f}</b> na <b>{dest}</b>.
-                    </p>
+            if (dados.caixinha_futuro > 0) {
+                grid.innerHTML += `
+                    <div class="bank-card card-purple">
+                        <div class="card-label">🚀 Caixinha Futuro</div>
+                        <div class="card-value">R$ ${dados.caixinha_futuro.toFixed(2)}</div>
+                    </div>
+                `;
+            }
+
+            if (dados.caixinha_sonho > 0) {
+                grid.innerHTML += `
+                    <div class="bank-card card-gold">
+                        <div class="card-label">🔒 Caixinha Sonho</div>
+                        <div class="card-value">R$ ${dados.caixinha_sonho.toFixed(2)}</div>
+                    </div>
+                `;
+            }
+
+            grid.innerHTML += `
+                <div class="bank-card card-green">
+                    <div class="card-label">🌟 Patrimônio</div>
+                    <div class="card-value">R$ ${patrimonioTotal.toFixed(2)}</div>
                 </div>
-            """,
-                unsafe_allow_html=True,
-            )
+            `;
 
-        elif tipo_acao == "resgatar":
-            v, orig = float(partes[1]), partes[2]
-            st.markdown(
-                f"""
-                <div style="background-color: #0F172A; padding: 18px; border-radius: 16px; border: 2px solid #F59E0B; margin-top: 15px;">
-                    <h4 style="color: #F59E0B; margin:0;">🔓 RESGATE REGISTRADO!</h4>
-                    <p style="color: #E2E8F0; font-size: 14px; margin-top: 8px;">
-                        👉 <b>Ação no Nubank:</b> Abra o app do Nubank, vá na <b>{orig}</b> e clique em <b>Resgatar R$ {v:.2f}</b> para seu Saldo Livre.
-                    </p>
-                </div>
-            """,
-                unsafe_allow_html=True,
-            )
+            // Progresso Meta 62k
+            const pct = Math.min((patrimonioTotal / 62000) * 100, 100).toFixed(1);
+            document.getElementById('progresoTexto').innerText = `${pct}%`;
+            document.getElementById('progresoBarra').style.width = `${pct}%`;
 
-        elif tipo_acao == "gastar":
-            v = float(partes[1])
-            st.warning(f"💸 Gasto de R$ {v:.2f} descontado do seu Saldo Livre em Conta.")
+            // Guia Onde Investir
+            const box = document.getElementById('recomencacaoBox');
+            if (dados.saldo_conta > 100) {
+                const excesso = (dados.saldo_conta - 100).toFixed(2);
+                box.innerHTML = `
+                    <div class="alert-card" style="border-color: var(--accent-green);">
+                        <h4 style="color: var(--accent-green);">🎯 HORA DE INVESTIR!</h4>
+                        <p>Você tem R$ ${dados.saldo_conta.toFixed(2)} livres. Como sua reserva do mês é R$ 100,00:</p>
+                        <br>
+                        <p style="color: var(--accent-blue); font-weight: 700;">👉 Transfira R$ ${excesso} para a Caixinha Futuro (100% CDI) no Nubank.</p>
+                    </div>
+                `;
+            } else {
+                box.innerHTML = `
+                    <div class="alert-card" style="border-color: var(--accent-blue);">
+                        <h4 style="color: var(--accent-blue);">✅ CONTA EQUILIBRADA</h4>
+                        <p>Seus R$ 100,00 estão garantidos para os gastos do mês. O restante já está rendendo nas Caixinhas!</p>
+                    </div>
+                `;
+            }
 
-# ABA 2: GUIA DE INVESTIMENTO DINÂMICO
-with aba_guia:
-    st.subheader("🤖 Recomendação de Aporte")
+            // Extrato
+            const hist = document.getElementById('historicoLista');
+            hist.innerHTML = '';
+            dados.transacoes.slice().reverse().forEach(t => {
+                hist.innerHTML += `
+                    <div class="history-item">
+                        <div>
+                            <div class="history-type">${t.tipo} - ${t.cat}</div>
+                            <div class="history-date">${t.data}</div>
+                        </div>
+                        <div class="history-val" style="color: ${t.tipo === 'Entrada' || t.tipo === 'Resgate' ? '#10B981' : '#F43F5E'}">
+                            ${t.tipo === 'Entrada' || t.tipo === 'Resgate' ? '+' : '-'} R$ ${t.valor.toFixed(2)}
+                        </div>
+                    </div>
+                `;
+            });
 
-    if dados["saldo_conta"] > 100.00:
-        excesso = dados["saldo_conta"] - 100.00
-        st.markdown(
-            f"""
-            <div style="background-color: #0F172A; padding: 20px; border-radius: 18px; border: 2px solid #10B981;">
-                <h4 style="color: #10B981; margin:0; font-weight: 800;">🎯 HORA DE APORTAR!</h4>
-                <p style="color: #E2E8F0; font-size: 14px; margin-top: 8px;">
-                    Seu saldo livre está em <b>R$ {dados['saldo_conta']:.2f}</b>. Como sua reserva do mês é de R$ 100,00, invista a diferença!
-                </p>
-                <hr style="border-color: #1E293B; margin: 12px 0;">
-                <p style="color: #38BDF8; font-size: 15px; font-weight: 700; margin: 0;">
-                    👉 Transfira R$ {excesso:.2f} para a Caixinha "Futuro" (100% CDI) no app do Nubank.
-                </p>
-            </div>
-        """,
-            unsafe_allow_html=True,
-        )
-    elif dados["saldo_conta"] == 100.00:
-        st.markdown(
-            """
-            <div style="background-color: #0F172A; padding: 20px; border-radius: 18px; border: 2px solid #38BDF8;">
-                <h4 style="color: #38BDF8; margin:0; font-weight: 800;">✅ CONTA BALANCEADA!</h4>
-                <p style="color: #E2E8F0; font-size: 14px; margin-top: 8px;">
-                    Seus R$ 100,00 estão garantidos no Saldo Livre para seus gastos do mês.
-                </p>
-                <hr style="border-color: #1E293B; margin: 12px 0;">
-                <p style="color: #94A3B8; font-size: 13px; margin: 0;">
-                    Todo o restante do seu patrimônio já está rendendo 100% do CDI nas Caixinhas.
-                </p>
-            </div>
-        """,
-            unsafe_allow_html=True,
-        )
-    else:
-        st.warning(
-            f"Seu saldo livre está em R$ {dados['saldo_conta']:.2f}. Complete para R$ 100,00 na próxima entrada!"
-        )
+            // Projeção
+            const projList = document.getElementById('projecaoLista');
+            projList.innerHTML = '';
+            let ac = patrimonioTotal;
+            for (let ano = 2026; ano <= 2032; ano++) {
+                if (ano > 2026) ac = (ac + (600 * 12)) * 1.095;
+                const p = Math.min((ac / 62000) * 100, 100);
+                projList.innerHTML += `
+                    <div style="background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; margin-bottom: 8px;">
+                        <div style="display:flex; justify-content:space-between; font-size:13px; font-weight:700; margin-bottom:6px;">
+                            <span>Ano ${ano}</span>
+                            <span style="color: var(--accent-green);">R$ ${ac.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.08); height:6px; border-radius:3px;">
+                            <div style="background: var(--accent-purple); width:${p}%; height:100%; border-radius:3px;"></div>
+                        </div>
+                    </div>
+                `;
+            }
+        }
 
-    st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("### 📌 Estrutura do Seu Plano:")
-    st.write("• **Saldo em Conta:** Manter R$ 100,00 para lanches e saídas do mês.")
-    st.write(
-        "• **Caixinha 'Futuro' (100% CDI):** Guardar todas as mesadas e valores acumulados."
-    )
-    if dados["caixinha_sonho"] > 0:
-        st.write(
-            "• **Caixinha 'Sonho' (RDB):** Manter até Novembro/2026 e consolidar tudo na Caixinha Futuro no vencimento."
-        )
+        function trocarAba(nomeAba, el) {
+            document.querySelectorAll('.view-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            document.getElementById(`view${nomeAba}`).classList.add('active');
+            el.classList.add('active');
+        }
 
-# ABA 3: EXTRATO COMPLETO
-with aba_extrato:
-    st.subheader("Histórico do Seu Dinheiro")
-    if len(dados["transacoes"]) > 0:
-        df = pd.DataFrame(dados["transacoes"])
-        st.dataframe(df, use_container_width=True, hide_index=True)
+        function atualizarFormulario() {
+            const op = document.getElementById('selectOperacao').value;
+            const group = document.getElementById('groupCaixinha');
+            group.style.display = (op === 'guardar' || op === 'resgatar') ? 'block' : 'none';
+        }
 
-# ABA 4: PROJEÇÃO LIMPA
-with aba_projecao:
-    st.subheader("📈 Projeção do Patrimônio")
-    st.caption("Simulação baseada nos aportes de R$ 600/mês + 100% do CDI acumulado")
+        function processarOperacao() {
+            const op = document.getElementById('selectOperacao').value;
+            const val = parseFloat(document.getElementById('inputValor').value);
+            const desc = document.getElementById('inputDescricao').value || 'Movimentação';
+            const cx = document.getElementById('selectCaixinha').value;
+            const hoje = new Date().toISOString().split('T')[0];
+            const feedback = document.getElementById('feedbackContainer');
 
-    anos = [2026, 2027, 2028, 2029, 2030, 2031, 2032]
-    valores = [patrimonio_total]
-    acumulado = patrimonio_total
+            if (isNaN(val) || val <= 0) return alert('Digite um valor válido');
 
-    for idx in range(1, len(anos)):
-        acumulado = (acumulado + (600 * 12)) * 1.095
-        valores.append(acumulado)
+            if (op === 'receber') {
+                dados.saldo_conta += val;
+                dados.transacoes.push({ data: hoje, tipo: 'Entrada', valor: val, cat: desc });
+                confetti({ particleCount: 80, spread: 60, origin: { y: 0.8 } });
+                feedback.innerHTML = `
+                    <div class="alert-card" style="border-color: var(--accent-green);">
+                        <h4 style="color: var(--accent-green);">🎉 VALOR RECEBIDO!</h4>
+                        <p>👉 Vá no Nubank e guarde o excedente dos R$ 100 na Caixinha Futuro!</p>
+                    </div>
+                `;
+            } else if (op === 'guardar') {
+                if (val > dados.saldo_conta) return alert('Saldo Livre insuficiente!');
+                dados.saldo_conta -= val;
+                if (cx === 'futuro') dados.caixinha_futuro += val;
+                else dados.caixinha_sonho += val;
+                dados.transacoes.push({ data: hoje, tipo: 'Aporte', valor: val, cat: `Caixinha ${cx}` });
+                feedback.innerHTML = `
+                    <div class="alert-card" style="border-color: var(--accent-purple);">
+                        <h4 style="color: var(--accent-purple);">🔒 APORTE REGISTRADO!</h4>
+                        <p>👉 Abra o Nubank e mova R$ ${val.toFixed(2)} para a Caixinha selecionada.</p>
+                    </div>
+                `;
+            } else if (op === 'resgatar') {
+                let disp = cx === 'futuro' ? dados.caixinha_futuro : dados.caixinha_sonho;
+                if (val > disp) return alert('Saldo indisponível nesta Caixinha!');
+                if (cx === 'futuro') dados.caixinha_futuro -= val;
+                else dados.caixinha_sonho -= val;
+                dados.saldo_conta += val;
+                dados.transacoes.push({ data: hoje, tipo: 'Resgate', valor: val, cat: `Caixinha ${cx}` });
+                feedback.innerHTML = `
+                    <div class="alert-card" style="border-color: var(--accent-gold);">
+                        <h4 style="color: var(--accent-gold);">🔓 RESGATE REGISTRADO!</h4>
+                        <p>👉 Vá no Nubank e resgate R$ ${val.toFixed(2)} da Caixinha para sua Conta.</p>
+                    </div>
+                `;
+            } else if (op === 'gastar') {
+                dados.saldo_conta -= val;
+                dados.transacoes.push({ data: hoje, tipo: 'Saída', valor: val, cat: desc });
+                feedback.innerHTML = `
+                    <div class="alert-card" style="border-color: #F43F5E;">
+                        <h4 style="color: #F43F5E;">💸 GASTO REGISTRADO</h4>
+                        <p>R$ ${val.toFixed(2)} descontados do seu Saldo Livre.</p>
+                    </div>
+                `;
+            }
 
-    for ano, val in zip(anos, valores):
-        pct = min(val / 62000.0, 1.0)
-        st.markdown(
-            f"""
-            <div style="background-color: #0F172A; padding: 12px 16px; border-radius: 12px; margin-bottom: 8px; border: 1px solid #1E293B;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
-                    <span style="color: #94A3B8; font-weight: 700;">Ano {ano}</span>
-                    <span style="color: #10B981; font-weight: 800;">R$ {val:,.2f}</span>
-                </div>
-                <div style="background-color: #1E293B; height: 6px; border-radius: 3px; overflow: hidden;">
-                    <div style="background-color: #8B5CF6; width: {pct * 100}%; height: 100%;"></div>
-                </div>
-            </div>
-        """,
-            unsafe_allow_html=True,
-        )
+            salvarDados();
+        }
 
-    st.success(f"🚀 **Estimativa Final aos 18 Anos (2032):** ~R$ {valores[-1]:,.2f}")
-    
+        // Inicialização
+        renderizarApp();
+    </script>
+</body>
+</html>
