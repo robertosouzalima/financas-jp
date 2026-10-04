@@ -15,7 +15,7 @@ if "modo_pais" not in st.session_state:
     st.session_state["modo_pais"] = False
 
 # ==========================================
-# 2. SISTEMA DE CORES BLINDADO (CLARO / ESCURO)
+# 2. SISTEMA DE CORES (CLARO / ESCURO)
 # ==========================================
 temas = {
     "Escuro": {
@@ -31,7 +31,6 @@ temas = {
 }
 t = temas[st.session_state["tema"]]
 
-# O CSS abaixo blinda o app contra o modo claro/escuro forçado do sistema do celular
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
@@ -51,17 +50,17 @@ st.markdown(f"""
         z-index: 999999 !important; background: {t['glass']} !important; backdrop-filter: blur(20px) !important;
         -webkit-backdrop-filter: blur(20px) !important; border: 1px solid {t['border']} !important;
         border-radius: 40px !important; padding: 6px !important; box-shadow: 0 10px 30px rgba(0,0,0,0.15) !important;
-        display: flex !important; width: 92% !important; max-width: 400px !important; gap: 4px !important;
+        display: flex !important; width: 92% !important; max-width: 420px !important; gap: 4px !important;
     }}
     [data-baseweb="tab-border"], [data-baseweb="tab-highlight"] {{ display: none !important; }}
     [data-baseweb="tab"] {{
         background: transparent !important; border-radius: 30px !important; color: {t['glass_text']} !important;
-        font-weight: 700 !important; font-size: 11px !important; padding: 12px 0px !important;
+        font-weight: 700 !important; font-size: 10px !important; padding: 12px 0px !important;
         border: none !important; margin: 0 !important; flex: 1 !important; text-align: center !important; transition: 0.2s !important;
     }}
     [aria-selected="true"] {{ background: {t['glass_active_bg']} !important; color: {t['glass_active']} !important; }}
 
-    /* CARDS FINANCEIROS (FLAT & CLEAN) */
+    /* CARDS FINANCEIROS */
     .fin-card {{
         background: {t['card']}; border: 1px solid {t['border']}; border-radius: 16px; padding: 16px; margin-bottom: 12px;
     }}
@@ -73,7 +72,7 @@ st.markdown(f"""
     .c-gold {{ border-left: 4px solid #F59E0B; }}
     .c-green {{ border-left: 4px solid #10B981; }}
 
-    /* LISTA DE EXTRATO NATIVA */
+    /* LISTA DE EXTRATO */
     .list-row {{
         display: flex; justify-content: space-between; align-items: center; background: {t['card']};
         border: 1px solid {t['border']}; border-radius: 12px; padding: 14px; margin-bottom: 8px;
@@ -98,7 +97,7 @@ st.markdown(f"""
 # ==========================================
 ARQUIVO_DADOS = "dados_financas.json"
 DADOS_INICIAIS = {
-    "nome_filho": "Filho", 
+    "nome_filho": "Meu Perfil", 
     "saldo_conta": 100.00, 
     "caixinha_futuro": 966.55, 
     "caixinha_sonho": 971.85,
@@ -120,35 +119,37 @@ def salvar_dados(dados):
 
 dados = carregar_dados()
 
-# Garantia de chaves antigas
 if "transacoes" not in dados: dados["transacoes"] = []
-if "nome_filho" not in dados: dados["nome_filho"] = "Filho"
+if "nome_filho" not in dados: dados["nome_filho"] = "Meu Perfil"
 
 patrimonio_total = dados["saldo_conta"] + dados["caixinha_futuro"] + dados["caixinha_sonho"]
 
 # ==========================================
-# 4. MENU TOPO: CONFIGURAÇÕES & PAIS
+# 4. MENU TOPO: AJUSTES E CONTROLE PARENTAL PRIVADO
 # ==========================================
 col_titulo, col_config = st.columns([3, 1])
 with col_titulo:
+    # Nome privado e protegido no estado da sessão
     st.markdown(f"<h2 style='margin:0; font-weight:800; font-size:20px;'>🏦 Finanças 18</h2>", unsafe_allow_html=True)
     if st.session_state["modo_pais"]:
-        st.markdown(f"<span style='background:#3B82F6; color:#FFF; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700;'>👀 SUPERVISÃO DE {dados['nome_filho'].upper()}</span>", unsafe_allow_html=True)
+        st.markdown(f"<span style='background:#3B82F6; color:#FFF; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700;'>👀 SUPERVISÃO ATIVA ({dados['nome_filho']})</span>", unsafe_allow_html=True)
+    else:
+        st.markdown(f"<span style='color:#A1A1AA; font-size:12px;'>Conta Privada • {dados['nome_filho']}</span>", unsafe_allow_html=True)
 
 with col_config:
     with st.popover("⚙️ Ajustes"):
         st.markdown("**Tema Visual**")
-        novo_tema = st.radio("Escolha o tema:", ["Escuro", "Claro"], index=0 if st.session_state["tema"] == "Escuro" else 1, label_visibility="collapsed")
+        novo_tema = st.radio("Tema:", ["Escuro", "Claro"], index=0 if st.session_state["tema"] == "Escuro" else 1, label_visibility="collapsed")
         if novo_tema != st.session_state["tema"]:
             st.session_state["tema"] = novo_tema
             st.rerun()
             
         st.divider()
-        st.markdown(f"**Acesso dos Pais ({dados['nome_filho']})**")
+        st.markdown("**Acesso dos Pais**")
         
         if not st.session_state["modo_pais"]:
-            senha = st.text_input("Código (PIN):", type="password")
-            if st.button(f"Entrar na conta de {dados['nome_filho']}"):
+            senha = st.text_input("PIN Parental:", type="password", placeholder="Digite 0506")
+            if st.button("Acessar Visão Pais"):
                 if senha == "0506":
                     st.session_state["modo_pais"] = True
                     st.rerun()
@@ -159,44 +160,37 @@ with col_config:
                 st.session_state["modo_pais"] = False
                 st.rerun()
 
-        # Botões de Administração
-        if not st.session_state["modo_pais"]:
-            st.divider()
-            st.markdown("**Administração**")
-            novo_nome = st.text_input("Seu Nome:", value=dados["nome_filho"])
-            if st.button("Salvar Nome"):
-                dados["nome_filho"] = novo_nome
-                salvar_dados(dados)
-                st.success("Nome atualizado!")
-                time.sleep(0.5)
-                st.rerun()
+        st.divider()
+        st.markdown("**Configurações da Conta**")
+        nome_input = st.text_input("Nome da Conta:", value=dados["nome_filho"])
+        if st.button("Salvar Nome"):
+            dados["nome_filho"] = nome_input
+            salvar_dados(dados)
+            st.success("Nome salvo com privacidade!")
+            time.sleep(0.5)
+            st.rerun()
 
-            if st.button("🔄 Atualizar App"):
-                st.rerun()
+        if st.button("🔄 Atualizar Dados"):
+            st.rerun()
 
-            if st.button("⚠️ Reiniciar Tudo"):
-                salvar_dados(DADOS_INICIAIS)
-                st.rerun()
+        if st.button("⚠️ Reiniciar Tudo (Reset)"):
+            salvar_dados(DADOS_INICIAIS)
+            st.rerun()
 
 st.markdown("<div style='margin-bottom:15px;'></div>", unsafe_allow_html=True)
 
 # ==========================================
-# 5. ABAS DA BARRA FLUTUANTE
+# 5. ABAS DA BARRA FLUTUANTE (5 ABAS PROFISSIONAIS)
 # ==========================================
 if st.session_state["modo_pais"]:
-    # Se os pais estão logados, exibe apenas Painel, Extrato e Projeção + Botão de Atualizar rápido
-    aba_painel, aba_extrato, aba_projecao = st.tabs(["Painel", "Extrato", "Projeção"])
+    aba_painel, aba_investir, aba_extrato, aba_projecao = st.tabs(["Painel", "Estratégia", "Extrato", "Projeção"])
 else:
-    aba_painel, aba_lancar, aba_extrato, aba_projecao = st.tabs(["Painel", "Lançar", "Extrato", "Projeção"])
+    aba_painel, aba_lancar, aba_investir, aba_extrato, aba_projecao = st.tabs(["Painel", "Lançar", "Investir", "Extrato", "Projeção"])
 
 # ------------------------------------------
 # ABA 1: PAINEL DE CONTROLE
 # ------------------------------------------
 with aba_painel:
-    if st.session_state["modo_pais"]:
-        if st.button("🔄 Puxar dados mais recentes"):
-            st.rerun()
-            
     c1, c2 = st.columns(2)
     with c1: st.markdown(f"""<div class="fin-card c-blue"><div class="c-title">💳 Saldo Livre</div><div class="c-val">R$ {dados['saldo_conta']:.2f}</div></div>""", unsafe_allow_html=True)
     with c2: st.markdown(f"""<div class="fin-card c-green"><div class="c-title">🌟 Patrimônio</div><div class="c-val">R$ {patrimonio_total:.2f}</div></div>""", unsafe_allow_html=True)
@@ -284,7 +278,50 @@ if not st.session_state["modo_pais"]:
             st.rerun()
 
 # ------------------------------------------
-# ABA 3: EXTRATO (CORES NEUTRAS, POSITIVAS E NEGATIVAS)
+# ABA 3: SUGESTÕES DE INVESTIMENTO AVANÇADAS
+# ------------------------------------------
+with aba_investir:
+    st.markdown("### 💡 Sugestões de Investimento")
+    st.caption("Estratégias inteligentes recomendadas para o seu perfil e idade.")
+
+    # Diagnóstico automático do saldo livre
+    if dados["saldo_conta"] > 100.00:
+        excesso = dados["saldo_conta"] - 100.00
+        st.markdown(f"""
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid #10B981; padding: 14px; border-radius: 12px; margin-bottom: 15px;">
+            <strong style="color: #10B981;">🚀 Ação de Otimização Detectada:</strong><br>
+            Você tem <b>R$ {dados['saldo_conta']:.2f}</b> na conta. Mantendo sua base de R$ 100,00, sugerimos alocar imediatamente <b>R$ {excesso:.2f}</b>.
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("""
+    <div class="fin-card">
+        <h4 style="margin:0 0 8px 0; font-size:15px; color:#3B82F6;">1. Reserva de Liquidez Diária (100% CDI)</h4>
+        <p style="font-size:12px; color:#A1A1AA; margin:0;">
+            <b>Onde colocar:</b> Caixinha de Resgate Diário do Nubank.<br>
+            <b>Por que:</b> Seu dinheiro rende todos os dias úteis, sem risco de oscilação, e você pode sacar na hora se precisar. Ideal para o seu saldo principal.
+        </p>
+    </div>
+
+    <div class="fin-card">
+        <h4 style="margin:0 0 8px 0; font-size:15px; color:#8B5CF6;">2. Renda Fixa de Médio Prazo (RDB / CDB)</h4>
+        <p style="font-size:12px; color:#A1A1AA; margin:0;">
+            <b>Onde colocar:</b> Caixinhas com prazos definidos (como sua Caixinha Sonho).<br>
+            <b>Por que:</b> Oferecem taxas de juros travadas acima da média do mercado (muitas vezes pagando mais de 100% do CDI) em troca de manter o dinheiro investido até o vencimento.
+        </p>
+    </div>
+
+    <div class="fin-card">
+        <h4 style="margin:0 0 8px 0; font-size:15px; color:#F59E0B;">3. Proteção contra a Inflação (Tesouro IPCA+)</h4>
+        <p style="font-size:12px; color:#A1A1AA; margin:0;">
+            <b>Onde colocar:</b> Tesouro Direto (via corretora ou app autorizado).<br>
+            <b>Por que:</b> Rende a inflação oficial do país + uma taxa fixa garantida. É excelente para garantir que o seu poder de compra não diminua até você completar 18 anos.
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
+
+# ------------------------------------------
+# ABA 4: EXTRATO
 # ------------------------------------------
 with aba_extrato:
     st.markdown("### Extrato")
@@ -310,7 +347,7 @@ with aba_extrato:
         st.write("Nenhuma movimentação.")
 
 # ------------------------------------------
-# ABA 4: PROJEÇÃO (GRÁFICO TRAVADO)
+# ABA 5: PROJEÇÃO
 # ------------------------------------------
 with aba_projecao:
     st.markdown("### Projeção 18 Anos")
