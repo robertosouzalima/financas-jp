@@ -15,7 +15,7 @@ if "modo_pais" not in st.session_state:
     st.session_state["modo_pais"] = False
 
 # ==========================================
-# 2. SISTEMA DE CORES (CLARO / ESCURO)
+# 2. SISTEMA DE CORES BLINDADO (CLARO / ESCURO)
 # ==========================================
 temas = {
     "Escuro": {
@@ -31,13 +31,19 @@ temas = {
 }
 t = temas[st.session_state["tema"]]
 
+# O CSS abaixo blinda o app contra o modo claro/escuro forçado do sistema do celular
 st.markdown(f"""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
     
-    html, body, [class*="css"] {{ font-family: 'Inter', sans-serif !important; background-color: {t['bg']} !important; color: {t['text']} !important; }}
+    html, body, [data-testid="stAppViewContainer"], .stApp {{ 
+        font-family: 'Inter', sans-serif !important; 
+        background-color: {t['bg']} !important; 
+        color: {t['text']} !important; 
+    }}
+    
     header, #MainMenu, footer, .stDeployButton {{ visibility: hidden !important; display: none !important; }}
-    .block-container {{ padding: 1rem 1rem 6.5rem 1rem !important; }}
+    .block-container {{ padding: 1rem 1rem 7.5rem 1rem !important; }}
 
     /* BARRA FLUTUANTE (LIQUID GLASS) */
     [data-baseweb="tab-list"] {{
@@ -75,10 +81,9 @@ st.markdown(f"""
     .list-title {{ font-size: 14px; font-weight: 700; color: {t['text']}; }}
     .list-sub {{ font-size: 11px; color: {t['sub']}; margin-top: 4px; }}
     
-    /* Cores dos Valores do Extrato */
-    .val-pos {{ font-size: 15px; font-weight: 800; color: #10B981; }} /* Verde (Entrada/Rendimento) */
-    .val-neg {{ font-size: 15px; font-weight: 800; color: #EF4444; }} /* Vermelho (Gasto) */
-    .val-neu {{ font-size: 15px; font-weight: 800; color: #3B82F6; }} /* Azul (Aporte/Resgate - Neutro) */
+    .val-pos {{ font-size: 15px; font-weight: 800; color: #10B981; }}
+    .val-neg {{ font-size: 15px; font-weight: 800; color: #EF4444; }}
+    .val-neu {{ font-size: 15px; font-weight: 800; color: #3B82F6; }}
 
     .stButton>button {{
         width: 100%; border-radius: 12px; height: 50px; font-weight: 700; font-size: 15px;
@@ -89,11 +94,14 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ==========================================
-# 3. DADOS
+# 3. GERENCIADOR DE DADOS
 # ==========================================
 ARQUIVO_DADOS = "dados_financas.json"
 DADOS_INICIAIS = {
-    "saldo_conta": 100.00, "caixinha_futuro": 966.55, "caixinha_sonho": 971.85,
+    "nome_filho": "Filho", 
+    "saldo_conta": 100.00, 
+    "caixinha_futuro": 966.55, 
+    "caixinha_sonho": 971.85,
     "transacoes": [
         {"Data": "03/10/2026", "Tipo": "Aporte", "Origem": "Sistema", "Valor": 966.55, "Categoria": "Saldo Inicial", "Conta": "Caixinha Futuro"},
         {"Data": "03/10/2026", "Tipo": "Aporte", "Origem": "Sistema", "Valor": 971.85, "Categoria": "Saldo Inicial", "Conta": "Caixinha Sonho"}
@@ -111,17 +119,21 @@ def salvar_dados(dados):
     with open(ARQUIVO_DADOS, "w", encoding="utf-8") as f: json.dump(dados, f, indent=4, ensure_ascii=False)
 
 dados = carregar_dados()
+
+# Garantia de chaves antigas
 if "transacoes" not in dados: dados["transacoes"] = []
+if "nome_filho" not in dados: dados["nome_filho"] = "Filho"
+
 patrimonio_total = dados["saldo_conta"] + dados["caixinha_futuro"] + dados["caixinha_sonho"]
 
 # ==========================================
-# 4. MENU TOPO: CONFIGURAÇÕES & MODO PAIS
+# 4. MENU TOPO: CONFIGURAÇÕES & PAIS
 # ==========================================
 col_titulo, col_config = st.columns([3, 1])
 with col_titulo:
     st.markdown(f"<h2 style='margin:0; font-weight:800; font-size:20px;'>🏦 Finanças 18</h2>", unsafe_allow_html=True)
     if st.session_state["modo_pais"]:
-        st.markdown(f"<span style='background:#3B82F6; color:#FFF; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700;'>👀 MODO SUPERVISÃO (PAIS)</span>", unsafe_allow_html=True)
+        st.markdown(f"<span style='background:#3B82F6; color:#FFF; padding:2px 8px; border-radius:10px; font-size:10px; font-weight:700;'>👀 SUPERVISÃO DE {dados['nome_filho'].upper()}</span>", unsafe_allow_html=True)
 
 with col_config:
     with st.popover("⚙️ Ajustes"):
@@ -132,18 +144,38 @@ with col_config:
             st.rerun()
             
         st.divider()
-        st.markdown("**Acesso dos Pais**")
+        st.markdown(f"**Acesso dos Pais ({dados['nome_filho']})**")
+        
         if not st.session_state["modo_pais"]:
-            senha = st.text_input("Código de Acesso:", type="password")
-            if st.button("Entrar"):
-                if senha == "1234":
+            senha = st.text_input("Código (PIN):", type="password")
+            if st.button(f"Entrar na conta de {dados['nome_filho']}"):
+                if senha == "0506":
                     st.session_state["modo_pais"] = True
                     st.rerun()
                 else:
-                    st.error("Código incorreto.")
+                    st.error("PIN incorreto.")
         else:
             if st.button("Sair do Modo Pais"):
                 st.session_state["modo_pais"] = False
+                st.rerun()
+
+        # Botões de Administração
+        if not st.session_state["modo_pais"]:
+            st.divider()
+            st.markdown("**Administração**")
+            novo_nome = st.text_input("Seu Nome:", value=dados["nome_filho"])
+            if st.button("Salvar Nome"):
+                dados["nome_filho"] = novo_nome
+                salvar_dados(dados)
+                st.success("Nome atualizado!")
+                time.sleep(0.5)
+                st.rerun()
+
+            if st.button("🔄 Atualizar App"):
+                st.rerun()
+
+            if st.button("⚠️ Reiniciar Tudo"):
+                salvar_dados(DADOS_INICIAIS)
                 st.rerun()
 
 st.markdown("<div style='margin-bottom:15px;'></div>", unsafe_allow_html=True)
@@ -152,6 +184,7 @@ st.markdown("<div style='margin-bottom:15px;'></div>", unsafe_allow_html=True)
 # 5. ABAS DA BARRA FLUTUANTE
 # ==========================================
 if st.session_state["modo_pais"]:
+    # Se os pais estão logados, exibe apenas Painel, Extrato e Projeção + Botão de Atualizar rápido
     aba_painel, aba_extrato, aba_projecao = st.tabs(["Painel", "Extrato", "Projeção"])
 else:
     aba_painel, aba_lancar, aba_extrato, aba_projecao = st.tabs(["Painel", "Lançar", "Extrato", "Projeção"])
@@ -160,6 +193,10 @@ else:
 # ABA 1: PAINEL DE CONTROLE
 # ------------------------------------------
 with aba_painel:
+    if st.session_state["modo_pais"]:
+        if st.button("🔄 Puxar dados mais recentes"):
+            st.rerun()
+            
     c1, c2 = st.columns(2)
     with c1: st.markdown(f"""<div class="fin-card c-blue"><div class="c-title">💳 Saldo Livre</div><div class="c-val">R$ {dados['saldo_conta']:.2f}</div></div>""", unsafe_allow_html=True)
     with c2: st.markdown(f"""<div class="fin-card c-green"><div class="c-title">🌟 Patrimônio</div><div class="c-val">R$ {patrimonio_total:.2f}</div></div>""", unsafe_allow_html=True)
@@ -175,7 +212,7 @@ with aba_painel:
     st.progress(progresso)
 
 # ------------------------------------------
-# ABA 2: LANÇAR
+# ABA 2: LANÇAR (Oculta para os Pais)
 # ------------------------------------------
 if not st.session_state["modo_pais"]:
     with aba_lancar:
@@ -247,19 +284,18 @@ if not st.session_state["modo_pais"]:
             st.rerun()
 
 # ------------------------------------------
-# ABA 3: EXTRATO (COM CORES CORRIGIDAS)
+# ABA 3: EXTRATO (CORES NEUTRAS, POSITIVAS E NEGATIVAS)
 # ------------------------------------------
 with aba_extrato:
     st.markdown("### Extrato")
     if len(dados["transacoes"]) > 0:
         for t in reversed(dados["transacoes"]):
-            # Lógica de Cores Inteligente
             if t["Tipo"] in ["Entrada", "Rendimento"]:
                 css_val, sinal = "val-pos", "+"
             elif t["Tipo"] == "Saída":
                 css_val, sinal = "val-neg", "-"
-            else: # Aporte e Resgate são transferências internas
-                css_val, sinal = "val-neu", "" 
+            else: 
+                css_val, sinal = "val-neu", ""
             
             st.markdown(f"""
             <div class="list-row">
@@ -274,7 +310,7 @@ with aba_extrato:
         st.write("Nenhuma movimentação.")
 
 # ------------------------------------------
-# ABA 4: PROJEÇÃO (GRÁFICO DE BARRAS TRAVADO)
+# ABA 4: PROJEÇÃO (GRÁFICO TRAVADO)
 # ------------------------------------------
 with aba_projecao:
     st.markdown("### Projeção 18 Anos")
@@ -287,15 +323,12 @@ with aba_projecao:
         atual = (atual + (600 * 12)) * 1.095
         valores.append(atual)
 
-    # 1. Ajuste do Eixo X (Ano como texto) e Arredondamento do Valor
     anos_str = [str(a) for a in anos]
     valores_limpos = [round(v, 2) for v in valores]
     
-    # 2. Uso do Bar Chart (Muito mais estável em celulares)
     df_grafico = pd.DataFrame({"Ano": anos_str, "Patrimônio": valores_limpos})
     st.bar_chart(df_grafico.set_index("Ano"))
 
-    # Tabela Simples
     df_tabela = df_grafico.copy()
     df_tabela["Patrimônio"] = df_tabela["Patrimônio"].apply(lambda x: f"R$ {x:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
     st.dataframe(df_tabela, use_container_width=True, hide_index=True)
