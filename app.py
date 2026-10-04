@@ -62,7 +62,6 @@ st.markdown(f"""
     .c-title {{ font-size: 11px; color: {t['sub']}; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }}
     .c-val {{ font-size: 24px; color: {t['text']}; font-weight: 800; margin-top: 4px; }}
     
-    /* CORES SÓLIDAS SIMPLES */
     .c-blue {{ border-left: 4px solid #3B82F6; }}
     .c-purple {{ border-left: 4px solid #8B5CF6; }}
     .c-gold {{ border-left: 4px solid #F59E0B; }}
@@ -75,10 +74,12 @@ st.markdown(f"""
     }}
     .list-title {{ font-size: 14px; font-weight: 700; color: {t['text']}; }}
     .list-sub {{ font-size: 11px; color: {t['sub']}; margin-top: 4px; }}
-    .val-pos {{ font-size: 15px; font-weight: 800; color: #10B981; }}
-    .val-neg {{ font-size: 15px; font-weight: 800; color: #EF4444; }}
+    
+    /* Cores dos Valores do Extrato */
+    .val-pos {{ font-size: 15px; font-weight: 800; color: #10B981; }} /* Verde (Entrada/Rendimento) */
+    .val-neg {{ font-size: 15px; font-weight: 800; color: #EF4444; }} /* Vermelho (Gasto) */
+    .val-neu {{ font-size: 15px; font-weight: 800; color: #3B82F6; }} /* Azul (Aporte/Resgate - Neutro) */
 
-    /* BOTÃO PRINCIPAL */
     .stButton>button {{
         width: 100%; border-radius: 12px; height: 50px; font-weight: 700; font-size: 15px;
         background: #111827; color: #FFFFFF; border: none; transition: 0.2s;
@@ -174,7 +175,7 @@ with aba_painel:
     st.progress(progresso)
 
 # ------------------------------------------
-# ABA 2: LANÇAR (Oculta para os Pais)
+# ABA 2: LANÇAR
 # ------------------------------------------
 if not st.session_state["modo_pais"]:
     with aba_lancar:
@@ -198,10 +199,9 @@ if not st.session_state["modo_pais"]:
                 caixinha_alvo = None
             else: caixinha_alvo = st.selectbox("De qual Caixinha?", opcoes_resgate)
 
-        # O rendimento geralmente quebra em centavos, então o step vira R$ 0.10 para facilitar
         passo_valor = 0.10 if opcao == "📈 Registrar Rendimento (Juros)" else 5.00
         valor = st.number_input("Valor (R$):", min_value=0.01, step=passo_valor, value=50.00)
-        desc = st.text_input("Descrição:", placeholder="Ex: Rendimento do mês, Mesada, Uber...")
+        desc = st.text_input("Descrição:", placeholder="Ex: Rendimento, Mesada, Lanche...")
 
         if st.button("Confirmar Lançamento"):
             data = str(pd.Timestamp.now().strftime("%d/%m/%Y"))
@@ -235,7 +235,7 @@ if not st.session_state["modo_pais"]:
                 if caixinha_alvo == "Futuro": dados["caixinha_futuro"] += valor
                 else: dados["caixinha_sonho"] += valor
                 dados["transacoes"].append({"Data": data, "Tipo": "Rendimento", "Valor": valor, "Categoria": desc or "Rendimento CDI", "Conta": f"C. {caixinha_alvo}"})
-                st.success(f"Juros registrados na Caixinha {caixinha_alvo}! 🚀")
+                st.success(f"Juros registrados na Caixinha {caixinha_alvo}!")
                 
             elif opcao == "💸 Gastei Dinheiro":
                 dados["saldo_conta"] -= valor
@@ -247,15 +247,19 @@ if not st.session_state["modo_pais"]:
             st.rerun()
 
 # ------------------------------------------
-# ABA 3: EXTRATO
+# ABA 3: EXTRATO (COM CORES CORRIGIDAS)
 # ------------------------------------------
 with aba_extrato:
     st.markdown("### Extrato")
     if len(dados["transacoes"]) > 0:
         for t in reversed(dados["transacoes"]):
-            # Rendimentos, Entradas e Resgates ficam verde (+). Saídas ficam vermelho (-).
-            if t["Tipo"] in ["Entrada", "Resgate", "Rendimento"]: css_val, sinal = "val-pos", "+"
-            else: css_val, sinal = "val-neg", "-"
+            # Lógica de Cores Inteligente
+            if t["Tipo"] in ["Entrada", "Rendimento"]:
+                css_val, sinal = "val-pos", "+"
+            elif t["Tipo"] == "Saída":
+                css_val, sinal = "val-neg", "-"
+            else: # Aporte e Resgate são transferências internas
+                css_val, sinal = "val-neu", "" 
             
             st.markdown(f"""
             <div class="list-row">
@@ -270,21 +274,26 @@ with aba_extrato:
         st.write("Nenhuma movimentação.")
 
 # ------------------------------------------
-# ABA 4: PROJEÇÃO
+# ABA 4: PROJEÇÃO (GRÁFICO DE BARRAS TRAVADO)
 # ------------------------------------------
 with aba_projecao:
     st.markdown("### Projeção 18 Anos")
     st.caption("Aportes de R$ 600/mês + 100% CDI")
 
-    anos, valores = [2026, 2027, 2028, 2029, 2030, 2031, 2032], [patrimonio_total]
+    anos = [2026, 2027, 2028, 2029, 2030, 2031, 2032]
+    valores = [patrimonio_total]
     atual = patrimonio_total
     for i in range(1, len(anos)):
         atual = (atual + (600 * 12)) * 1.095
         valores.append(atual)
 
-    # Gráfico Nativo
-    df_grafico = pd.DataFrame({"Ano": anos, "Patrimônio": valores})
-    st.line_chart(df_grafico.set_index("Ano"))
+    # 1. Ajuste do Eixo X (Ano como texto) e Arredondamento do Valor
+    anos_str = [str(a) for a in anos]
+    valores_limpos = [round(v, 2) for v in valores]
+    
+    # 2. Uso do Bar Chart (Muito mais estável em celulares)
+    df_grafico = pd.DataFrame({"Ano": anos_str, "Patrimônio": valores_limpos})
+    st.bar_chart(df_grafico.set_index("Ano"))
 
     # Tabela Simples
     df_tabela = df_grafico.copy()
