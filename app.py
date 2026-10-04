@@ -5,42 +5,42 @@ import pandas as pd
 import streamlit as st
 
 # ==========================================
-# 1. CONFIGURAÇÃO BASE
+# 1. CONFIGURAÇÃO DA PÁGINA
 # ==========================================
 st.set_page_config(
-    page_title="Finanças 18",
+    page_title="Projeto 18 Anos",
     page_icon="💎",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
 # ==========================================
-# 2. INJEÇÃO DE CSS (O SEGREDO DO LIQUID GLASS)
+# 2. DESIGN PREMIUM & LIQUID GLASS BAR
 # ==========================================
 st.markdown(
     """
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
     html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', sans-serif !important;
-        background-color: #05070A !important; /* Fundo super escuro (Modo Noturno Real) */
+        font-family: 'Inter', sans-serif !important;
+        background-color: #0B0E14 !important;
         color: #F3F4F6;
     }
 
-    /* Oculta barras e menus do Streamlit */
+    /* Limpeza da Interface Padrão */
     header, #MainMenu, footer, .stDeployButton { visibility: hidden !important; display: none !important; }
 
-    /* Espaço extra no rodapé para a barra flutuante não tampar o conteúdo */
+    /* Espaçamento para o celular e para a barra flutuante */
     .block-container {
         padding-top: 1.5rem !important;
-        padding-bottom: 7rem !important; 
+        padding-bottom: 6.5rem !important; 
         padding-left: 1rem !important;
         padding-right: 1rem !important;
     }
 
     /* ========================================================
-       A MÁGICA: BARRA FLUTUANTE LIQUID GLASS NO RODAPÉ (iOS 18)
+       BARRA FLUTUANTE (LIQUID GLASS iOS 18)
        ======================================================== */
     [data-baseweb="tab-list"] {
         position: fixed !important;
@@ -48,55 +48,53 @@ st.markdown(
         left: 50% !important;
         transform: translateX(-50%) !important;
         z-index: 999999 !important;
-        background: rgba(30, 35, 45, 0.65) !important;
-        backdrop-filter: blur(25px) saturate(200%) !important;
-        -webkit-backdrop-filter: blur(25px) saturate(200%) !important;
-        border: 1px solid rgba(255, 255, 255, 0.15) !important;
+        background: rgba(20, 25, 35, 0.75) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+        -webkit-backdrop-filter: blur(20px) saturate(180%) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 40px !important;
         padding: 6px !important;
-        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255,255,255,0.2) !important;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6) !important;
         display: flex !important;
-        width: 90% !important;
-        max-width: 400px !important;
-        justify-content: space-between !important;
+        width: 95% !important;
+        max-width: 450px !important;
         gap: 2px !important;
     }
 
-    /* Remove linha e fundo feio do Streamlit nas abas */
     [data-baseweb="tab-border"], [data-baseweb="tab-highlight"] { display: none !important; }
 
-    /* Estilo de cada botão da barra */
+    /* Botões da Barra */
     [data-baseweb="tab"] {
         background: transparent !important;
         border-radius: 30px !important;
         color: #8B94A5 !important;
         font-weight: 700 !important;
-        font-size: 13px !important;
-        padding: 10px 14px !important;
+        font-size: 11px !important;
+        padding: 12px 4px !important;
         border: none !important;
-        transition: all 0.3s ease !important;
         margin: 0 !important;
         flex: 1 !important;
         text-align: center !important;
+        transition: all 0.2s ease !important;
     }
 
-    /* Aba Ativa (A pílula preta sólida dentro do vidro) */
+    /* Aba Ativa */
     [aria-selected="true"] {
-        background: rgba(0, 0, 0, 0.85) !important;
+        background: rgba(255, 255, 255, 0.12) !important;
         color: #FFFFFF !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2) !important;
     }
 
     /* ========================================================
-       CARDS NEUMÓRFICOS (ESTILO BANCO)
+       CARDS FINANCEIROS (COMUM, BONITO E ORGANIZADO)
        ======================================================== */
-    .premium-card {
-        background: linear-gradient(150deg, #131722 0%, #0B0D14 100%);
-        border: 1px solid rgba(255,255,255,0.06);
-        border-radius: 22px;
-        padding: 18px;
+    .fin-card {
+        background: linear-gradient(145deg, #151A22 0%, #0D1016 100%);
+        border: 1px solid #1E2532;
+        border-radius: 16px;
+        padding: 16px;
         margin-bottom: 12px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.3);
     }
     
     .c-blue { border-top: 3px solid #00D4FF; }
@@ -104,56 +102,23 @@ st.markdown(
     .c-gold { border-top: 3px solid #F59E0B; }
     .c-green { border-top: 3px solid #10B981; }
 
-    .c-label { font-size: 10px; color: #9CA3AF; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; }
-    .c-val { font-size: 26px; color: #FFFFFF; font-weight: 800; margin-top: 4px; letter-spacing: -0.5px; }
+    .c-title { font-size: 11px; color: #9CA3AF; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; }
+    .c-val { font-size: 24px; color: #FFFFFF; font-weight: 800; margin-top: 4px; }
 
-    /* ========================================================
-       BOTÕES DE ESCOLHA (RÁDIOS) EM LIQUID GLASS
-       ======================================================== */
-    div[role="radiogroup"] {
-        background: rgba(255,255,255,0.04);
-        border-radius: 18px;
-        padding: 6px;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        border: 1px solid rgba(255,255,255,0.08);
-    }
-    label[data-baseweb="radio"] {
-        background: transparent;
-        padding: 14px 16px;
-        border-radius: 14px;
-        margin: 0;
-        transition: 0.2s;
-    }
-    /* Esconde a bolinha padrão do rádio */
-    div[data-baseweb="radio"] div:first-child { display: none !important; }
-    div[data-baseweb="radio"] div:last-child { margin-left: 0 !important; font-weight: 700; font-size: 15px; color: #9CA3AF; }
-    
-    /* Quando selecionado */
-    label[data-baseweb="radio"]:has(input:checked) {
-        background: #1E2532;
-        border: 1px solid rgba(255,255,255,0.1);
-        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-    }
-    label[data-baseweb="radio"]:has(input:checked) div:last-child {
-        color: #FFFFFF;
-    }
-
-    /* Botão Principal */
+    /* Botão Primário */
     .stButton>button {
         width: 100%;
-        border-radius: 18px;
-        height: 58px;
-        font-weight: 800;
+        border-radius: 14px;
+        height: 52px;
+        font-weight: 700;
         font-size: 16px;
         background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%);
         color: #FFFFFF;
         border: none;
-        box-shadow: 0 8px 25px rgba(139, 92, 246, 0.4);
+        box-shadow: 0 8px 20px rgba(139, 92, 246, 0.3);
         transition: all 0.15s;
     }
-    .stButton>button:active { transform: scale(0.96); }
+    .stButton>button:active { transform: scale(0.97); }
     </style>
 """,
     unsafe_allow_html=True,
@@ -167,7 +132,10 @@ DADOS_INICIAIS = {
     "saldo_conta": 100.00,
     "caixinha_futuro": 966.55,
     "caixinha_sonho": 971.85,
-    "transacoes": []
+    "transacoes": [
+        {"Data": "2026-10-03", "Tipo": "Aporte", "Origem": "Sistema", "Valor": 966.55, "Categoria": "Saldo Inicial Futuro"},
+        {"Data": "2026-10-03", "Tipo": "Aporte", "Origem": "Sistema", "Valor": 971.85, "Categoria": "Saldo Inicial Sonho"}
+    ]
 }
 
 def carregar_dados():
@@ -185,185 +153,199 @@ def salvar_dados(dados):
 
 dados = carregar_dados()
 
-# ==========================================
-# 4. CABEÇALHO DO APLICATIVO
-# ==========================================
-st.markdown(
-    """
-    <div style="margin-bottom: 20px;">
-        <h2 style="margin:0; font-weight: 800; font-size: 24px; color: #FFF;">Finanças 18</h2>
-        <p style="margin:0; color: #6B7280; font-size: 13px;">Gestão de Patrimônio PRO 💎</p>
-    </div>
-    """, unsafe_allow_html=True
-)
+# Garantir chaves de transações
+if "transacoes" not in dados:
+    dados["transacoes"] = []
 
 patrimonio_total = dados["saldo_conta"] + dados["caixinha_futuro"] + dados["caixinha_sonho"]
 
 # ==========================================
-# 5. AS 4 ABAS (Que agora são a barra de baixo!)
+# 4. CABEÇALHO
 # ==========================================
-aba_painel, aba_lancar, aba_guia, aba_extrato = st.tabs(
-    ["Painel", "Lançar", "Aportes", "Extrato"]
+st.markdown(
+    """
+    <div style="margin-bottom: 16px;">
+        <h2 style="margin:0; font-weight: 800; font-size: 24px; color: #FFF;">Finanças 18</h2>
+        <p style="margin:0; color: #9CA3AF; font-size: 13px;">Seu controle financeiro profissional</p>
+    </div>
+    """, unsafe_allow_html=True
+)
+
+# ==========================================
+# 5. AS 5 ABAS NAVEGÁVEIS (Barra Inferior)
+# ==========================================
+aba_painel, aba_lancar, aba_investir, aba_extrato, aba_projecao = st.tabs(
+    ["Painel", "Lançar", "Investir", "Extrato", "Projeção"]
 )
 
 # ------------------------------------------
-# ABA 1: PAINEL (Cards dinâmicos que somem)
+# ABA 1: PAINEL DE CONTROLE (Cards)
 # ------------------------------------------
 with aba_painel:
-    c1, c2 = st.columns(2)
-    
-    with c1:
+    col1, col2 = st.columns(2)
+    with col1:
         st.markdown(f"""
-        <div class="premium-card c-blue">
-            <div class="c-label">💳 Saldo Livre</div>
+        <div class="fin-card c-blue">
+            <div class="c-title">💳 Saldo Livre</div>
             <div class="c-val">R$ {dados['saldo_conta']:.2f}</div>
         </div>
         """, unsafe_allow_html=True)
-        
-    with c2:
+    with col2:
         st.markdown(f"""
-        <div class="premium-card c-green">
-            <div class="c-label">🌟 Patrimônio</div>
+        <div class="fin-card c-green">
+            <div class="c-title">🌟 Patrimônio</div>
             <div class="c-val">R$ {patrimonio_total:.2f}</div>
         </div>
         """, unsafe_allow_html=True)
 
-    # Lógica Dinâmica: Só renderiza as Caixinhas se tiver dinheiro nelas!
-    c3, c4 = st.columns(2)
-    
+    col3, col4 = st.columns(2)
+    # Lógica Dinâmica: Só renderiza as Caixinhas se tiver dinheiro nelas
     if dados["caixinha_futuro"] > 0:
-        with c3:
+        with col3:
             st.markdown(f"""
-            <div class="premium-card c-purple">
-                <div class="c-label">🚀 C. Futuro</div>
+            <div class="fin-card c-purple">
+                <div class="c-title">🚀 C. Futuro</div>
                 <div class="c-val">R$ {dados['caixinha_futuro']:.2f}</div>
             </div>
             """, unsafe_allow_html=True)
             
     if dados["caixinha_sonho"] > 0:
-        with c4:
+        with col4:
             st.markdown(f"""
-            <div class="premium-card c-gold">
-                <div class="c-label">🔒 C. Sonho</div>
+            <div class="fin-card c-gold">
+                <div class="c-title">🔒 C. Sonho</div>
                 <div class="c-val">R$ {dados['caixinha_sonho']:.2f}</div>
             </div>
             """, unsafe_allow_html=True)
 
     progresso = min(patrimonio_total / 62000.0, 1.0)
-    st.write(f"🎯 **Meta (R$ 62k):** `{progresso * 100:.2f}%` atingido")
+    st.write(f"🎯 **Meta (R$ 62.000,00):** `{progresso * 100:.2f}%` atingido")
     st.progress(progresso)
 
 # ------------------------------------------
-# ABA 2: LANÇAR (Com resgate dinâmico)
+# ABA 2: LANÇAMENTOS (Organizado)
 # ------------------------------------------
 with aba_lancar:
-    st.markdown("<h4 style='margin-bottom:10px;'>Nova Operação</h4>", unsafe_allow_html=True)
+    st.subheader("Nova Operação")
 
     opcao = st.radio(
-        "Ação",
+        "Selecione o tipo:",
         ["📥 Recebi Dinheiro", "🔒 Guardar na Caixinha", "🔓 Resgatar da Caixinha", "💸 Gastei Dinheiro"],
-        label_visibility="collapsed"
+        horizontal=False
     )
 
     if opcao == "🔒 Guardar na Caixinha":
-        caixinha_alvo = st.selectbox("Qual Caixinha?", ["Futuro", "Sonho"])
+        caixinha_alvo = st.selectbox("Qual Caixinha quer alimentar?", ["Futuro", "Sonho"])
     elif opcao == "🔓 Resgatar da Caixinha":
         opcoes_resgate = []
         if dados["caixinha_futuro"] > 0: opcoes_resgate.append("Futuro")
         if dados["caixinha_sonho"] > 0: opcoes_resgate.append("Sonho")
         
         if not opcoes_resgate:
-            st.warning("⚠️ Você não tem dinheiro nas Caixinhas para resgatar.")
+            st.warning("⚠️ Nenhuma Caixinha possui saldo para resgate.")
             caixinha_alvo = None
         else:
-            caixinha_alvo = st.selectbox("De onde quer resgatar?", opcoes_resgate)
+            caixinha_alvo = st.selectbox("De qual Caixinha quer resgatar?", opcoes_resgate)
 
-    valor = st.number_input("Valor (R$):", min_value=1.00, step=10.00, value=50.00)
-    desc = st.text_input("Descrição:", placeholder="Ex: Mesada, Lanche, Resgate")
+    valor = st.number_input("Valor da operação (R$):", min_value=1.00, step=10.00, value=50.00)
+    desc = st.text_input("Descrição / Categoria:", placeholder="Ex: Mesada, Uber, Resgate Rápido")
 
-    if st.button("🚀 Confirmar"):
-        data = str(pd.Timestamp.now().strftime("%Y-%m-%d"))
+    if st.button("🚀 Confirmar Lançamento"):
+        data = str(pd.Timestamp.now().strftime("%d/%m/%Y"))
 
         if opcao == "📥 Recebi Dinheiro":
             dados["saldo_conta"] += valor
-            dados["transacoes"].append({"Data": data, "Tipo": "Entrada", "Valor": valor, "Categoria": desc or "Recebimento"})
-            st.success(f"R$ {valor:.2f} adicionados à conta!")
-            st.balloons()
+            dados["transacoes"].append({"Data": data, "Tipo": "Entrada", "Valor": valor, "Categoria": desc or "Recebimento", "Conta": "Saldo Livre"})
+            st.success(f"R$ {valor:.2f} adicionados com sucesso!")
 
         elif opcao == "🔒 Guardar na Caixinha":
             if valor > dados["saldo_conta"]:
-                st.error("⚠️ Saldo da conta insuficiente para guardar isso tudo.")
+                st.error("⚠️ Seu Saldo Livre é insuficiente para guardar este valor.")
             else:
                 dados["saldo_conta"] -= valor
                 if caixinha_alvo == "Futuro": dados["caixinha_futuro"] += valor
                 else: dados["caixinha_sonho"] += valor
-                dados["transacoes"].append({"Data": data, "Tipo": "Aporte", "Valor": valor, "Categoria": f"Para {caixinha_alvo}"})
-                st.success(f"R$ {valor:.2f} guardados com sucesso!")
+                dados["transacoes"].append({"Data": data, "Tipo": "Aporte", "Valor": valor, "Categoria": desc or "Aporte", "Conta": f"Caixinha {caixinha_alvo}"})
+                st.success(f"R$ {valor:.2f} guardados na Caixinha {caixinha_alvo}!")
                 st.snow()
 
         elif opcao == "🔓 Resgatar da Caixinha":
             if caixinha_alvo:
                 saldo_disponivel = dados["caixinha_futuro"] if caixinha_alvo == "Futuro" else dados["caixinha_sonho"]
                 if valor > saldo_disponivel:
-                    st.error(f"⚠️ A Caixinha {caixinha_alvo} só tem R$ {saldo_disponivel:.2f}.")
+                    st.error(f"⚠️ A Caixinha {caixinha_alvo} possui apenas R$ {saldo_disponivel:.2f}.")
                 else:
                     if caixinha_alvo == "Futuro": dados["caixinha_futuro"] -= valor
                     else: dados["caixinha_sonho"] -= valor
                     dados["saldo_conta"] += valor
-                    dados["transacoes"].append({"Data": data, "Tipo": "Resgate", "Valor": valor, "Categoria": f"De {caixinha_alvo}"})
-                    st.success(f"R$ {valor:.2f} resgatados de volta para a conta!")
+                    dados["transacoes"].append({"Data": data, "Tipo": "Resgate", "Valor": valor, "Categoria": desc or "Resgate", "Conta": f"Da Caixinha {caixinha_alvo}"})
+                    st.success(f"R$ {valor:.2f} resgatados para o Saldo Livre!")
 
         elif opcao == "💸 Gastei Dinheiro":
             dados["saldo_conta"] -= valor
-            dados["transacoes"].append({"Data": data, "Tipo": "Saída", "Valor": valor, "Categoria": desc or "Gasto"})
-            st.warning(f"R$ {valor:.2f} descontados da conta.")
+            dados["transacoes"].append({"Data": data, "Tipo": "Saída", "Valor": valor, "Categoria": desc or "Gasto Pessoal", "Conta": "Saldo Livre"})
+            st.warning(f"R$ {valor:.2f} descontados do seu saldo.")
 
         salvar_dados(dados)
         time.sleep(1)
         st.rerun()
 
 # ------------------------------------------
-# ABA 3: APORTES E DICAS
+# ABA 3: INVESTIR (Direto ao Ponto)
 # ------------------------------------------
-with aba_guia:
+with aba_investir:
+    st.subheader("Onde Investir Agora")
+    
     if dados["saldo_conta"] > 100.00:
         excesso = dados["saldo_conta"] - 100.00
-        st.markdown(f"""
-        <div style="background: #0B1A15; padding: 20px; border-radius: 18px; border: 1px solid #10B981;">
-            <h4 style="color: #10B981; margin:0;">🎯 HORA DE INVESTIR!</h4>
-            <p style="color: #A0AAB8; font-size: 14px; margin-top: 10px;">
-                Sua reserva do mês é R$ 100,00 e você tem R$ {dados['saldo_conta']:.2f}.
-            </p>
-            <p style="color: #38BDF8; font-size: 16px; font-weight: 700;">👉 Transfira R$ {excesso:.2f} para a Caixinha "Futuro" no app do Nubank.</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.success(f"**Ação Recomendada:** Transfira **R$ {excesso:.2f}** para a Caixinha Futuro (100% CDI).")
+        st.info("Sua reserva mensal de R$ 100,00 será mantida no Saldo Livre para gastos diários.")
     else:
-        st.markdown(f"""
-        <div style="background: #0A1322; padding: 20px; border-radius: 18px; border: 1px solid #38BDF8;">
-            <h4 style="color: #38BDF8; margin:0;">✅ CONTA BALANCEADA!</h4>
-            <p style="color: #A0AAB8; font-size: 14px; margin-top: 10px;">
-                Você tem R$ {dados['saldo_conta']:.2f} livres. O resto está rendendo!
-            </p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.info("Sua conta está equilibrada! Você não possui saldo excedente para investir neste momento.")
+        
+    st.markdown("---")
+    st.write("📌 **Regras do seu Plano:**")
+    st.write("1. **Saldo Livre:** Máximo de R$ 100,00 para liquidez.")
+    st.write("2. **Caixinha Futuro:** Conta principal de rentabilidade.")
+    if dados["caixinha_sonho"] > 0:
+        st.write("3. **Caixinha Sonho:** Aguardar vencimento para consolidar.")
 
 # ------------------------------------------
-# ABA 4: EXTRATO
+# ABA 4: EXTRATO (A TABELA VOLTOU)
 # ------------------------------------------
 with aba_extrato:
-    st.markdown("<h4 style='margin-bottom:10px;'>Seu Histórico</h4>", unsafe_allow_html=True)
+    st.subheader("Tabela de Movimentações")
+    
     if len(dados["transacoes"]) > 0:
-        for t in reversed(dados["transacoes"]):
-            cor = "#10B981" if t["Tipo"] in ["Entrada", "Resgate"] else "#F43F5E"
-            sinal = "+" if t["Tipo"] in ["Entrada", "Resgate"] else "-"
-            st.markdown(f"""
-            <div style="background: #11151E; padding: 14px; border-radius: 14px; margin-bottom: 8px; border: 1px solid #1E2532; display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-size: 13px; font-weight: 700; color: #FFF;">{t['Tipo']}</div>
-                    <div style="font-size: 11px; color: #8B94A5;">{t['Categoria']} • {t['Data']}</div>
-                </div>
-                <div style="font-size: 16px; font-weight: 800; color: {cor};">{sinal} R$ {t['Valor']:.2f}</div>
-            </div>
-            """, unsafe_allow_html=True)
+        # Puxa a lista de trás pra frente (mais recentes primeiro)
+        df_extrato = pd.DataFrame(reversed(dados["transacoes"]))
+        
+        # Formata a coluna de valor para ficar como Moeda Brasileira
+        df_extrato["Valor"] = df_extrato["Valor"].apply(lambda x: f"R$ {x:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+        
+        st.dataframe(df_extrato, use_container_width=True, hide_index=True)
     else:
-        st.write("Nenhuma movimentação.")
+        st.write("Nenhuma movimentação registrada no sistema.")
+
+# ------------------------------------------
+# ABA 5: PROJEÇÃO (GRÁFICO E TABELA VOLTARAM)
+# ------------------------------------------
+with aba_projecao:
+    st.subheader("Projeção aos 18 Anos (R$ 62k)")
+    st.caption("Simulando rentabilidade de 100% CDI com aportes de R$ 600/mês")
+
+    anos = [2026, 2027, 2028, 2029, 2030, 2031, 2032]
+    valores = [patrimonio_total]
+    atual = patrimonio_total
+
+    for i in range(1, len(anos)):
+        atual = (atual + (600 * 12)) * 1.095
+        valores.append(atual)
+
+    # 1. O Gráfico Visual (Area Chart)
+    df_projecao = pd.DataFrame({"Ano": anos, "Patrimônio": valores})
+    st.area_chart(df_projecao.set_index("Ano"))
+
+    # 2. A Tabela Detalhada (A que você pediu de volta)
+    df_projecao["Patrimônio"] = df_projecao["Patrimônio"].apply(lambda x: f"R$ {x:,.2f}".replace(",", "X").replace(".", ",").replace("X", "."))
+    st.dataframe(df_projecao, use_container_width=True, hide_index=True)
