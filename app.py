@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""FUTURE - controlo financeiro pessoal (Streamlit >= 1.40)."""
+"""FUTURE - controle financeiro pessoal (Streamlit >= 1.40)."""
 import csv, io, json, random, time, html, hmac, hashlib, base64, secrets, threading, urllib.request, unicodedata
 from datetime import datetime, date
 from pathlib import Path
@@ -136,7 +136,7 @@ def salvar():
             else:
                 ARQ.write_text(json.dumps(db(), ensure_ascii=False), "utf-8")
         except Exception:
-            st.session_state["warn"] = "⚠️ Não consegui guardar os dados. Verifique a ligação com a base de dados."
+            st.session_state["warn"] = "⚠️ Não consegui salvar os dados. Verifique a conexão."
 
 # ------------------------------------------------------------------ visual
 def get_css(tema, paleta_nome):
@@ -148,84 +148,154 @@ def get_css(tema, paleta_nome):
     return t.get(tema, t["dark"])
 
 CSS_BASE = """
-html, body, [data-testid="stApp"] {background:var(--bg)!important; background-color:var(--bg)!important; overscroll-behavior-y:none; margin:0; padding:0;}
-.stApp {color:var(--tx);overflow-x:hidden;font-family:-apple-system,"SF Pro Text",Roboto,system-ui,sans-serif;transition:background .3s}
-header[data-testid="stHeader"],#MainMenu,footer{display:none!important}
-.block-container{max-width:480px!important;padding:1.2rem 1rem 10rem!important}
-.stApp p,.stApp label,.stApp h1,.stApp li,[data-testid="stDialog"] *{color:var(--tx)}
-.stApp input,[data-baseweb="select"]>div,[data-baseweb="input"],[data-baseweb="base-input"]{background:var(--c2)!important;color:var(--tx)!important;border-radius:14px!important}
-div[role="dialog"]{background:var(--c1)!important;border-radius:28px!important}
-button[kind="secondary"],[data-testid="stBaseButton-secondary"]{background:var(--c2);border:1px solid var(--ln);border-radius:16px}
-button[kind="secondary"] p,[data-testid="stBaseButton-secondary"] p{color:var(--tx)}
-button[kind="primary"],[data-testid="stBaseButton-primary"]{background:linear-gradient(135deg,var(--pur),var(--blue))!important;border:0!important;border-radius:16px!important}
-button[kind="primary"] *,[data-testid="stBaseButton-primary"] *{color:#fff!important}
-[data-testid="stForm"]{border:0;padding:0;background:transparent}
-.hd h1{margin:0;font-size:26px;letter-spacing:-.03em;padding:0}.hd{margin-bottom:16px}
-.login{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:100%;margin:0 auto;padding:7vh 0 18px;animation:slR .6s cubic-bezier(.25,1,.5,1)}
-.login h1{font-size:30px;letter-spacing:-.03em;margin:8px 0 4px;padding:0;width:100%;text-align:center;display:block}.logo{font-size:56px;text-align:center;line-height:1;animation:glow 3s ease-in-out infinite}
-.login .k{width:100%;text-align:center;display:block}
-@keyframes glow{50%{transform:scale(1.08);filter:drop-shadow(0 0 18px var(--pur))}}
-.card{background:linear-gradient(145deg,var(--c1),var(--c2));border:1px solid color-mix(in srgb,var(--c,var(--ln)) 50%,transparent);border-radius:26px;padding:18px;box-shadow:9px 9px 22px var(--s1),-5px -5px 16px var(--s2);margin-bottom:16px}
-.k{color:var(--mu);font-size:13px}.lb{font-size:14px;font-weight:600}.big{font-size:34px;font-weight:700;letter-spacing:-.035em;margin:2px 0 8px;font-variant-numeric:tabular-nums}
-.pg{height:8px;border-radius:9px;background:var(--ln);overflow:hidden;margin:6px 0}.pg i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--blue),var(--grn))}
-.as{font-size:15px;border-style:dashed}.sup{background:color-mix(in srgb,var(--gold) 16%,transparent);border:1px solid var(--gold);border-radius:18px;padding:12px 14px;margin-bottom:16px;font-size:14px}
-.tx{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--ln)}.tx:last-child{border:0}.tx .g{flex:1;min-width:0}
-.ic{width:40px;height:40px;border-radius:14px;background:var(--c2);display:grid;place-items:center;font-size:19px;flex:none;border:1px solid var(--ln)}
-table{width:100%;border-collapse:collapse;font-size:13.5px}th{color:var(--mu);font-weight:500;text-align:right;padding:6px 0}td{padding:10px 0;text-align:right;border-top:1px solid var(--ln)}th:first-child,td:first-child{text-align:left}
-.bar{fill:var(--grn);opacity:.9}.bt{fill:var(--mu);font-size:10px;text-anchor:middle}.tl{stroke:var(--gold);stroke-dasharray:4 4;stroke-width:1.2}
-.al{display:flex;justify-content:space-between;align-items:baseline}.al b{font-size:20px}
-.st-key-nav,.st-key-bolha{position:fixed;left:16px;bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:999;width:auto!important}
-.st-key-nav{width:min(calc(100vw - 32px),420px)!important;display:flex!important;flex-direction:row!important;align-items:center;gap:4px!important;padding:6px;overflow:hidden;background:var(--glass);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border:1px solid var(--ln);border-radius:34px;box-shadow:0 14px 40px var(--s1),inset 0 1px 0 rgba(255,255,255,.14);animation:stretch .7s cubic-bezier(.16, 1, .3, 1) forwards}
-@keyframes stretch{from{width:58px!important;padding:0;opacity:0}}
-.st-key-nav>div{width:auto!important;animation:fi .6s .15s cubic-bezier(.16, 1, .3, 1) both}
-@keyframes fi{from{opacity:0;transform:translateX(-16px)}}
-.st-key-aba{flex:1!important}
-.st-key-nav [role="radiogroup"]{display:flex;flex-wrap:nowrap;gap:2px;width:100%}
-.st-key-nav label{flex:1;justify-content:center;margin:0;padding:8px 0;border-radius:26px;cursor:pointer;transition:background .3s}
-.st-key-nav label>div:first-child{display:none}
-.st-key-nav label p{font-size:10px;line-height:1.3;font-weight:600;text-align:center;word-spacing:100vw;margin:0;opacity:.55;transition:opacity .3s}
-.st-key-nav label p::first-line{font-size:21px}
-.st-key-nav label:has(input:checked){background:color-mix(in srgb,var(--pur) 26%,transparent)}
-.st-key-nav label:has(input:checked) p{opacity:1}
-.st-key-b_min button,.st-key-b_plus button,.st-key-bolha button,.st-key-b_tema button,.st-key-b_sair button{border-radius:50%;padding:0;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--ln)}
-.st-key-b_min button{width:34px;height:34px}.st-key-b_plus button{width:46px;height:46px;border:0;background:linear-gradient(135deg,var(--pur),var(--blue))}
-.st-key-b_plus button p{color:#fff;font-size:24px;line-height:1}
-.st-key-bolha{animation:popin .4s cubic-bezier(.2,1.4,.4,1)}.st-key-bolha button{width:58px;height:58px;font-size:24px;box-shadow:0 10px 30px var(--s1)}
-@keyframes popin{from{transform:scale(.4);opacity:0}}
-.st-key-b_tema,.st-key-b_sair{position:fixed;z-index:1000;width:auto!important;top:calc(12px + env(safe-area-inset-top,0px))}
-.st-key-b_tema{right:66px}.st-key-b_sair{right:14px}.st-key-b_tema button,.st-key-b_sair button{width:44px;height:44px;font-size:18px}
-[class*="_fromR"]{animation:slR .6s cubic-bezier(0.25, 1, 0.5, 1) forwards}
-[class*="_fromL"]{animation:slL .6s cubic-bezier(0.25, 1, 0.5, 1) forwards}
-@keyframes slR{from{transform:translateX(50px);opacity:0}to{transform:translateX(0);opacity:1}}
-@keyframes slL{from{transform:translateX(-50px);opacity:0}to{transform:translateX(0);opacity:1}}
-.fx{position:fixed;inset:0;pointer-events:none;z-index:2000;overflow:hidden}
-.fx i{position:absolute;bottom:-50px;font-style:normal;opacity:0;animation:rise 2.4s ease-out forwards}
-.fx b{position:absolute;left:50%;top:36%;font-size:36px;color:var(--grn);opacity:0;animation:pop 2.4s ease forwards;text-shadow:0 4px 24px rgba(0,0,0,.35)}
-@keyframes rise{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:1}100%{transform:translateY(-90vh) rotate(25deg) scale(1.1);opacity:0}}
-@keyframes pop{0%{opacity:0;transform:translate(-50%,30px) scale(.7)}20%{opacity:1;transform:translate(-50%,0) scale(1.05)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-40px)}}
-html,body,.stApp,.stApp p,.stApp label,.stApp input,.stApp textarea,.stApp button,.stApp [data-baseweb],div[role="dialog"] p{font-family:Inter,-apple-system,"SF Pro Text",system-ui,sans-serif!important}
-.big,.hd h1,.login h1,.al b,.lb{font-family:"Plus Jakarta Sans",Inter,system-ui,sans-serif!important}
-.big,table,.tx b{font-variant-numeric:tabular-nums}
-@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+html, body, [data-testid="stApp"], [data-testid="stMain"], [data-testid="stMainBlockContainer"] {
+    background: var(--bg) !important;
+    background-color: var(--bg) !important;
+    overscroll-behavior-y: none;
+    margin: 0;
+    padding: 0;
+}
+.stApp {
+    color: var(--tx);
+    overflow-x: hidden;
+    font-family: -apple-system, "SF Pro Text", Roboto, system-ui, sans-serif;
+    transition: background .3s;
+}
+header[data-testid="stHeader"], #MainMenu, footer { display: none !important; }
+.block-container { max-width: 480px !important; padding: 1.2rem 1rem 10rem !important; margin: 0 auto !important; }
+.stApp p, .stApp label, .stApp h1, .stApp li, [data-testid="stDialog"] * { color: var(--tx); }
+.stApp input, [data-baseweb="select"]>div, [data-baseweb="input"], [data-baseweb="base-input"] { background: var(--c2) !important; color: var(--tx) !important; border-radius: 14px !important; }
+div[role="dialog"] { background: var(--c1) !important; border-radius: 28px !important; }
+button[kind="secondary"], [data-testid="stBaseButton-secondary"] { background: var(--c2); border: 1px solid var(--ln); border-radius: 16px; }
+button[kind="secondary"] p, [data-testid="stBaseButton-secondary"] p { color: var(--tx); }
+button[kind="primary"], [data-testid="stBaseButton-primary"] { background: linear-gradient(135deg, var(--pur), var(--blue)) !important; border: 0 !important; border-radius: 16px !important; }
+button[kind="primary"] *, [data-testid="stBaseButton-primary"] * { color: #fff !important; }
+[data-testid="stForm"] { border: 0; padding: 0; background: transparent; }
+.hd h1 { margin: 0; font-size: 26px; letter-spacing: -.03em; padding: 0; }
+.hd { margin-bottom: 16px; }
+
+/* LOGIN CENTRALIZADO COM ANIMAÇÃO DO FOGUETE */
+.login {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    margin: 0 auto;
+    padding: 7vh 0 18px;
+    animation: slR .6s cubic-bezier(.25, 1, .5, 1);
+}
+.login h1 {
+    font-size: 30px;
+    letter-spacing: -.03em;
+    margin: 8px 0 4px;
+    padding: 0;
+    width: 100%;
+    text-align: center;
+    display: block;
+}
+.logo {
+    font-size: 56px;
+    text-align: center;
+    line-height: 1;
+    display: inline-block;
+    animation: rocketAnim 3.5s ease-in-out infinite;
+}
+@keyframes rocketAnim {
+    0% { transform: translateY(0) scale(1) rotate(0deg); filter: drop-shadow(0 0 10px var(--pur)); }
+    50% { transform: translateY(-12px) scale(1.08) rotate(-3deg); filter: drop-shadow(0 0 22px var(--blue)); }
+    100% { transform: translateY(0) scale(1) rotate(0deg); filter: drop-shadow(0 0 10px var(--pur)); }
+}
+.login .k {
+    width: 100%;
+    text-align: center;
+    display: block;
+}
+
+.card { background: linear-gradient(145deg, var(--c1), var(--c2)); border: 1px solid color-mix(in srgb, var(--c, var(--ln)) 50%, transparent); border-radius: 26px; padding: 18px; box-shadow: 9px 9px 22px var(--s1), -5px -5px 16px var(--s2); margin-bottom: 16px; }
+.k { color: var(--mu); font-size: 13px; }
+.lb { font-size: 14px; font-weight: 600; }
+.big { font-size: 34px; font-weight: 700; letter-spacing: -.035em; margin: 2px 0 8px; font-variant-numeric: tabular-nums; }
+.pg { height: 8px; border-radius: 9px; background: var(--ln); overflow: hidden; margin: 6px 0; }
+.pg i { display: block; height: 100%; border-radius: 9px; background: linear-gradient(90deg, var(--blue), var(--grn)); }
+.as { font-size: 15px; border-style: dashed; }
+.sup { background: color-mix(in srgb, var(--gold) 16%, transparent); border: 1px solid var(--gold); border-radius: 18px; padding: 12px 14px; margin-bottom: 16px; font-size: 14px; }
+.tx { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--ln); }
+.tx:last-child { border: 0; }
+.tx .g { flex: 1; min-width: 0; }
+.ic { width: 40px; height: 40px; border-radius: 14px; background: var(--c2); display: grid; place-items: center; font-size: 19px; flex: none; border: 1px solid var(--ln); }
+table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+th { color: var(--mu); font-weight: 500; text-align: right; padding: 6px 0; }
+td { padding: 10px 0; text-align: right; border-top: 1px solid var(--ln); }
+th:first-child, td:first-child { text-align: left; }
+.bar { fill: var(--grn); opacity: .9; }
+.bt { fill: var(--mu); font-size: 10px; text-anchor: middle; }
+.tl { stroke: var(--gold); stroke-dasharray: 4 4; stroke-width: 1.2; }
+.al { display: flex; justify-content: space-between; align-items: baseline; }
+.al b { font-size: 20px; }
+
+.st-key-nav, .st-key-bolha { position: fixed; left: 16px; bottom: calc(66px + env(safe-area-inset-bottom, 0px)); z-index: 999; width: auto !important; }
+.st-key-nav { width: min(calc(100vw - 32px), 420px) !important; display: flex !important; flex-direction: row !important; align-items: center; gap: 4px !important; padding: 6px; overflow: hidden; background: var(--glass); backdrop-filter: blur(28px) saturate(180%); -webkit-backdrop-filter: blur(28px) saturate(180%); border: 1px solid var(--ln); border-radius: 34px; box-shadow: 0 14px 40px var(--s1), inset 0 1px 0 rgba(255,255,255,.14); animation: stretch .7s cubic-bezier(.16, 1, .3, 1) forwards; }
+@keyframes stretch { from { width: 58px !important; padding: 0; opacity: 0; } }
+.st-key-nav>div { width: auto !important; animation: fi .6s .15s cubic-bezier(.16, 1, .3, 1) both; }
+@keyframes fi { from { opacity: 0; transform: translateX(-16px); } }
+.st-key-aba { flex: 1 !important; }
+.st-key-nav [role="radiogroup"] { display: flex; flex-wrap: nowrap; gap: 2px; width: 100%; }
+.st-key-nav label { flex: 1; justify-content: center; margin: 0; padding: 8px 0; border-radius: 26px; cursor: pointer; transition: background .3s; }
+.st-key-nav label>div:first-child { display: none; }
+.st-key-nav label p { font-size: 10px; line-height: 1.3; font-weight: 600; text-align: center; word-spacing: 100vw; margin: 0; opacity: .55; transition: opacity .3s; }
+.st-key-nav label p::first-line { font-size: 21px; }
+.st-key-nav label:has(input:checked) { background: color-mix(in srgb, var(--pur) 26%, transparent); }
+.st-key-nav label:has(input:checked) p { opacity: 1; }
+.st-key-b_min button, .st-key-b_plus button, .st-key-bolha button, .st-key-b_tema button, .st-key-b_sair button { border-radius: 50%; padding: 0; background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--ln); }
+.st-key-b_min button { width: 34px; height: 34px; }
+.st-key-b_plus button { width: 46px; height: 46px; border: 0; background: linear-gradient(135deg, var(--pur), var(--blue)); }
+.st-key-b_plus button p { color: #fff; font-size: 24px; line-height: 1; }
+.st-key-bolha { animation: popin .4s cubic-bezier(.2, 1.4, .4, 1); }
+.st-key-bolha button { width: 58px; height: 58px; font-size: 24px; box-shadow: 0 10px 30px var(--s1); }
+@keyframes popin { from { transform: scale(.4); opacity: 0; } }
+.st-key-b_tema, .st-key-b_sair { position: fixed; z-index: 1000; width: auto !important; top: calc(12px + env(safe-area-inset-top, 0px)); }
+.st-key-b_tema { right: 66px; }
+.st-key-b_sair { right: 14px; }
+.st-key-b_tema button, .st-key-b_sair button { width: 44px; height: 44px; font-size: 18px; }
+[class*="_fromR"] { animation: slR .6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+[class*="_fromL"] { animation: slL .6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+@keyframes slR { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes slL { from { transform: translateX(-50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.fx { position: fixed; inset: 0; pointer-events: none; z-index: 2000; overflow: hidden; }
+.fx i { position: absolute; bottom: -50px; font-style: normal; opacity: 0; animation: rise 2.4s ease-out forwards; }
+.fx b { position: absolute; left: 50%; top: 36%; font-size: 36px; color: var(--grn); opacity: 0; animation: pop 2.4s ease forwards; text-shadow: 0 4px 24px rgba(0,0,0,.35); }
+@keyframes rise { 0% { transform: translateY(0) scale(.6); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-90vh) rotate(25deg) scale(1.1); opacity: 0; } }
+@keyframes pop { 0% { opacity: 0; transform: translate(-50%, 30px) scale(.7); } 20% { opacity: 1; transform: translate(-50%, 0) scale(1.05); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -40px); } }
+html, body, .stApp, .stApp p, .stApp label, .stApp input, .stApp textarea, .stApp button, .stApp [data-baseweb], div[role="dialog"] p { font-family: Inter, -apple-system, "SF Pro Text", system-ui, sans-serif !important; }
+.big, .hd h1, .login h1, .al b, .lb { font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif !important; }
+.big, table, .tx b { font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation: none !important; transition: none !important; } }
 """
 FONTES = "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');"
 st.markdown("<style>" + FONTES + get_css(st.session_state["tema"], st.session_state["paleta"]) + CSS_BASE + "</style>", unsafe_allow_html=True)
 
-# Forçar remoção da barra branca no PWA de forma definitiva via JS nativo:
-components.html(f"""
+# Garante o preenchimento total do ecrã e remove bordas brancas (PWA / Modo App)
+components.html("""
 <script>
-    const parentBody = window.parent.document.body;
-    parentBody.style.backgroundColor = 'var(--bg)';
-    parentBody.style.overscrollBehaviorY = 'none';
-    const parentHtml = window.parent.document.documentElement;
-    parentHtml.style.backgroundColor = 'var(--bg)';
+    const parentDoc = window.parent.document;
+    const applyBg = () => {
+        parentDoc.body.style.backgroundColor = 'var(--bg)';
+        parentDoc.documentElement.style.backgroundColor = 'var(--bg)';
+        parentDoc.body.style.margin = '0';
+        parentDoc.body.style.padding = '0';
+    };
+    applyBg();
+    setTimeout(applyBg, 100);
+    setTimeout(applyBg, 500);
 </script>
 """, height=0, width=0)
 
 try:
     db()
 except Exception:
-    st.error("Não consegui ligar à base de dados. Atualize a página.")
+    st.error("Não consegui conectar ao banco de dados. Atualize a página.")
     st.stop()
 
 # ------------------------------------------------- Face ID (WebAuthn / passkey)
@@ -317,12 +387,12 @@ def _falha():
 def _espera():
     e = st.session_state["bloq"] - time.time()
     if e > 0:
-        st.error(f"Demasiadas tentativas. Aguarde {int(e) + 1}s.")
+        st.error(f"Muitas tentativas. Aguarde {int(e) + 1}s.")
     return e > 0
 
 def tela_login():
     t = st.session_state["tela"]
-    sub = {"login": "INICIAR SESSÃO", "criar": "CRIAR CONTA", "pais": "CONTROLO PARENTAL"}[t]
+    sub = {"login": "INICIAR SESSÃO", "criar": "CRIAR CONTA", "pais": "CONTROLE PARENTAL"}[t]
     st.markdown(f'<div class="login"><div class="logo">🚀</div><h1>FUTURE</h1><div class="k" style="letter-spacing:.2em">{sub}</div></div>', unsafe_allow_html=True)
     
     if t == "login":
@@ -344,10 +414,10 @@ def tela_login():
                 if u:
                     entrar(u, "filho")
                 st.error("Face ID não reconhecido.")
-        st.button("🛡️ Controlo parental", key="b_pais", use_container_width=True, on_click=_ir, args=("pais",))
+        st.button("🛡️ Controle parental", key="b_pais", use_container_width=True, on_click=_ir, args=("pais",))
         st.button("Criar conta", key="b_criar", use_container_width=True, on_click=_ir, args=("criar",))
         if not SB_URL:
-            st.caption("⚠ Armazenamento temporário: os dados perdem-se ao reiniciar.")
+            st.caption("⚠ Armazenamento temporário: os dados podem ser apagados ao reiniciar.")
         return
         
     if t == "criar":
@@ -355,18 +425,18 @@ def tela_login():
             n = st.text_input("Nome da conta", max_chars=24)
             p = st.text_input("Senha (mín. 4 caracteres)", type="password")
             pin = st.text_input("PIN dos pais (4 números)", type="password", max_chars=4)
-            nasc = st.date_input("A sua data de nascimento", value=date(2014, 1, 1), min_value=date(1900, 1, 1), max_value=date(2020, 12, 31), format="DD/MM/YYYY")
+            nasc = st.date_input("Sua data de nascimento", value=date(2014, 1, 1), min_value=date(1900, 1, 1), max_value=date(2020, 12, 31), format="DD/MM/YYYY")
             go = st.form_submit_button("Criar conta", type="primary", use_container_width=True)
         if go:
             k = chave(n)
             if not 2 <= len(k) <= 24:
-                st.error("Utilize um nome entre 2 a 24 caracteres.")
+                st.error("Use um nome entre 2 e 24 caracteres.")
             elif k in db()["contas"]:
-                st.error("Este nome já existe.")
+                st.error("Esse nome já existe.")
             elif len(p) < 4:
                 st.error("Escolha outra senha (mín. 4 caracteres).")
             elif not (pin.isdigit() and len(pin) == 4):
-                st.error("O PIN dos pais precisa de ter exatamente 4 números.")
+                st.error("O PIN dos pais precisa ter exatamente 4 números.")
             else:
                 db()["contas"][k] = nova_conta(n.strip(), p, pin, nasc=nasc.isoformat())
                 salvar()
@@ -428,20 +498,28 @@ def fecha(msg=None):
     st.session_state["msg"] = msg or "Lançado em " + fmt_dt(S["extrato"][-1]["ts"])
     salvar()
 
+def liberar_sonho():
+    sd = S["cfg"].get("sonho_data")
+    if sd and agora().date().isoformat() >= sd:
+        if "sonho" in S.get("caixas", {}) and "futuro" in S.get("caixas", {}) and S["caixas"]["sonho"] > 0.004:
+            mover("sonho", "futuro", S["caixas"]["sonho"], "Sonho liberada → Futuro")
+        S["cfg"]["sonho_data"] = None
+        salvar()
+
 def aplicar(t, v, cx=None, obs=""):
     v = round(v, 2)
     reserva = S["cfg"].get("reserva", 100.0)
     if v <= 0:
-        return "Informe um valor superior a zero."
+        return "Informe um valor maior que zero."
     cxs = S.get("caixas", {})
     if t == "save":
         if S["livre"] - v < reserva - 1e-9:
-            return f"A reserva fixa de {brl(reserva)} está protegida. Pode guardar até {brl(max(0, S['livre'] - reserva))}."
+            return f"A reserva fixa de {brl(reserva)} está protegida. Você pode guardar até {brl(max(0, S['livre'] - reserva))}."
         S["livre"] -= v
         cxs[cx] += v
     elif t == "take":
         if v > cxs[cx] + 1e-9:
-            return f"Essa caixinha tem apenas {brl(cxs[cx])}."
+            return f"Essa caixinha tem só {brl(cxs[cx])}."
         cxs[cx] -= v
         S["livre"] += v
     elif t == "yld":
@@ -463,10 +541,10 @@ def aplicar(t, v, cx=None, obs=""):
 def mover(o, d, v, obs=""):
     v = round(v, 2)
     if v <= 0:
-        return "Informe um valor superior a zero."
+        return "Informe um valor maior que zero."
     if v > S.get("caixas", {})[o] + 1e-9:
         nome_origem = S.get("caixas_meta", {}).get(o, ["Caixinha"])[0]
-        return f"{nome_origem} tem apenas {brl(S['caixas'][o])}."
+        return f"{nome_origem} tem só {brl(S['caixas'][o])}."
     S["caixas"][o] -= v
     S["caixas"][d] += v
     reg("mov", v, o, obs, dest=d)
@@ -479,7 +557,7 @@ def excluir_caixinha(cx, resgatar):
         S["livre"] += v
         reg("take", v, cx, "Exclusão da caixinha")
     else:
-        reg("del", v, cx, "Saldo removido do património")
+        reg("del", v, cx, "Saldo removido do patrimônio")
     nome_cx = S.get("caixas_meta", {}).get(cx, ["Caixinha"])[0]
     S["caixas"].pop(cx, None)
     S["caixas_meta"].pop(cx, None)
@@ -549,7 +627,7 @@ def projetar():
     return linhas, falta, ano_fim, meta_val
 
 def get_csv_proj():
-    L, falta, ano_fim, meta_val = projetar()
+    L, _, _, meta_val = projetar()
     buf = io.StringIO()
     w = csv.writer(buf, delimiter=";")
     w.writerow(["Ano", "Investido (R$)", "Juros (R$)", "Total (R$)", "% da meta"])
@@ -559,7 +637,7 @@ def get_csv_proj():
     return ("\ufeff" + buf.getvalue()).encode("utf-8")
 
 def relatorio_html():
-    L, falta, ano_fim, meta_val = projetar()
+    L, _, ano_fim, meta_val = projetar()
     fim = L[-1][3] if L else total()
     p = PALETAS[st.session_state.get("paleta", "Padrão")]
     aporte = S["cfg"].get("renda", 0.0) - S["cfg"].get("gastos", 0.0)
@@ -571,7 +649,7 @@ def relatorio_html():
         '<p style="color:#8b8b9a; font-size:14px; margin:0">Conta: ' + html.escape(CONTA["nome"]) + ' | Fim: ' + str(ano_fim) + '</p>'
         '</div>'
         '<div style="background:#0e0e15; padding:20px; border-radius:16px; margin:15px 0; border: 1px solid rgba(255,255,255,0.05);">'
-        '<div style="font-size:12px; color:#8b8b9a; text-transform:uppercase;">Património Projetado</div>'
+        '<div style="font-size:12px; color:#8b8b9a; text-transform:uppercase;">Patrimônio Projetado</div>'
         '<div style="font-size:32px; font-weight:bold; color:' + p["grn"] + '; margin:5px 0;">' + brl(fim) + '</div>'
         '<div style="font-size:14px; color:' + p["gold"] + ';">Meta alvo: ' + brl(meta_val) + '</div>'
         '</div>'
@@ -600,7 +678,7 @@ def destino(x):
     d = " → " + S.get("caixas_meta", {}).get(x["d"], [""])[0] if x.get("d") else ""
     return s + d
 
-# ------------------------------------------------------------------ ecrãs
+# ------------------------------------------------------------------ telas
 def fx_html(d):
     random.seed(d["n"])
     itens = "".join(
@@ -625,18 +703,18 @@ def v_tutorial():
     idade = agora().year - nasc_date.year
     
     if idade >= 18:
-        texto_idade = f"Como já tem {idade} anos, a nossa projeção vai ajudá-lo a alavancar o seu património financeiro daqui para a frente!"
+        texto_idade = f"Como você já tem {idade} anos, nossa projeção vai ajudá-lo a alavancar seu patrimônio financeiro daqui para frente!"
     else:
-        texto_idade = f"Como tem {idade} anos, vamos focar-nos em fazer crescer o seu património até à maioridade!"
+        texto_idade = f"Como você tem {idade} anos, vamos focar em fazer o seu dinheiro crescer até a maioridade!"
         
     return f"""
     <div class="card as" style="border-color:var(--pur); background:color-mix(in srgb,var(--pur) 10%,transparent)">
         <b style="color:var(--pur); font-size:16px;">👋 Bem-vindo ao FUTURE, {html.escape(CONTA["nome"])}!</b><br><br>
-        A sua nova conta está pronta. {texto_idade}<br><br>
-        <b>1. Criar uma Caixinha:</b> Clique no botão <b>＋</b> no menu inferior para <i>Criar Caixinha</i>. É lá que o dinheiro vai render a juros todos os meses.<br>
-        <b>2. A sua Meta:</b> Navegue para a aba ⚙️ <b>Ajustes</b> para definir o montante que quer acumular no final e a sua Reserva Fixa.<br>
-        <b>3. Gastos Mensais:</b> É muito importante! Vá também aos <b>Ajustes</b> e introduza os seus <b>gastos mensais</b> e a sua renda para que o controlo dos seus ganhos e o cálculo daquilo que sobra sejam perfeitos.<br><br>
-        <i>Quando terminar, pode desmarcar este tutorial nas opções de Ajustes.</i>
+        Sua nova conta está pronta. {texto_idade}<br><br>
+        <b>1. Criar uma Caixinha:</b> Clique no botão <b>＋</b> no menu inferior para <i>Criar Caixinha</i>. É lá que o dinheiro rende todos os meses.<br>
+        <b>2. Sua Meta:</b> Vá para a aba ⚙️ <b>Ajustes</b> para definir o valor que deseja acumular e a sua Reserva Fixa.<br>
+        <b>3. Gastos Mensais:</b> Muito importante! Vá na aba <b>Ajustes</b> e cadastre os seus <b>gastos mensais</b> e a sua renda para que o controle do que sobra seja calculado com perfeição.<br><br>
+        <i>Quando estiver pronto, você pode desmarcar este tutorial nas opções de Ajustes.</i>
     </div>
     """
 
@@ -651,21 +729,21 @@ def v_home():
         out += v_tutorial()
 
     if f > reserva + .005:
-        msg = "Tem <b>" + brl(f - reserva) + "</b> acima da reserva fixa. Consulte o separador de Ideias."
+        msg = "Você tem <b>" + brl(f - reserva) + "</b> acima da reserva fixa. Consulte a aba de Ideias."
     elif f < reserva - .005:
-        msg = "Atenção: faltam <b>" + brl(reserva - f) + "</b> para completar a reserva fixa da sua conta."
+        msg = "Atenção: faltam <b>" + brl(reserva - f) + "</b> para completar a sua reserva fixa."
     else:
-        msg = "A sua Reserva fixa está completa. Tudo em ordem."
+        msg = "Sua reserva fixa está completa. Tudo em ordem."
     
     h = agora()
     prox = f"01/{h.month + 1:02d}/{h.year}" if h.month < 12 else f"01/01/{h.year + 1}"
     mesada = (
-        "<br>Próxima entrada (Líquida) planeada: " + prox
-        if c.get("renda", 0.0) > 0 else "<br>Configure a sua renda nos Ajustes."
+        "<br>Próxima entrada (Líquida) programada: " + prox
+        if c.get("renda", 0.0) > 0 else "<br>Configure sua renda nos Ajustes."
     )
     
     pct = f"{pc:.1f}".replace(".", ",")
-    out += card("grn", "Património total", brl(t), f"{pct}% da meta de {brl(meta_val)} traçada até {ano_fim}", '<div class="pg"><i style="width:' + str(pc) + '%"></i></div>')
+    out += card("grn", "Patrimônio total", brl(t), f"{pct}% da meta de {brl(meta_val)} até {ano_fim}", '<div class="pg"><i style="width:' + str(pc) + '%"></i></div>')
     out += '<div class="card as">💡 ' + msg + '</div>'
     out += card("blue", "Saldo livre", brl(f), "Proteção de reserva de emergência: " + brl(reserva) + mesada)
     
@@ -677,7 +755,7 @@ def v_home():
 
 def v_ext():
     if not S["extrato"]:
-        return '<div class="card"><div class="k">Sem qualquer movimento até ao momento.</div></div>'
+        return '<div class="card"><div class="k">Nenhum lançamento registrado ainda.</div></div>'
     rows = ""
     for _, x in sorted(enumerate(S["extrato"]), key=lambda p: (p[1]["ts"], p[0]), reverse=True):
         ic, nome = TIPOS[x["t"]]
@@ -712,12 +790,12 @@ def svg_barras(L, meta_val):
 def v_proj():
     L, falta, ano_fim, meta_val = projetar()
     if not L:
-        return card("grn", "Projeção", brl(total()), "Atingiu ou ultrapassou a janela temporal da meta estipulada.")
+        return card("grn", "Projeção", brl(total()), "Sem meses restantes na projeção.")
     fim = L[-1][3]
     ok = fim >= meta_val
     sub = (
-        "Meta de " + brl(meta_val) + " alcançada, com folga de " + brl(fim - meta_val) + "." if ok
-        else "Para bater " + brl(meta_val) + ", será necessário aportar " + brl(falta) + " extra por mês."
+        "Meta de " + brl(meta_val) + " atingida, com folga de " + brl(fim - meta_val) + "." if ok
+        else "Para alcançar " + brl(meta_val) + ", aporte cerca de " + brl(falta) + " por mês."
     )
     tab = '<table><tr><th>Ano</th><th>Investido</th><th>Juros</th><th>Total</th></tr>'
     for a, p, j, b in L:
@@ -727,20 +805,20 @@ def v_proj():
     cdi = str(S["cfg"].get("cdi", 9.5)).replace(".", ",")
     aporte = S["cfg"].get("renda", 0.0) - S["cfg"].get("gastos", 0.0)
     return (
-        card("grn" if ok else "gold", "Projeção Financeira até " + str(ano_fim), brl(fim), sub)
+        card("grn" if ok else "gold", "Projeção até " + str(ano_fim), brl(fim), sub)
         + '<div class="card">' + svg_barras(L, meta_val) + '</div><div class="card">' + tab + '</div>'
-        + '<div class="k" style="padding:0 6px">Ponto de partida base: ' + brl(total()) + '. Aporte líquido programado: ' + brl(aporte) + '/mês · Rendimento simulado a ' + cdi + '% a.a.</div>'
+        + '<div class="k" style="padding:0 6px">Ponto de partida base: ' + brl(total()) + '. Aporte líquido de ' + brl(aporte) + '/mês · Rendimento simulado a ' + cdi + '% a.a.</div>'
     )
 
 def v_idea():
     reserva = S["cfg"].get("reserva", 100.0)
     ex = round(max(0.0, S["livre"] - reserva), 2)
-    opc = [("Reserva de liquidez diária", 1.0 if ex < 50 else .4, "blue", "CDB ou RDB com liquidez diária pagando cerca de 100% do CDI. Dinheiro disponível a qualquer hora."),
-           ("RDB de longo prazo", .35, "pur", "Prazos de 2 a 5 anos costumam ter um rendimento bastante superior ao CDI. Ideal para fazer juros sobre juros."),
-           ("Tesouro IPCA+", .25, "gold", "Rende a inflação (IPCA) mais juros fixos, protegendo integralmente o seu poder de compra no futuro.")]
+    opc = [("Reserva de liquidez diária", 1.0 if ex < 50 else .4, "blue", "CDB ou RDB com liquidez diária rendendo aprox. 100% do CDI. Dinheiro disponível para imprevistos."),
+           ("RDB de longo prazo", .35, "pur", "Prazos de 2 a 5 anos pagam taxas superiores ao CDI. Excelente para o longo prazo."),
+           ("Tesouro IPCA+", .25, "gold", "Rende a inflação mais juros fixos, blindando seu poder de compra.")]
     if ex < 50:
         opc = opc[:1]
-    sub = "Sugestão de otimização de divisão para esse valor:" if ex else "O seu saldo livre precisa de ser superior a " + brl(reserva + 50) + " para desbloquear sugestões estruturadas."
+    sub = "Sugestão de divisão para esse valor:" if ex else "Seu saldo livre precisa passar de " + brl(reserva + 50) + " para liberar sugestões de longo prazo."
     out = card("blue", "Excedente acima da reserva", brl(ex), sub)
     if ex:
         for nome, p, cor, txt in opc:
@@ -748,34 +826,34 @@ def v_idea():
                 '<div class="card" style="--c:var(--' + cor + ')"><div class="al"><span class="lb">' + nome + '</span>'
                 '<b style="color:var(--' + cor + ')">' + brl(ex * p) + '</b></div><div class="k">' + str(round(p * 100)) + '% · ' + txt + '</div></div>'
             )
-    return out + '<div class="k" style="padding:0 6px">Sugestões estritamente educativas e algorítmicas, não representam aconselhamento legal.</div>'
+    return out + '<div class="k" style="padding:0 6px">Sugestões educacionais, não constituem recomendação de investimento.</div>'
 
 def v_ajustes():
     c = S["cfg"]
-    st.markdown('<div class="card as" style="border:none">Aqui pode configurar toda a estética da sua conta, bem como redefinir as suas finanças.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="card as" style="border:none">Aqui você gerencia as configurações da sua conta, metas, rendas e gastos mensais.</div>', unsafe_allow_html=True)
     with st.form("f_ajustes"):
-        nome = st.text_input("O seu Nome", CONTA["nome"], max_chars=24)
+        nome = st.text_input("Nome da conta", CONTA["nome"], max_chars=24)
         paleta_escolhida = st.selectbox("Cor do aplicativo", list(PALETAS.keys()), index=list(PALETAS.keys()).index(S.get("paleta", "Padrão")))
-        tutorial = st.checkbox("Exibir tutorial de início no seu ecrã inicial", value=c.get("tutorial", False))
+        tutorial = st.checkbox("Exibir tutorial de início na tela Início", value=c.get("tutorial", False))
         
         st.divider()
-        st.caption("🎯 OS SEUS OBJETIVOS")
-        meta = st.number_input("Meta financeira estipulada (R$)", min_value=0.0, value=float(c.get("meta", 10000.0)), step=1000.0, format="%.2f")
-        reserva = st.number_input("Montante da sua Reserva Fixa (R$)", min_value=0.0, value=float(c.get("reserva", 100.0)), step=100.0, format="%.2f")
+        st.caption("🎯 SEUS OBJETIVOS")
+        meta = st.number_input("Meta financeira aos 18 anos (R$)", min_value=0.0, value=float(c.get("meta", 10000.0)), step=1000.0, format="%.2f")
+        reserva = st.number_input("Tamanho ideal da Reserva Fixa (R$)", min_value=0.0, value=float(c.get("reserva", 100.0)), step=100.0, format="%.2f")
         
         st.divider()
-        st.caption("💰 RENDIMENTOS E GASTOS (ENTRA TODO DIA 1)")
-        renda = st.number_input("Renda ou Mesada Bruta (R$)", min_value=0.0, value=float(c.get("renda", 0.0)), step=50.0, format="%.2f")
-        gast = st.number_input("Os seus Gastos Fixos Mensais (R$)", min_value=0.0, value=float(c.get("gastos", 0.0)), step=10.0, format="%.2f")
-        guard = st.number_input("Desse valor, guardar automaticamente numa caixinha (R$)", min_value=0.0, value=float(c.get("guardar", 0.0)), step=50.0, format="%.2f")
-        cdi = st.number_input("CDI estimado para a Projeção (% ao ano)", min_value=0.0, max_value=100.0, value=float(c.get("cdi", 9.5)), step=0.1, format="%.2f")
+        st.caption("💰 FINANÇAS E GASTOS (ENTRA TODO DIA 1)")
+        renda = st.number_input("Renda / Mesada bruta mensal (R$)", min_value=0.0, value=float(c.get("renda", 0.0)), step=50.0, format="%.2f")
+        gast = st.number_input("Gastos fixos mensais (R$)", min_value=0.0, value=float(c.get("gastos", 0.0)), step=10.0, format="%.2f")
+        guard = st.number_input("Desse valor, guardar automaticamente (R$)", min_value=0.0, value=float(c.get("guardar", 0.0)), step=50.0, format="%.2f")
+        cdi = st.number_input("CDI estimado (% ao ano)", min_value=0.0, max_value=100.0, value=float(c.get("cdi", 9.5)), step=0.1, format="%.2f")
         
-        if st.form_submit_button("Guardar as minhas opções", type="primary", use_container_width=True):
+        if st.form_submit_button("Salvar ajustes", type="primary", use_container_width=True):
             CONTA["nome"] = nome.strip() or CONTA["nome"]
             S["paleta"] = paleta_escolhida
             st.session_state["paleta"] = paleta_escolhida
             S["cfg"].update({"renda": renda, "gastos": gast, "guardar": min(guard, renda), "cdi": cdi, "meta": meta, "reserva": reserva, "tutorial": tutorial})
-            fecha("Os seus ajustes foram guardados com sucesso.")
+            fecha("Ajustes salvos com sucesso!")
             st.rerun()
             
     if HAS_CRYPTO:
@@ -784,9 +862,9 @@ def v_ajustes():
         if r and r.get("kind") == "reg" and r["n"] != st.session_state["fid_done"]:
             st.session_state["fid_done"] = r["n"]
             if fid_registrar(U, r):
-                st.session_state["msg"] = "Face ID ativado no seu telemóvel"
+                st.session_state["msg"] = "Face ID ativado neste aparelho!"
                 st.rerun()
-            st.error("Falha ao validar credenciais WebAuthn.")
+            st.error("Falha ao registrar Face ID.")
 
 # ------------------------------------------------------------------ diálogos
 def form_op(op):
@@ -794,15 +872,15 @@ def form_op(op):
     if op in ("save", "take", "yld", "mov"):
         ops = [k for k in S.get("caixas", {}) if op == "save" or S["caixas"][k] > 0]
         if not ops:
-            st.info("Sem saldos disponíveis. Por favor, crie uma gaveta primeiro ou deposite valores.")
+            st.info("Nenhuma caixinha criada ou com saldo.")
             return
-        cx = st.selectbox("De" if op == "mov" else "Selecione a gaveta:", ops, key="c_" + op,
+        cx = st.selectbox("De" if op == "mov" else "Caixinha", ops, key="c_" + op,
                           format_func=lambda k: S.get("caixas_meta", {}).get(k, ["Caixinha"])[0] + " · " + brl(S["caixas"][k]))
         if op == "mov":
             cx2 = st.selectbox("Para", [k for k in S.get("caixas", {}) if k != cx], key="d_mov", format_func=lambda k: S.get("caixas_meta", {}).get(k, ["Caixinha"])[0])
     v = st.number_input("Valor (R$)", min_value=0.0, value=0.0, step=0.10 if op == "yld" else 1.0, format="%.2f", key="v_" + op)
-    obs = st.text_input("Observação / Recibo (opcional)", max_chars=40, key="o_" + op)
-    if st.button("Confirmar a transação", type="primary", use_container_width=True, key="ok_" + op):
+    obs = st.text_input("Observação (opcional)", max_chars=40, key="o_" + op)
+    if st.button("Confirmar", type="primary", use_container_width=True, key="ok_" + op):
         e = mover(cx, cx2, v, obs.strip()) if op == "mov" else aplicar(op, v, cx, obs.strip())
         if e:
             st.error(e)
@@ -810,13 +888,13 @@ def form_op(op):
             st.rerun()
 
 def form_criar_cx():
-    st.caption("Organize perfeitamente o seu dinheiro, segmentando-o por objetivos.")
-    nome = st.text_input("Nome que pretende dar (ex: Férias)")
-    cor = st.selectbox("Destaque Visual", ["pur", "blue", "gold", "grn", "red"], format_func=lambda c: {"pur":"Roxo","blue":"Azul","gold":"Dourado","grn":"Verde","red":"Vermelho"}[c])
-    desc = st.text_input("Resumo para lembrete (ex: Compra do carro)")
-    if st.button("Criar a nova Caixinha", type="primary", use_container_width=True):
+    st.caption("Organize seu dinheiro criando caixinhas separadas que rendem 100% do CDI.")
+    nome = st.text_input("Nome da Caixinha (ex: Viagem)")
+    cor = st.selectbox("Cor de Destaque", ["pur", "blue", "gold", "grn", "red"], format_func=lambda c: {"pur":"Roxo","blue":"Azul","gold":"Dourado","grn":"Verde","red":"Vermelho"}[c])
+    desc = st.text_input("Descrição (ex: Rende 100% do CDI)")
+    if st.button("Criar Caixinha", type="primary", use_container_width=True):
         if not nome.strip():
-            st.error("Atribua um nome à sua gaveta.")
+            st.error("Dê um nome para a caixinha.")
         else:
             k = chave(nome) + secrets.token_hex(2)
             if "caixas" not in S: S["caixas"] = {}
@@ -828,43 +906,43 @@ def form_criar_cx():
 
 @st.dialog("Novo lançamento")
 def dlg_novo():
-    t_tabs = ["💳 Conta", "🐷 Caixinhas", "➕ Criar Gaveta"]
+    t_tabs = ["💳 Conta", "🐷 Caixinhas", "➕ Criar Caixinha"]
     t1, t2, t3 = st.tabs(t_tabs)
     with t1:
-        form_op(st.radio("Conta Corrente", ["in", "out"], horizontal=True, format_func=CURTO.get, label_visibility="collapsed", key="r1"))
+        form_op(st.radio("Conta", ["in", "out"], horizontal=True, format_func=CURTO.get, label_visibility="collapsed", key="r1"))
     with t2:
-        form_op(st.radio("Gerir Caixinhas", ["save", "take", "yld", "mov"], horizontal=True, format_func=CURTO.get, label_visibility="collapsed", key="r2"))
+        form_op(st.radio("Caixinhas", ["save", "take", "yld", "mov"], horizontal=True, format_func=CURTO.get, label_visibility="collapsed", key="r2"))
     with t3:
         form_criar_cx()
 
-@st.dialog("🗑️ Eliminar permanentemente")
+@st.dialog("🗑️ Excluir caixinha")
 def dlg_excluir():
     ops = [k for k in S.get("caixas", {})]
     if not ops:
-        st.info("Não existem carteiras criadas para eliminar.")
+        st.info("Nenhuma caixinha para excluir.")
         return
-    cx = st.selectbox("Selecione a gaveta a apagar:", ops, format_func=lambda k: S.get("caixas_meta", {}).get(k, ["Caixinha"])[0] + " · " + brl(S["caixas"][k]))
-    modo = st.radio("Destino do capital:", ["Resgatar todo o montante para o Saldo Livre", "Limpar apenas registo visual (o saldo desaparece do património)"])
-    st.caption("ATENÇÃO: A destruição do card é definitiva na página inicial.")
-    if st.button("Confirmar eliminação", type="primary", use_container_width=True):
+    cx = st.selectbox("Qual caixinha?", ops, format_func=lambda k: S.get("caixas_meta", {}).get(k, ["Caixinha"])[0] + " · " + brl(S["caixas"][k]))
+    modo = st.radio("O que fazer com o saldo?", ["Resgatar para o Saldo Livre", "Apenas zerar (sai do patrimônio)"])
+    st.caption("Isso excluirá o card da caixinha permanentemente.")
+    if st.button("Excluir caixinha", type="primary", use_container_width=True):
         excluir_caixinha(cx, modo.startswith("Resgatar"))
         st.rerun()
 
-@st.dialog("🛡️ Painel Restrito")
+@st.dialog("🛡️ Painel dos pais")
 def dlg_pais():
-    st.caption("Encontra-se no modo de Leitura e Supervisão Avançada. Permite a redefinição de PINs de acesso.")
-    senha = st.text_input("Nova password para a conta do utilizador", type="password")
-    pin = st.text_input("Novo PIN Parental Exclusivo", type="password", max_chars=4)
-    if st.button("Gravar", type="primary", use_container_width=True):
+    st.caption("Modo supervisão: somente leitura. Aqui você pode redefinir os acessos.")
+    senha = st.text_input("Nova senha do filho (mín. 4)", type="password")
+    pin = st.text_input("Novo PIN dos pais (4 números)", type="password", max_chars=4)
+    if st.button("Salvar", type="primary", use_container_width=True):
         if (senha and len(senha) < 4) or (pin and not (pin.isdigit() and len(pin) == 4)):
-            st.error("A palavra-passe precisa de 4 ou mais caracteres e o PIN de estritamente 4 números.")
+            st.error("Senha com 4+ caracteres e PIN com 4 números.")
         else:
             if senha:
                 CONTA["s"], CONTA["h"] = mk(senha)
             if pin:
                 CONTA["ps"], CONTA["ph"] = mk(pin)
             salvar()
-            st.session_state["msg"] = "As chaves de encriptação foram sobrepostas."
+            st.session_state["msg"] = "Acessos atualizados!"
             st.rerun()
 
 # ------------------------------------------------------------------ app
@@ -891,18 +969,18 @@ def _nav(v):
     st.session_state["nav"] = v
 
 st.button("☀️" if st.session_state["tema"] == "dark" else "🌙", key="b_tema", on_click=_tema, help="Alternar tema")
-st.button("🔒", key="b_sair", on_click=_sair, help="Sair da sessão atual")
+st.button("🔒", key="b_sair", on_click=_sair, help="Encerrar sessão")
 
 tab = st.session_state["tab"]
 if st.session_state["nav"]:
     with st.container(key="nav"):
-        st.button("‹", key="b_min", on_click=_nav, args=(False,), help="Encolher painel")
-        aba = st.radio("Painel", ABAS, index=tab, key="aba", horizontal=True, label_visibility="collapsed")
-        if st.button("🛡️" if SUP else "＋", key="b_plus", help="Ferramentas dos pais" if SUP else "Adicionar entrada de valores"):
+        st.button("‹", key="b_min", on_click=_nav, args=(False,), help="Recolher")
+        aba = st.radio("Navegação", ABAS, index=tab, key="aba", horizontal=True, label_visibility="collapsed")
+        if st.button("🛡️" if SUP else "＋", key="b_plus", help="Painel dos pais" if SUP else "Novo lançamento"):
             (dlg_pais if SUP else dlg_novo)()
     idx = ABAS.index(aba)
 else:
-    st.button(ABAS[tab].split()[0], key="bolha", on_click=_nav, args=(True,), help="Desdobrar o menu")
+    st.button(ABAS[tab].split()[0], key="bolha", on_click=_nav, args=(True,), help="Abrir menu")
     idx = tab
 if idx != tab:
     st.session_state.update(dir="R" if idx > tab else "L", tab=idx)
@@ -910,24 +988,24 @@ if idx != tab:
 st.markdown('<div class="hd"><div class="k">' + TITULOS[idx] + '</div><h1>' + html.escape(CONTA["nome"]) + '</h1></div>', unsafe_allow_html=True)
 
 if SUP:
-    st.markdown('<div class="sup">🔐 <b>Modo Parental Ativo:</b> Não é permitido apagar e alterar saldos, mas pode auditar as transações efetuadas.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sup">🔐 Modo Supervisão: somente leitura, lançamentos ocultos.</div>', unsafe_allow_html=True)
 
 with st.container(key=f"view_{idx}_from{st.session_state['dir']}"):
     if idx == 0:
         st.markdown(v_home(), unsafe_allow_html=True)
         if not SUP and S.get("caixas"):
-            if st.button("🗑️ Eliminar uma caixinha", key="b_del", use_container_width=True):
+            if st.button("🗑️ Excluir caixinha", key="b_del", use_container_width=True):
                 dlg_excluir()
     elif idx == 1:
         st.markdown(v_ext(), unsafe_allow_html=True)
-        st.download_button("⬇️ Baixar todo o Extrato (CSV)", get_csv_extrato(), file_name=f"extrato_future_{agora():%Y-%m-%d}.csv", mime="text/csv", use_container_width=True, disabled=not S["extrato"])
+        st.download_button("⬇️ Baixar extrato (CSV)", get_csv_extrato(), file_name=f"extrato_future_{agora():%Y-%m-%d}.csv", mime="text/csv", use_container_width=True, disabled=not S["extrato"])
     elif idx == 2:
         st.markdown(v_proj(), unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1:
-            st.download_button("🖼️ Baixar Card Interativo", relatorio_html(), file_name=f"card_future_{agora():%Y-%m-%d}.html", mime="text/html", use_container_width=True)
+            st.download_button("🖼️ Baixar Card (HTML)", relatorio_html(), file_name=f"card_future_{agora():%Y-%m-%d}.html", mime="text/html", use_container_width=True)
         with col2:
-            st.download_button("⬇️ Baixar Projeção Anual", get_csv_proj(), file_name=f"projecao_future_{agora():%Y-%m-%d}.csv", mime="text/csv", use_container_width=True)
+            st.download_button("⬇️ Baixar Tabela", get_csv_proj(), file_name=f"projecao_future_{agora():%Y-%m-%d}.csv", mime="text/csv", use_container_width=True)
     elif idx == 3:
         st.markdown(v_idea(), unsafe_allow_html=True)
     elif idx == 4:
