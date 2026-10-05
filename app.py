@@ -1,10 +1,8 @@
 # -*- coding: utf-8 -*-
 """FUTURE - controle financeiro pessoal (Streamlit >= 1.40).
 
-requirements.txt:  streamlit>=1.40   cryptography   (cryptography = verificação do Face ID)
-Rodar: streamlit run app.py   |   Deploy: Streamlit Cloud (HTTPS é obrigatório para Face ID)
-Conta pré-carregada (dados do Nubank): nome João, senha 5102, PIN dos pais 5102.
-Contas novas começam zeradas.
+requirements.txt:  streamlit>=1.40   cryptography
+Rodar: streamlit run app.py
 """
 import csv, io, json, random, time, html, hmac, hashlib, base64, secrets, threading, urllib.request, unicodedata
 from datetime import datetime, date
@@ -56,7 +54,6 @@ for _k, _v in dict(u=None, modo=None, tela="login", tema="dark", paleta="Roxo Ne
     st.session_state.setdefault(_k, _v)
 
 
-# ---------------------------------------------------------------- utilidades
 def agora():
     return datetime.now(TZ) if TZ else datetime.now()
 
@@ -93,7 +90,6 @@ def confere(txt, s, h):
 
 
 def calcular_ano_fim(nasc):
-    """Calcula automaticamente o ano em que o usuário completa 18 anos com base na data de nascimento."""
     if not nasc:
         return 2032
     return nasc.year + 18
@@ -106,10 +102,10 @@ def nova_conta(nome, senha, pin, nasc=str(date(2014, 1, 1)), seed=False):
     d = {"livre": 0.0, "caixas": {"futuro": 0.0, "sonho": 0.0}, "extrato": [], "tema": "dark", "paleta": "Roxo Neón",
          "nasc": nasc, "cfg": {"renda": 0.0, "guardar": 0.0, "gastos": 0.0, "cdi": 9.5, "sonho_data": None},
          "ultimo_credito": f"{a.year}-{a.month:02d}"}
-    if seed:  # dados reais do Nubank: total R$ 2.038,40
+    if seed:
         d["livre"], d["caixas"] = 100.00, {"futuro": 966.55, "sonho": 971.85}
         d["cfg"].update(renda=600.0, guardar=500.0)
-        d["nasc"] = str(date(2014, 1, 1)) # João completaria 18 anos em 2032
+        d["nasc"] = str(date(2014, 1, 1))
     return {"nome": nome, "s": s, "h": h, "ps": ps, "ph": ph, "fid": {}, "d": d}
 
 
@@ -139,7 +135,7 @@ def db():
     c = d.setdefault("contas", {})
     if "projeto18" in c and SEED not in c:
         c[SEED] = c.pop("projeto18")
-        if c[SEED]["nome"] == "Minha Conta" or c[SEED]["nome"] == "João":
+        if c[SEED]["nome"] in ("Minha Conta", "João"):
             c[SEED]["nome"] = "João"
         c[SEED]["s"], c[SEED]["h"] = mk(CODIGO)
         c[SEED]["ps"], c[SEED]["ph"] = mk(PIN_PAIS)
@@ -166,30 +162,25 @@ def salvar():
             else:
                 ARQ.write_text(json.dumps(db(), ensure_ascii=False), "utf-8")
         except Exception:
-            st.session_state["warn"] = "⚠️ Não consegui salvar os dados. Verifique a conexão com o banco."
+            st.session_state["warn"] = "⚠️ Não consegui salvar os dados."
 
 
-# ------------------------------------------------------------------ visual
 def gerar_css():
     p = PALETAS.get(st.session_state.get("paleta", "Roxo Neón"), PALETAS["Roxo Neón"])
-    temas = {
-        "dark": f":root{{--bg:#07070b;--c1:#16161f;--c2:#0e0e15;--tx:#f4f4f8;--mu:#8b8b9a;--ln:rgba(255,255,255,.09);--s1:rgba(0,0,0,.6);--s2:rgba(255,255,255,.04);--blue:{p['blue']};--pur:{p['pur']};--gold:{p['gold']};--grn:#3fdc78;--red:#ff6b62;--glass:rgba(34,34,48,.58)}}",
-        "light": f":root{{--bg:#eceef4;--c1:#fff;--c2:#f3f4f9;--tx:#14141c;--mu:#656575;--ln:rgba(0,0,0,.09);--s1:rgba(120,125,150,.3);--s2:rgba(255,255,255,.95);--blue:{p['blue']};--pur:{p['pur']};--gold:{p['gold']};--grn:#12843f;--red:#d9342b;--glass:rgba(255,255,255,.68)}}",
-    }
-    css_base = """
-    .stApp{background:var(--bg)!important;color:var(--tx);overflow-x:hidden;font-family:-apple-system,"SF Pro Text",Roboto,system-ui,sans-serif;transition:background 0.3s ease}
-    header[data-testid="stHeader"],#MainMenu,footer{display:none!important}
-    .block-container{max-width:480px!important;padding:1.2rem 1rem 10rem!important}
-    .stApp p,.stApp label,.stApp h1,.stApp li,[data-testid="stDialog"] *{color:var(--tx)}
-    .stApp input,[data-baseweb="select"]>div,[data-baseweb="input"],[data-baseweb="base-input"]{background:var(--c2)!important;color:var(--tx)!important;border-radius:14px!important}
-    div[role="dialog"]{background:var(--c1)!important;border-radius:28px!important}
-    button[kind="secondary"],[data-testid="stBaseButton-secondary"]{background:var(--c2);border:1px solid var(--ln);border-radius:16px}
-    button[kind="secondary"] p,[data-testid="stBaseButton-secondary"] p{color:var(--tx)}
-    button[kind="primary"],[data-testid="stBaseButton-primary"]{background:linear-gradient(135deg,var(--pur),var(--blue))!important;border:0!important;border-radius:16px!important}
-    button[kind="primary"] *,[data-testid="stBaseButton-primary"] *{color:#fff!important}
-    [data-testid="stForm"]{border:0;padding:0;background:transparent}
-    .hd h1{margin:0;font-size:26px;letter-spacing:-.03em;padding:0}.hd{margin-bottom:16px}
-    .login{text-align:center;padding:7vh 0 18px;animation:slR .6s cubic-bezier(.2,.8,.2,1)}
-    .login h1{font-size:30px;letter-spacing:-.03em;margin:8px 0 4px;padding:0}.logo{font-size:56px;animation:glow 3s ease-in-out infinite}
-    @keyframes glow{50%{transform:scale(1.08);filter:drop-shadow(0 0 18px var(--pur))}}
-    .card{background:linear-gradient(145deg,var(--c1),var(--c2));border:1px solid color-mix(in srgb,var(--c,var(--ln)) 50%,transparent);border-radius:26px;padding:18px;box-shadow:9px 9px 22px var(--s1),-5px -5px 16px var(--s2);margin-bottom:16px
+    is_dark = st.session_state.get("tema", "dark") == "dark"
+    
+    bg = "#07070b" if is_dark else "#eceef4"
+    c1 = "#16161f" if is_dark else "#fff"
+    c2 = "#0e0e15" if is_dark else "#f3f4f9"
+    tx = "#f4f4f8" if is_dark else "#14141c"
+    mu = "#8b8b9a" if is_dark else "#656575"
+    ln = "rgba(255,255,255,.09)" if is_dark else "rgba(0,0,0,.09)"
+    s1 = "rgba(0,0,0,.6)" if is_dark else "rgba(120,125,150,.3)"
+    s2 = "rgba(255,255,255,.04)" if is_dark else "rgba(255,255,255,.95)"
+    glass = "rgba(34,34,48,.58)" if is_dark else "rgba(255,255,255,.68)"
+    grn = "#3fdc78" if is_dark else "#12843f"
+    red = "#ff6b62" if is_dark else "#d9342b"
+
+    return f"""
+    :root {{
+        --bg: {bg}; --c1: {c1}; --c2: {c2}; --tx: {tx};
