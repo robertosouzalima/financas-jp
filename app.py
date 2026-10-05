@@ -3,11 +3,19 @@
 
 requirements.txt:  streamlit>=1.40   cryptography   (cryptography = verificação do Face ID)
 Rodar: streamlit run app.py   |   Deploy: Streamlit Cloud (HTTPS é obrigatório para Face ID)
-Contas novas começam zeradas. Senha 5102 abre a conta pré-carregada (dados do Nubank);
-PIN 0506 abre essa mesma conta em Controle Parental. Para esconder esses códigos use Secrets:
-codigo = "5102"  /  pin_pais = "0506"
+Conta pré-carregada (dados do Nubank): nome João, senha 5102, PIN dos pais 5102.
+Contas novas começam zeradas.
+
+SALVAR DE FORMA PERMANENTE (o Streamlit Cloud apaga arquivos quando o servidor reinicia):
+1) Crie um projeto gratuito em supabase.com e rode no SQL Editor:
+   create table projeto18 (id text primary key, dados jsonb not null);
+   alter table projeto18 enable row level security;
+2) Em Settings > Secrets do app, cole:
+   supabase_url = "https://SEU-PROJETO.supabase.co"
+   supabase_key = "SUA_SERVICE_ROLE_KEY"
+Sem isso o app salva em arquivo local, que some quando o servidor reinicia.
 """
-import csv, io, json, random, time, html, hmac, hashlib, base64, secrets, threading
+import csv, io, json, random, time, html, hmac, hashlib, base64, secrets, threading, urllib.request, unicodedata
 from datetime import datetime, date
 from pathlib import Path
 from urllib.parse import urlparse
@@ -27,12 +35,13 @@ except Exception:
     TZ = None
 
 st.set_page_config(page_title="Projeto 18 Anos", page_icon="💜", layout="centered", initial_sidebar_state="collapsed")
+CODIGO, PIN_PAIS = "5102", "5102"
 try:
-    CODIGO, PIN_PAIS = str(st.secrets["codigo"]), str(st.secrets["pin_pais"])
+    SB_URL, SB_KEY = str(st.secrets["supabase_url"]).rstrip("/"), str(st.secrets["supabase_key"])
 except Exception:
-    CODIGO, PIN_PAIS = "5102", "0506"
+    SB_URL = SB_KEY = ""
 
-SEED = "projeto18"
+SEED = "joao"
 ARQ = Path(__file__).with_name("projeto18_db.json")
 META, RESERVA, ANO_FIM = 62000.0, 100.0, 2032
 CAIXAS = {"futuro": ("Caixinha Futuro", "pur", "Principal · rende 100% do CDI"),
@@ -41,9 +50,9 @@ TIPOS = {"in": ("📥", "Recebi dinheiro"), "out": ("💸", "Gastei dinheiro"), 
          "take": ("🔓", "Resgatar da caixinha"), "yld": ("📈", "Rendimento / juros"), "mov": ("🔁", "Mover entre caixinhas"),
          "del": ("🗑️", "Caixinha zerada")}
 CURTO = {"in": "📥 Receber", "out": "💸 Gastar", "save": "🔒 Guardar", "take": "🔓 Resgatar", "yld": "📈 Juros", "mov": "🔁 Mover"}
-ABAS, TITULOS = ["🏠", "🧾", "📈", "💡"], ["Início", "Extrato", "Projeção", "Ideias"]
+ABAS, TITULOS = ["🏠 Início", "🧾 Extrato", "📈 Projeção", "💡 Ideias"], ["Início", "Extrato", "Projeção", "Ideias"]
 
-for _k, _v in dict(u=None, modo=None, tela="login", tema="dark", tab=0, nav=True, dir="R", fx=None, msg=None,
+for _k, _v in dict(u=None, modo=None, tela="login", tema="dark", tab=0, nav=False, dir="R", fx=None, msg=None,
                    tent=0, bloq=0.0, chal=secrets.token_urlsafe(32), fid_done=None).items():
     st.session_state.setdefault(_k, _v)
 
@@ -64,6 +73,12 @@ def kf(v):
 
 def fmt_dt(iso):
     return datetime.fromisoformat(iso).strftime("%d/%m/%Y %H:%M:%S")
+
+
+def chave(n):
+    """Nome normalizado: sem acento, minúsculo, espaços únicos (João = joao = JOÃO)."""
+    n = "".join(c for c in unicodedata.normalize("NFD", n) if unicodedata.category(c) != "Mn")
+    return " ".join(n.lower().split())
 
 
 def b64d(s):
@@ -92,15 +107,35 @@ def nova_conta(nome, senha, pin, seed=False):
     return {"nome": nome, "s": s, "h": h, "ps": ps, "ph": ph, "fid": {}, "d": d}
 
 
+def _sb(metodo, path="", corpo=None):
+    h = {"apikey": SB_KEY, "Authorization": "Bearer " + SB_KEY, "Content-Type": "application/json",
+         "Prefer": "resolution=merge-duplicates,return=minimal"}
+    req = urllib.request.Request(SB_URL + "/rest/v1/projeto18" + path, headers=h, method=metodo,
+                                 data=None if corpo is None else json.dumps(corpo, ensure_ascii=False).encode())
+    with urllib.request.urlopen(req, timeout=10) as r:
+        return r.read()
+
+
 @st.cache_resource
 def db():
-    try:
-        d = json.loads(ARQ.read_text("utf-8"))
-    except Exception:
-        d = {}
-    d.setdefault("contas", {})
-    if SEED not in d["contas"]:
-        d["contas"][SEED] = nova_conta("Minha Conta", CODIGO, PIN_PAIS, True)
+    d = None
+    if SB_URL:      # nuvem: se falhar, o app para (evita sobrescrever dados salvos)
+        r = json.loads(_sb("GET", "?id=eq.db&select=dados"))
+        d = r[0]["dados"] if r else None
+    if d is None:
+        try:
+            d = json.loads(ARQ.read_text("utf-8"))
+        except Exception:
+            d = {}
+    c = d.setdefault("contas", {})
+    if "projeto18" in c and SEED not in c:      # migra a conta antiga para João / 5102
+        c[SEED] = c.pop("projeto18")
+        if c[SEED]["nome"] == "Minha Conta":
+            c[SEED]["nome"] = "João"
+        c[SEED]["s"], c[SEED]["h"] = mk(CODIGO)
+        c[SEED]["ps"], c[SEED]["ph"] = mk(PIN_PAIS)
+    if SEED not in c:
+        c[SEED] = nova_conta("João", CODIGO, PIN_PAIS, True)
     return d
 
 
@@ -117,9 +152,12 @@ def sessoes():
 def salvar():
     with trava():
         try:
-            ARQ.write_text(json.dumps(db(), ensure_ascii=False), "utf-8")
+            if SB_URL:
+                _sb("POST", "", [{"id": "db", "dados": db()}])
+            else:
+                ARQ.write_text(json.dumps(db(), ensure_ascii=False), "utf-8")
         except Exception:
-            pass
+            st.session_state["warn"] = "⚠️ Não consegui salvar os dados. Verifique a conexão com o banco."
 
 
 # ------------------------------------------------------------------ visual
@@ -153,14 +191,15 @@ table{width:100%;border-collapse:collapse;font-size:13.5px}th{color:var(--mu);fo
 .bar{fill:var(--grn);opacity:.9}.bt{fill:var(--mu);font-size:10px;text-anchor:middle}.tl{stroke:var(--gold);stroke-dasharray:4 4;stroke-width:1.2}
 .al{display:flex;justify-content:space-between;align-items:baseline}.al b{font-size:20px}
 .st-key-nav,.st-key-bolha{position:fixed;left:16px;bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:999;width:auto!important}
-.st-key-nav{width:min(calc(100vw - 32px),420px)!important;display:flex!important;flex-direction:row!important;align-items:center;gap:4px!important;padding:6px;overflow:hidden;background:var(--glass);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border:1px solid var(--ln);border-radius:999px;box-shadow:0 14px 40px var(--s1),inset 0 1px 0 rgba(255,255,255,.14);animation:stretch .55s cubic-bezier(.2,.9,.2,1)}
+.st-key-nav{width:min(calc(100vw - 32px),420px)!important;display:flex!important;flex-direction:row!important;align-items:center;gap:4px!important;padding:6px;overflow:hidden;background:var(--glass);backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);border:1px solid var(--ln);border-radius:34px;box-shadow:0 14px 40px var(--s1),inset 0 1px 0 rgba(255,255,255,.14);animation:stretch .55s cubic-bezier(.2,.9,.2,1)}
 @keyframes stretch{from{width:58px!important;padding:0}}
 .st-key-nav>div{width:auto!important;animation:fi .5s .12s both}@keyframes fi{from{opacity:0;transform:translateX(-12px)}}
 .st-key-aba{flex:1!important}
 .st-key-nav [role="radiogroup"]{display:flex;flex-wrap:nowrap;gap:2px;width:100%}
-.st-key-nav label{flex:1;justify-content:center;margin:0;padding:11px 0;border-radius:999px;cursor:pointer;transition:background .3s}
+.st-key-nav label{flex:1;justify-content:center;margin:0;padding:8px 0;border-radius:26px;cursor:pointer;transition:background .3s}
 .st-key-nav label>div:first-child{display:none}
-.st-key-nav label p{font-size:20px;line-height:1;opacity:.5;transition:opacity .3s}
+.st-key-nav label p{font-size:10px;line-height:1.3;font-weight:600;text-align:center;word-spacing:100vw;margin:0;opacity:.55;transition:opacity .3s}
+.st-key-nav label p::first-line{font-size:21px}
 .st-key-nav label:has(input:checked){background:color-mix(in srgb,var(--pur) 26%,transparent)}
 .st-key-nav label:has(input:checked) p{opacity:1}
 .st-key-b_min button,.st-key-b_plus button,.st-key-bolha button,.st-key-b_tema button,.st-key-b_sair button{border-radius:50%;padding:0;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--ln)}
@@ -177,9 +216,18 @@ table{width:100%;border-collapse:collapse;font-size:13.5px}th{color:var(--mu);fo
 .fx b{position:absolute;left:50%;top:36%;font-size:36px;color:var(--grn);opacity:0;animation:pop 2.4s ease forwards;text-shadow:0 4px 24px rgba(0,0,0,.35)}
 @keyframes rise{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:1}100%{transform:translateY(-90vh) rotate(25deg) scale(1.1);opacity:0}}
 @keyframes pop{0%{opacity:0;transform:translate(-50%,30px) scale(.7)}20%{opacity:1;transform:translate(-50%,0) scale(1.05)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-40px)}}
+html,body,.stApp,.stApp p,.stApp label,.stApp input,.stApp textarea,.stApp button,.stApp [data-baseweb],div[role="dialog"] p{font-family:Inter,-apple-system,"SF Pro Text",system-ui,sans-serif!important}
+.big,.hd h1,.login h1,.al b,.lb{font-family:"Plus Jakarta Sans",Inter,system-ui,sans-serif!important}
+.big,table,.tx b{font-variant-numeric:tabular-nums}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 """
-st.markdown("<style>" + TEMAS[st.session_state["tema"]] + CSS + "</style>", unsafe_allow_html=True)
+FONTES = "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');"
+st.markdown("<style>" + FONTES + TEMAS[st.session_state["tema"]] + CSS + "</style>", unsafe_allow_html=True)
+try:
+    db()
+except Exception:
+    st.error("Não consegui conectar ao banco de dados. Atualize a página em instantes.")
+    st.stop()
 
 # ------------------------------------------------- Face ID (WebAuthn / passkey)
 FACEID_HTML = """<!DOCTYPE html><html><body style="margin:0;font-family:-apple-system,system-ui,sans-serif"><button id="b"></button><div id="m"></div><script>
@@ -291,11 +339,9 @@ def tela_login():
             p = st.text_input("Senha", type="password", placeholder="Senha", label_visibility="collapsed")
             go = st.form_submit_button("Entrar", type="primary", use_container_width=True)
         if go and not _espera():
-            c = db()["contas"].get(n.strip().lower())
+            c = db()["contas"].get(chave(n))
             if c and confere(p, c["s"], c["h"]):
-                entrar(n.strip().lower(), "filho")
-            elif p == CODIGO:
-                entrar(SEED, "filho")
+                entrar(chave(n), "filho")
             else:
                 _falha()
         if HAS_CRYPTO:
@@ -308,6 +354,8 @@ def tela_login():
                 st.error("Face ID não reconhecido.")
         st.button("🛡️ Controle parental", key="b_pais", use_container_width=True, on_click=_ir, args=("pais",))
         st.button("Criar conta", key="b_criar", use_container_width=True, on_click=_ir, args=("criar",))
+        if not SB_URL:
+            st.caption("⚠️ Armazenamento temporário: os dados podem ser apagados quando o servidor reiniciar.")
         return
     if t == "criar":
         with st.form("f_criar"):
@@ -316,12 +364,12 @@ def tela_login():
             pin = st.text_input("PIN dos pais (4 números)", type="password", max_chars=4)
             go = st.form_submit_button("Criar conta", type="primary", use_container_width=True)
         if go:
-            k = n.strip().lower()
+            k = chave(n)
             if not 2 <= len(k) <= 24:
                 st.error("Use um nome de 2 a 24 caracteres.")
             elif k in db()["contas"]:
                 st.error("Esse nome já existe.")
-            elif len(p) < 4 or p == CODIGO:
+            elif len(p) < 4:
                 st.error("Escolha outra senha (mín. 4 caracteres).")
             elif not (pin.isdigit() and len(pin) == 4):
                 st.error("O PIN dos pais precisa ter 4 números.")
@@ -335,11 +383,9 @@ def tela_login():
             pin = st.text_input("PIN dos pais", type="password", max_chars=4)
             go = st.form_submit_button("Entrar em supervisão", type="primary", use_container_width=True)
         if go and not _espera():
-            c = db()["contas"].get(n.strip().lower())
+            c = db()["contas"].get(chave(n))
             if c and confere(pin, c["ps"], c["ph"]):
-                entrar(n.strip().lower(), "pais")
-            elif pin == PIN_PAIS:
-                entrar(SEED, "pais")
+                entrar(chave(n), "pais")
             else:
                 _falha()
     st.button("← Voltar", key="b_volta", use_container_width=True, on_click=_ir, args=("login",))
@@ -376,8 +422,8 @@ def fecha(msg=None):
     S["livre"] = round(S["livre"], 2)
     for k in S["caixas"]:
         S["caixas"][k] = round(S["caixas"][k], 2)
-    salvar()
     st.session_state["msg"] = msg or "Lançado em " + fmt_dt(S["extrato"][-1]["ts"])
+    salvar()
 
 
 def aplicar(t, v, cx=None, obs=""):
@@ -502,6 +548,20 @@ def csv_extrato():
         if obs[:1] in ("=", "+", "-", "@"):
             obs = "'" + obs
         w.writerow([d.strftime("%d/%m/%Y"), d.strftime("%H:%M:%S"), TIPOS[x["t"]][1], destino(x), f"{x['v']:.2f}".replace(".", ","), obs])
+    return ("\ufeff" + buf.getvalue()).encode("utf-8")
+
+
+def csv_proj():
+    L, _ = projetar()
+    m = lambda v: f"{v:.2f}".replace(".", ",")
+    buf = io.StringIO()
+    w = csv.writer(buf, delimiter=";")
+    w.writerow(["Ano", "Investido (R$)", "Juros (R$)", "Total (R$)", "% da meta"])
+    for a, p, j, b in L:
+        w.writerow([a, m(p), m(j), m(b), f"{b / META * 100:.1f}".replace(".", ",") + "%"])
+    w.writerow([])
+    w.writerows([["Meta (R$)", m(META)], ["Ponto de partida (R$)", m(total())],
+                 ["Aporte mensal (R$)", m(S["cfg"]["renda"])], ["CDI estimado a.a. (%)", m(S["cfg"]["cdi"])]])
     return ("\ufeff" + buf.getvalue()).encode("utf-8")
 
 
@@ -656,6 +716,7 @@ def ajustes():
         S["cfg"] = {"renda": renda, "guardar": min(guard, renda), "gastos": gast, "cdi": cdi, "sonho_data": sd.isoformat() if sd else None}
         fecha("Ajustes salvos")
         st.rerun()
+    st.caption("☁️ Dados salvos na nuvem." if SB_URL else "⚠️ Armazenamento temporário: configure o Supabase para salvar de vez.")
     if HAS_CRYPTO:
         st.divider()
         r = FACEID(modo="reg", chal=st.session_state["chal"], user=U, tema=st.session_state["tema"], key="fid_reg", default=None)
@@ -698,7 +759,7 @@ def dlg_pais():
     senha = st.text_input("Nova senha do filho (mín. 4)", type="password")
     pin = st.text_input("Novo PIN dos pais (4 números)", type="password", max_chars=4)
     if st.button("Salvar", type="primary", use_container_width=True):
-        if (senha and len(senha) < 4) or (senha and senha == CODIGO and U != SEED) or (pin and not (pin.isdigit() and len(pin) == 4)):
+        if (senha and len(senha) < 4) or (pin and not (pin.isdigit() and len(pin) == 4)):
             st.error("Senha com 4+ caracteres e PIN com 4 números.")
         else:
             if senha:
@@ -714,6 +775,8 @@ def dlg_pais():
 if not SUP:
     creditar_mes()
     liberar_sonho()
+if st.session_state.get("warn"):
+    st.session_state["msg"] = st.session_state.pop("warn")
 if st.session_state["msg"]:
     st.toast(st.session_state["msg"])
     st.session_state["msg"] = None
@@ -747,7 +810,7 @@ if st.session_state["nav"]:
             (dlg_pais if SUP else dlg_novo)()
     idx = ABAS.index(aba)
 else:
-    st.button(ABAS[tab], key="bolha", on_click=_nav, args=(True,), help="Abrir menu")   # bolinha recolhida
+    st.button(ABAS[tab].split()[0], key="bolha", on_click=_nav, args=(True,), help="Abrir menu")   # bolinha recolhida
     idx = tab
 if idx != tab:
     st.session_state.update(dir="R" if idx > tab else "L", tab=idx)
@@ -761,6 +824,9 @@ with st.container(key=f"view_{idx}_from{st.session_state['dir']}"):
     if idx == 0 and not SUP and any(v > 0.004 for v in S["caixas"].values()):
         if st.button("🗑️ Excluir caixinha", key="b_del", use_container_width=True):
             dlg_excluir()
+    if idx == 2:
+        st.download_button("⬇️ Baixar projeção (CSV)", csv_proj(), file_name=f"projecao_projeto18_{agora():%Y-%m-%d}.csv",
+                           mime="text/csv", use_container_width=True)
     if idx == 1:
         st.download_button("⬇️ Baixar tabela (CSV)", csv_extrato(), file_name=f"extrato_projeto18_{agora():%Y-%m-%d}.csv",
                            mime="text/csv", use_container_width=True, disabled=not S["extrato"])
