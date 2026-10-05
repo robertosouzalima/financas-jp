@@ -33,7 +33,9 @@ TIPOS = {"in": ("📥", "Recebi dinheiro"), "out": ("💸", "Gastei dinheiro"), 
          "take": ("🔓", "Resgatar da caixinha"), "yld": ("📈", "Rendimento / juros"), "mov": ("🔁", "Mover entre caixinhas"),
          "del": ("🗑️", "Caixinha apagada")}
 CURTO = {"in": "📥 Receber", "out": "💸 Gastar", "save": "🔒 Guardar", "take": "🔓 Resgatar", "yld": "📈 Juros", "mov": "🔁 Mover"}
-ABAS, TITULOS = ["🏠 Início", "🧾 Extrato", "📈 Projeção", "💡 Ideias", "⚙️ Ajustes"], ["Início", "Extrato", "Projeção", "Ideias", "Ajustes da Conta"]
+
+# Os Ajustes saíram das abas principais e foram pro topo!
+ABAS, TITULOS = ["🏠 Início", "🧾 Extrato", "📈 Projeção", "💡 Ideias"], ["Início", "Extrato", "Projeção", "Ideias"]
 
 PALETAS = {
     "Padrão": {"pur": "#b57bff", "blue": "#4aa3ff", "gold": "#f0c24b", "grn": "#3fdc78", "red": "#ff6b62"},
@@ -174,43 +176,18 @@ button[kind="primary"] *, [data-testid="stBaseButton-primary"] * { color: #fff !
 .hd h1 { margin: 0; font-size: 26px; letter-spacing: -.03em; padding: 0; }
 .hd { margin-bottom: 16px; }
 
-/* LOGIN CENTRALIZADO COM ANIMAÇÃO DO FOGUETE */
-.login {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    width: 100%;
-    margin: 0 auto;
-    padding: 7vh 0 18px;
-    animation: slR .6s cubic-bezier(.25, 1, .5, 1);
-}
-.login h1 {
-    font-size: 30px;
-    letter-spacing: -.03em;
-    margin: 8px 0 4px;
-    padding: 0;
-    width: 100%;
-    text-align: center;
-    display: block;
+/* ANIMAÇÃO DO FOGUETE DECOLANDO E FLUTUANDO */
+@keyframes rocketLaunch {
+    0% { transform: translateY(80px) scale(0.4); opacity: 0; filter: drop-shadow(0 0 0px var(--pur)); }
+    60% { transform: translateY(-15px) scale(1.1); opacity: 1; }
+    100% { transform: translateY(0) scale(1); opacity: 1; filter: drop-shadow(0 8px 18px var(--blue)); }
 }
 .logo {
-    font-size: 56px;
-    text-align: center;
+    font-size: 64px;
     line-height: 1;
+    margin: 0 auto;
     display: inline-block;
-    animation: rocketAnim 3.5s ease-in-out infinite;
-}
-@keyframes rocketAnim {
-    0% { transform: translateY(0) scale(1) rotate(0deg); filter: drop-shadow(0 0 10px var(--pur)); }
-    50% { transform: translateY(-12px) scale(1.08) rotate(-3deg); filter: drop-shadow(0 0 22px var(--blue)); }
-    100% { transform: translateY(0) scale(1) rotate(0deg); filter: drop-shadow(0 0 10px var(--pur)); }
-}
-.login .k {
-    width: 100%;
-    text-align: center;
-    display: block;
+    animation: rocketLaunch 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
 }
 
 .card { background: linear-gradient(145deg, var(--c1), var(--c2)); border: 1px solid color-mix(in srgb, var(--c, var(--ln)) 50%, transparent); border-radius: 26px; padding: 18px; box-shadow: 9px 9px 22px var(--s1), -5px -5px 16px var(--s2); margin-bottom: 16px; }
@@ -248,17 +225,21 @@ th:first-child, td:first-child { text-align: left; }
 .st-key-nav label p::first-line { font-size: 21px; }
 .st-key-nav label:has(input:checked) { background: color-mix(in srgb, var(--pur) 26%, transparent); }
 .st-key-nav label:has(input:checked) p { opacity: 1; }
-.st-key-b_min button, .st-key-b_plus button, .st-key-bolha button, .st-key-b_tema button, .st-key-b_sair button { border-radius: 50%; padding: 0; background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--ln); }
+.st-key-b_min button, .st-key-b_plus button, .st-key-bolha button, .st-key-b_tema button, .st-key-b_ajustes_top button, .st-key-b_sair button { border-radius: 50%; padding: 0; background: var(--glass); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid var(--ln); }
 .st-key-b_min button { width: 34px; height: 34px; }
 .st-key-b_plus button { width: 46px; height: 46px; border: 0; background: linear-gradient(135deg, var(--pur), var(--blue)); }
 .st-key-b_plus button p { color: #fff; font-size: 24px; line-height: 1; }
 .st-key-bolha { animation: popin .4s cubic-bezier(.2, 1.4, .4, 1); }
 .st-key-bolha button { width: 58px; height: 58px; font-size: 24px; box-shadow: 0 10px 30px var(--s1); }
 @keyframes popin { from { transform: scale(.4); opacity: 0; } }
-.st-key-b_tema, .st-key-b_sair { position: fixed; z-index: 1000; width: auto !important; top: calc(12px + env(safe-area-inset-top, 0px)); }
-.st-key-b_tema { right: 66px; }
+
+/* BOTÕES DO TOPO (TEMA, AJUSTES E SAIR) */
+.st-key-b_tema, .st-key-b_ajustes_top, .st-key-b_sair { position: fixed; z-index: 1000; width: auto !important; top: calc(12px + env(safe-area-inset-top, 0px)); }
+.st-key-b_tema { right: 118px; }
+.st-key-b_ajustes_top { right: 66px; }
 .st-key-b_sair { right: 14px; }
-.st-key-b_tema button, .st-key-b_sair button { width: 44px; height: 44px; font-size: 18px; }
+.st-key-b_tema button, .st-key-b_ajustes_top button, .st-key-b_sair button { width: 44px; height: 44px; font-size: 18px; }
+
 [class*="_fromR"] { animation: slR .6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
 [class*="_fromL"] { animation: slL .6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
 @keyframes slR { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -269,14 +250,14 @@ th:first-child, td:first-child { text-align: left; }
 @keyframes rise { 0% { transform: translateY(0) scale(.6); opacity: 0; } 15% { opacity: 1; } 100% { transform: translateY(-90vh) rotate(25deg) scale(1.1); opacity: 0; } }
 @keyframes pop { 0% { opacity: 0; transform: translate(-50%, 30px) scale(.7); } 20% { opacity: 1; transform: translate(-50%, 0) scale(1.05); } 80% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -40px); } }
 html, body, .stApp, .stApp p, .stApp label, .stApp input, .stApp textarea, .stApp button, .stApp [data-baseweb], div[role="dialog"] p { font-family: Inter, -apple-system, "SF Pro Text", system-ui, sans-serif !important; }
-.big, .hd h1, .login h1, .al b, .lb { font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif !important; }
+.big, .hd h1, .al b, .lb { font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif !important; }
 .big, table, .tx b { font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation: none !important; transition: none !important; } }
 """
 FONTES = "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');"
 st.markdown("<style>" + FONTES + get_css(st.session_state["tema"], st.session_state["paleta"]) + CSS_BASE + "</style>", unsafe_allow_html=True)
 
-# Garante o preenchimento total do ecrã e remove bordas brancas (PWA / Modo App)
+# Garante o preenchimento total da tela e remove bordas brancas (PWA / Modo App)
 components.html("""
 <script>
     const parentDoc = window.parent.document;
@@ -393,7 +374,15 @@ def _espera():
 def tela_login():
     t = st.session_state["tela"]
     sub = {"login": "INICIAR SESSÃO", "criar": "CRIAR CONTA", "pais": "CONTROLE PARENTAL"}[t]
-    st.markdown(f'<div class="login"><div class="logo">🚀</div><h1>FUTURE</h1><div class="k" style="letter-spacing:.2em">{sub}</div></div>', unsafe_allow_html=True)
+    
+    # FUTURE 100% Centralizado independentemente do Wrapper
+    st.markdown(f'''
+    <div style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:100%; text-align:center; padding-top: 5vh; padding-bottom: 2vh;">
+        <div class="logo">🚀</div>
+        <h1 style="font-size: 36px; margin: 10px 0 5px 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; letter-spacing: -1px; text-align: center; width: 100%;">FUTURE</h1>
+        <div style="color: var(--mu); font-size: 13px; letter-spacing: 0.2em; text-align: center; width: 100%; text-transform: uppercase;">{sub}</div>
+    </div>
+    ''', unsafe_allow_html=True)
     
     if t == "login":
         with st.form("f_login"):
@@ -642,24 +631,46 @@ def relatorio_html():
     p = PALETAS[st.session_state.get("paleta", "Padrão")]
     aporte = S["cfg"].get("renda", 0.0) - S["cfg"].get("gastos", 0.0)
     
-    html_out = (
-        '<div style="background:#16161f; color:#f4f4f8; padding:30px; border-radius:24px; font-family:sans-serif; width:400px; box-shadow: 0 4px 20px rgba(0,0,0,0.5)">'
-        '<div style="text-align:center; padding-bottom:15px;">'
-        '<h2 style="color:' + p["pur"] + '; margin:0 0 5px 0">🚀 FUTURE - Projeção de Metas</h2>'
-        '<p style="color:#8b8b9a; font-size:14px; margin:0">Conta: ' + html.escape(CONTA["nome"]) + ' | Fim: ' + str(ano_fim) + '</p>'
-        '</div>'
-        '<div style="background:#0e0e15; padding:20px; border-radius:16px; margin:15px 0; border: 1px solid rgba(255,255,255,0.05);">'
-        '<div style="font-size:12px; color:#8b8b9a; text-transform:uppercase;">Patrimônio Projetado</div>'
-        '<div style="font-size:32px; font-weight:bold; color:' + p["grn"] + '; margin:5px 0;">' + brl(fim) + '</div>'
-        '<div style="font-size:14px; color:' + p["gold"] + ';">Meta alvo: ' + brl(meta_val) + '</div>'
-        '</div>'
-        '<div style="color:#8b8b9a; font-size:13px; line-height:1.6; padding-left:5px;">'
-        '• Ponto de partida inicial: ' + brl(total()) + '<br>'
-        '• Aporte líquido programado: ' + brl(aporte) + ' / mês<br>'
-        '• Rendimento estimado: ' + str(S["cfg"]["cdi"]) + '% ao ano'
-        '</div>'
-        '</div>'
-    )
+    html_out = f"""<!DOCTYPE html>
+    <html lang="pt-BR">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Card FUTURE - {html.escape(CONTA["nome"])}</title>
+        <style>
+            body {{ background-color: #07070b; margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: -apple-system, system-ui, sans-serif; }}
+            .card-wrap {{ background: #16161f; color: #f4f4f8; padding: 30px; border-radius: 24px; width: 100%; max-width: 400px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); box-sizing: border-box; }}
+            .title-sec {{ text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 20px; margin-bottom: 20px; }}
+            .title-sec h2 {{ color: {p['pur']}; margin: 0 0 8px 0; font-size: 24px; letter-spacing: -0.5px; }}
+            .title-sec p {{ color: #8b8b9a; font-size: 14px; margin: 0; }}
+            .main-box {{ background: #0e0e15; padding: 24px; border-radius: 16px; margin: 0 0 20px 0; border: 1px solid rgba(255,255,255,0.05); text-align: center; }}
+            .main-box .lbl {{ font-size: 12px; color: #8b8b9a; text-transform: uppercase; letter-spacing: 1px; }}
+            .main-box .val {{ font-size: 38px; font-weight: bold; color: {p['grn']}; margin: 10px 0; }}
+            .main-box .meta {{ font-size: 15px; color: {p['gold']}; }}
+            .details {{ color: #8b8b9a; font-size: 14px; line-height: 1.8; background: rgba(255,255,255,0.02); padding: 16px; border-radius: 12px; }}
+            .details b {{ color: #f4f4f8; font-weight: 600; }}
+        </style>
+    </head>
+    <body>
+        <div class="card-wrap">
+            <div class="title-sec">
+                <h2>🚀 FUTURE</h2>
+                <p>Projeção Financeira de <b>{html.escape(CONTA["nome"])}</b> até {ano_fim}</p>
+            </div>
+            <div class="main-box">
+                <div class="lbl">Patrimônio Projetado</div>
+                <div class="val">{brl(fim)}</div>
+                <div class="meta">Meta alvo: {brl(meta_val)}</div>
+            </div>
+            <div class="details">
+                • Ponto de partida inicial: <b>{brl(total())}</b><br>
+                • Aporte líquido programado: <b>{brl(aporte)} / mês</b><br>
+                • Rendimento estimado: <b>{str(S["cfg"]["cdi"])}% ao ano</b>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
     return html_out.encode("utf-8")
 
 def get_csv_extrato():
@@ -712,8 +723,8 @@ def v_tutorial():
         <b style="color:var(--pur); font-size:16px;">👋 Bem-vindo ao FUTURE, {html.escape(CONTA["nome"])}!</b><br><br>
         Sua nova conta está pronta. {texto_idade}<br><br>
         <b>1. Criar uma Caixinha:</b> Clique no botão <b>＋</b> no menu inferior para <i>Criar Caixinha</i>. É lá que o dinheiro rende todos os meses.<br>
-        <b>2. Sua Meta:</b> Vá para a aba ⚙️ <b>Ajustes</b> para definir o valor que deseja acumular e a sua Reserva Fixa.<br>
-        <b>3. Gastos Mensais:</b> Muito importante! Vá na aba <b>Ajustes</b> e cadastre os seus <b>gastos mensais</b> e a sua renda para que o controle do que sobra seja calculado com perfeição.<br><br>
+        <b>2. Sua Meta:</b> Clique no botão ⚙️ no topo para definir o valor que deseja acumular e a sua Reserva Fixa.<br>
+        <b>3. Gastos Mensais:</b> Muito importante! Vá na aba <b>⚙️ Ajustes</b> no topo e cadastre os seus <b>gastos mensais</b> e a sua renda para que o controle do que sobra seja calculado com perfeição.<br><br>
         <i>Quando estiver pronto, você pode desmarcar este tutorial nas opções de Ajustes.</i>
     </div>
     """
@@ -739,7 +750,7 @@ def v_home():
     prox = f"01/{h.month + 1:02d}/{h.year}" if h.month < 12 else f"01/01/{h.year + 1}"
     mesada = (
         "<br>Próxima entrada (Líquida) programada: " + prox
-        if c.get("renda", 0.0) > 0 else "<br>Configure sua renda nos Ajustes."
+        if c.get("renda", 0.0) > 0 else "<br>Configure sua renda nos Ajustes (botão ⚙️)."
     )
     
     pct = f"{pc:.1f}".replace(".", ",")
@@ -828,9 +839,11 @@ def v_idea():
             )
     return out + '<div class="k" style="padding:0 6px">Sugestões educacionais, não constituem recomendação de investimento.</div>'
 
-def v_ajustes():
+# ------------------------------------------------------------------ diálogos
+@st.dialog("⚙️ Ajustes da Conta")
+def dlg_ajustes():
     c = S["cfg"]
-    st.markdown('<div class="card as" style="border:none">Aqui você gerencia as configurações da sua conta, metas, rendas e gastos mensais.</div>', unsafe_allow_html=True)
+    st.caption("Gerencie as configurações da sua conta, metas, rendas e gastos mensais.")
     with st.form("f_ajustes"):
         nome = st.text_input("Nome da conta", CONTA["nome"], max_chars=24)
         paleta_escolhida = st.selectbox("Cor do aplicativo", list(PALETAS.keys()), index=list(PALETAS.keys()).index(S.get("paleta", "Padrão")))
@@ -866,7 +879,6 @@ def v_ajustes():
                 st.rerun()
             st.error("Falha ao registrar Face ID.")
 
-# ------------------------------------------------------------------ diálogos
 def form_op(op):
     cx = cx2 = None
     if op in ("save", "take", "yld", "mov"):
@@ -968,7 +980,10 @@ def _sair():
 def _nav(v):
     st.session_state["nav"] = v
 
+# BOTÕES DO TOPO (TEMA, AJUSTES, SAIR)
 st.button("☀️" if st.session_state["tema"] == "dark" else "🌙", key="b_tema", on_click=_tema, help="Alternar tema")
+if st.button("⚙️", key="b_ajustes_top", help="Ajustes da conta"):
+    dlg_ajustes()
 st.button("🔒", key="b_sair", on_click=_sair, help="Encerrar sessão")
 
 tab = st.session_state["tab"]
@@ -1003,13 +1018,11 @@ with st.container(key=f"view_{idx}_from{st.session_state['dir']}"):
         st.markdown(v_proj(), unsafe_allow_html=True)
         col1, col2 = st.columns(2)
         with col1:
-            st.download_button("🖼️ Baixar Card (HTML)", relatorio_html(), file_name=f"card_future_{agora():%Y-%m-%d}.html", mime="text/html", use_container_width=True)
+            st.download_button("🖼️ Baixar Card Interativo", relatorio_html(), file_name=f"card_future_{agora():%Y-%m-%d}.html", mime="text/html", use_container_width=True)
         with col2:
             st.download_button("⬇️ Baixar Tabela", get_csv_proj(), file_name=f"projecao_future_{agora():%Y-%m-%d}.csv", mime="text/csv", use_container_width=True)
     elif idx == 3:
         st.markdown(v_idea(), unsafe_allow_html=True)
-    elif idx == 4:
-        v_ajustes()
 
 if st.session_state["fx"]:
     st.markdown(fx_html(st.session_state["fx"]), unsafe_allow_html=True)
