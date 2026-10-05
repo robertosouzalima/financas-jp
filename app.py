@@ -334,7 +334,7 @@ def tela_login():
         st.button("🛡️ Controle parental", key="b_pais", use_container_width=True, on_click=_ir, args=("pais",))
         st.button("Criar conta", key="b_criar", use_container_width=True, on_click=_ir, args=("criar",))
         if not SB_URL:
-            st.caption("⚠️️ Armazenamento temporário: os dados podem ser apagados quando o servidor reiniciar.")
+            st.caption("⚠ Armazenamento temporário: os dados podem ser apagados quando o servidor reiniciar.")
         return
         
     if t == "criar":
@@ -385,9 +385,22 @@ U, SUP = st.session_state["u"], st.session_state["modo"] == "pais"
 CONTA = db()["contas"][U]
 S = CONTA["d"]
 
+# --- MIGRAÇÃO AUTOMÁTICA DE SEGURANÇA PARA CONTAS ANTIGAS ---
+if "caixas_meta" not in S:
+    S["caixas_meta"] = {}
+    if "futuro" in S.get("caixas", {}):
+        S["caixas_meta"]["futuro"] = ["Caixinha Futuro", "pur", "Principal · rende 100% do CDI"]
+    if "sonho" in S.get("caixas", {}):
+        S["caixas_meta"]["sonho"] = ["Caixinha Sonho", "gold", "Rende 100% do CDI · resgate imediato"]
+if "tutorial" not in S["cfg"]:
+    S["cfg"]["tutorial"] = False
+    S["cfg"]["meta"] = 62000.0
+    S["cfg"]["reserva"] = 100.0
+# -------------------------------------------------------------
+
 # ------------------------------------------------------------ regras de negócio
 def total():
-    return round(S["livre"] + sum(S["caixas"].values()), 2)
+    return round(S["livre"] + sum(S.get("caixas", {}).values()), 2)
 
 def reg(t, v, cx, obs, ts=None, dest=None):
     S["extrato"].append({"t": t, "v": round(v, 2), "c": cx, "d": dest, "o": obs, "ts": (ts or agora()).isoformat()})
@@ -397,7 +410,7 @@ def fx(valor):
 
 def fecha(msg=None):
     S["livre"] = round(S["livre"], 2)
-    for k in S["caixas"]:
+    for k in S.get("caixas", {}):
         S["caixas"][k] = round(S["caixas"][k], 2)
     st.session_state["msg"] = msg or "Lançado em " + fmt_dt(S["extrato"][-1]["ts"])
     salvar()
@@ -407,7 +420,7 @@ def aplicar(t, v, cx=None, obs=""):
     reserva = S["cfg"].get("reserva", 100.0)
     if v <= 0:
         return "Informe um valor maior que zero."
-    cxs = S["caixas"]
+    cxs = S.get("caixas", {})
     if t == "save":
         if S["livre"] - v < reserva - 1e-9:
             return f"A reserva fixa de {brl(reserva)} é protegida. Você pode guardar até {brl(max(0, S['livre'] - reserva))}."
@@ -438,8 +451,9 @@ def mover(o, d, v, obs=""):
     v = round(v, 2)
     if v <= 0:
         return "Informe um valor maior que zero."
-    if v > S["caixas"][o] + 1e-9:
-        return f"{S['caixas_meta'][o][0]} tem só {brl(S['caixas'][o])}."
+    if v > S.get("caixas", {})[o] + 1e-9:
+        nome_origem = S.get("caixas_meta", {}).get(o, ["Caixinha"])[0]
+        return f"{nome_origem} tem só {brl(S['caixas'][o])}."
     S["caixas"][o] -= v
     S["caixas"][d] += v
     reg("mov", v, o, obs, dest=d)
@@ -447,13 +461,13 @@ def mover(o, d, v, obs=""):
     return ""
 
 def excluir_caixinha(cx, resgatar):
-    v = S["caixas"][cx]
+    v = S.get("caixas", {})[cx]
     if resgatar:
         S["livre"] += v
         reg("take", v, cx, "Exclusão da caixinha")
     else:
         reg("del", v, cx, "Saldo removido do patrimônio")
-    nome_cx = S["caixas_meta"][cx][0]
+    nome_cx = S.get("caixas_meta", {}).get(cx, ["Caixinha"])[0]
     S["caixas"].pop(cx, None)
     S["caixas_meta"].pop(cx, None)
     fecha(f"{nome_cx} excluída")
@@ -461,7 +475,7 @@ def excluir_caixinha(cx, resgatar):
 def liberar_sonho():
     sd = S["cfg"].get("sonho_data")
     if sd and agora().date().isoformat() >= sd:
-        if "sonho" in S["caixas"] and "futuro" in S["caixas"] and S["caixas"]["sonho"] > 0.004:
+        if "sonho" in S.get("caixas", {}) and "futuro" in S["caixas"] and S["caixas"]["sonho"] > 0.004:
             mover("sonho", "futuro", S["caixas"]["sonho"], "Sonho liberada → Futuro")
         S["cfg"]["sonho_data"] = None
         salvar()
@@ -474,7 +488,7 @@ def creditar_mes():
         return
     c = S["cfg"]
     g, n = min(c["guardar"], c["renda"]), 0
-    primeira_cx = list(S["caixas"].keys())[0] if S["caixas"] else None
+    primeira_cx = list(S.get("caixas", {}).keys())[0] if S.get("caixas", {}) else None
     
     for k in range(ult + 1, atual + 1):
         if c["renda"] <= 0:
@@ -558,8 +572,8 @@ def relatorio_html():
     return html.encode("utf-8")
 
 def destino(x):
-    s = S["caixas_meta"][x["c"]][0] if x.get("c") and x["c"] in S["caixas_meta"] else ""
-    d = " → " + S["caixas_meta"][x["d"]][0] if x.get("d") and x["d"] in S["caixas_meta"] else ""
+    s = S.get("caixas_meta", {}).get(x["c"], [""])[0] if x.get("c") else ""
+    d = " → " + S.get("caixas_meta", {}).get(x["d"], [""])[0] if x.get("d") else ""
     return s + d
 
 # ------------------------------------------------------------------ telas
@@ -620,8 +634,8 @@ def v_home():
     out += '<div class="card as">💡 ' + msg + '</div>'
     out += card("blue", "Saldo livre", brl(f), "Proteção de reserva: " + brl(reserva) + mesada)
     
-    for k, v in S["caixas"].items():
-        meta_cx = S["caixas_meta"].get(k, ["Caixinha", "blue", ""])
+    for k, v in S.get("caixas", {}).items():
+        meta_cx = S.get("caixas_meta", {}).get(k, ["Caixinha", "blue", ""])
         out += card(meta_cx[1], meta_cx[0], brl(v), meta_cx[2])
         
     return out
@@ -704,14 +718,14 @@ def v_idea():
 def form_op(op):
     cx = cx2 = None
     if op in ("save", "take", "yld", "mov"):
-        ops = [k for k in S["caixas"] if op == "save" or S["caixas"][k] > 0]
+        ops = [k for k in S.get("caixas", {}) if op == "save" or S["caixas"][k] > 0]
         if not ops:
             st.info("Nenhuma caixinha criada ou com saldo ainda. Crie uma nova caixinha ou guarde valor primeiro.")
             return
         cx = st.selectbox("De" if op == "mov" else "Caixinha", ops, key="c_" + op,
-                          format_func=lambda k: S["caixas_meta"][k][0] + " · " + brl(S["caixas"][k]))
+                          format_func=lambda k: S.get("caixas_meta", {}).get(k, ["Caixinha"])[0] + " · " + brl(S["caixas"][k]))
         if op == "mov":
-            cx2 = st.selectbox("Para", [k for k in S["caixas"] if k != cx], key="d_mov", format_func=lambda k: S["caixas_meta"][k][0])
+            cx2 = st.selectbox("Para", [k for k in S.get("caixas", {}) if k != cx], key="d_mov", format_func=lambda k: S.get("caixas_meta", {}).get(k, ["Caixinha"])[0])
     v = st.number_input("Valor (R$)", min_value=0.0, value=0.0, step=0.10 if op == "yld" else 1.0, format="%.2f", key="v_" + op)
     if op == "yld" and cx:
         dia = S["caixas"][cx] * ((1 + S["cfg"]["cdi"] / 100) ** (1 / 252) - 1)
@@ -734,6 +748,8 @@ def form_criar_cx():
             st.error("Dê um nome para a caixinha.")
         else:
             k = chave(nome) + secrets.token_hex(2)
+            if "caixas" not in S: S["caixas"] = {}
+            if "caixas_meta" not in S: S["caixas_meta"] = {}
             S["caixas"][k] = 0.0
             S["caixas_meta"][k] = [nome.strip(), cor, desc.strip()]
             salvar()
@@ -781,11 +797,11 @@ def dlg_novo():
 
 @st.dialog("🗑️ Excluir caixinha")
 def dlg_excluir():
-    ops = [k for k in S["caixas"]]
+    ops = [k for k in S.get("caixas", {})]
     if not ops:
         st.info("Nenhuma caixinha para excluir.")
         return
-    cx = st.selectbox("Qual caixinha?", ops, format_func=lambda k: S["caixas_meta"][k][0] + " · " + brl(S["caixas"][k]))
+    cx = st.selectbox("Qual caixinha?", ops, format_func=lambda k: S.get("caixas_meta", {}).get(k, ["Caixinha"])[0] + " · " + brl(S["caixas"][k]))
     modo = st.radio("O que fazer com o saldo?", ["Resgatar para o Saldo Livre", "Apenas zerar (sai do patrimônio)"])
     st.caption("Isso excluirá o card da caixinha permanentemente.")
     if st.button("Excluir caixinha", type="primary", use_container_width=True):
@@ -857,7 +873,7 @@ if SUP:
 with st.container(key=f"view_{idx}_from{st.session_state['dir']}"):
     st.markdown([v_home, v_ext, v_proj, v_idea][idx](), unsafe_allow_html=True)
     
-    if idx == 0 and not SUP and S["caixas"]:
+    if idx == 0 and not SUP and S.get("caixas"):
         if st.button("🗑️ Excluir caixinha", key="b_del", use_container_width=True):
             dlg_excluir()
             
