@@ -69,19 +69,20 @@ ARQ = Path(__file__).with_name("future_db.json")
 XL = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 SESSAO_SEG = 30 * 86400
 
-TIPOS = {"in": ("📥", "Recebi dinheiro"), "out": ("💸", "Gastei dinheiro"), "save": ("🔒", "Guardar na caixinha"),
-         "take": ("🔓", "Resgatar da caixinha"), "yld": ("📈", "Rendimento / juros"), "mov": ("🔁", "Mover entre caixinhas"),
-         "del": ("🗑️", "Caixinha excluída")}
+TIPOS = {"in": ("📥", "Recebi"), "out": ("💸", "Gastei"), "save": ("🔒", "Guardei"),
+         "take": ("🔓", "Resgatei"), "yld": ("📈", "Rendeu"), "mov": ("🔁", "Movi"),
+         "del": ("🗑️", "Excluí")}
 CURTO = {"in": "📥 Receber", "out": "💸 Gastar", "save": "🔒 Guardar", "take": "🔓 Resgatar", "yld": "📈 Juros", "mov": "🔁 Mover"}
 ABAS, TITULOS = ["🏠 Início", "🧾 Extrato", "📈 Projeção", "💡 Ideias"], ["Início", "Extrato", "Projeção", "Ideias"]
 DIAS = ["segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo"]
 MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 PALETAS = {
-    "Padrão": {"pur": "#b57bff", "blue": "#4aa3ff", "gold": "#f0c24b", "grn": "#3fdc78", "red": "#ff6b62"},
-    "Neon": {"pur": "#ff00ff", "blue": "#00ffff", "gold": "#ffff00", "grn": "#00ff00", "red": "#ff0000"},
-    "Oceano": {"pur": "#3a0ca3", "blue": "#4361ee", "gold": "#4cc9f0", "grn": "#2ec4b6", "red": "#e71d36"},
-    "Outono": {"pur": "#6a4c93", "blue": "#1982c4", "gold": "#ffca3a", "grn": "#8ac926", "red": "#ff595e"},
+    "Padrão": {"pur": "#8b5cf6", "blue": "#3b82f6", "gold": "#f59e0b", "grn": "#10b981", "red": "#ef4444"},
+    "Neon": {"pur": "#d946ef", "blue": "#06b6d4", "gold": "#eab308", "grn": "#22c55e", "red": "#f43f5e"},
+    "Oceano": {"pur": "#6366f1", "blue": "#0ea5e9", "gold": "#f59e0b", "grn": "#14b8a6", "red": "#f43f5e"},
+    "Outono": {"pur": "#8b5cf6", "blue": "#2563eb", "gold": "#d97706", "grn": "#65a30d", "red": "#dc2626"},
 }
+
 for _k, _v in dict(u=None, modo=None, tela="login", tema="dark", paleta="Padrão", tab=0, nav=False, dir="R", fx=None, msg=None,
                    chal=secrets.token_urlsafe(32), fid_done=None, bak_done=None, launch=False, db_obj=None, db_ts=0.0,
                    recarregar=False, base_v={}, storage_mode="local", bak_hash=None, bak_payload=None).items():
@@ -145,11 +146,11 @@ def nova_conta(nome, senha, pin, nasc="2014-01-01", seed=False):
     ps, ph = mk(pin)
     a = agora()
     d = {"livre": 0.0, "caixas": {}, "caixas_meta": {}, "extrato": [], "tema": "dark", "paleta": "Padrão", "nasc": nasc,
-         "_v": 0.0 if seed else time.time(),       # conta inicial "virgem" (v=0) nunca vence dados reais salvos
+         "_v": 0.0 if seed else time.time(),
          "cfg": {"renda": 0.0, "guardar": 0.0, "gastos": 0.0, "cdi": 9.5, "sonho_data": None, "meta": 10000.0,
                  "reserva": 100.0, "tutorial": not seed, "ajustado": False},
          "ultimo_credito": f"{a.year}-{a.month:02d}"}
-    if seed:   # valores vêm dos Secrets; nada financeiro fica no código
+    if seed:
         d["livre"] = safe_float(secret_str("seed_livre", "0"))
         try:
             bruto = json.loads(secret_str("seed_caixas_json", "{}"))
@@ -193,7 +194,6 @@ def carregar_local():
 
 
 def salvar_local(dados):
-    """Escrita atômica (arquivo temporário + rename) para não corromper o cache local."""
     tmp = ARQ.with_name(ARQ.name + ".tmp")
     try:
         tmp.write_text(json.dumps(dados, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
@@ -208,7 +208,6 @@ def salvar_local(dados):
 
 
 def ler_fonte():
-    """Fonte da verdade: Supabase (quando configurado), senão o arquivo local. Retorna (leu_ok, dados|None)."""
     if supabase_configurado():
         try:
             r = json.loads(_sb("GET", "?id=eq.db&select=dados"))
@@ -228,7 +227,6 @@ def _ver(c):
 
 
 def _merge(a, b):
-    """Une dois bancos conta a conta. Vence a conta com versão (_v) maior; em empate vence `a`."""
     out = {"contas": {}}
     for src in (a or {}, b or {}):
         for u, c in (src.get("contas") or {}).items():
@@ -243,7 +241,6 @@ def trava():
 
 
 def _gravar(dados, nuvem=True):
-    """Grava no cache local (sempre) e na nuvem (só quando a leitura da nuvem funcionou)."""
     ok_l, ok_n = salvar_local(dados), True
     if supabase_configurado() and nuvem:
         try:
@@ -254,28 +251,26 @@ def _gravar(dados, nuvem=True):
 
 
 def carregar_db():
-    """Carrega o banco desta sessão: nuvem + cache local, vencendo sempre a conta mais nova. Nunca apaga nada."""
     ok, fonte = ler_fonte()
     local = carregar_local()
     d = _merge(fonte, local)
     contas = d["contas"]
-    for src in (fonte, local):      # migra sessões do formato antigo (top-level) para dentro de cada conta
+    for src in (fonte, local):
         for h, r in ((src or {}).get("sessoes") or {}).items():
             if isinstance(r, list) and len(r) >= 3 and r[0] in contas:
                 contas[r[0]].setdefault("sess", {}).setdefault(h, r)
     criou = False
-    if SEED and CODIGO and PIN_PAIS and SEED not in contas:      # sem Secrets não existe conta inicial
+    if SEED and CODIGO and PIN_PAIS and SEED not in contas:
         contas[SEED] = nova_conta(SEED_NOME, CODIGO, PIN_PAIS, seed=True)
         criou = True
     nv = {u: _ver(c) for u, c in ((fonte or {}).get("contas") or {}).items()}
     if criou or (supabase_configurado() and ok and any(_ver(c) > nv.get(u, -1) for u, c in contas.items())):
-        _gravar(d, nuvem=ok)        # sincroniza o que só existia no cache local
+        _gravar(d, nuvem=ok)
     st.session_state["storage_mode"] = ("cloud" if ok else "local-fallback") if supabase_configurado() else "local"
     return d
 
 
 def refrescar_db(force=False):
-    """Chamado uma vez no topo de cada execução completa. Cada sessão trabalha na sua própria cópia."""
     ss = st.session_state
     if force or ss.get("recarregar") or ss.get("db_obj") is None or time.time() - ss.get("db_ts", 0) > 8:
         d = carregar_db()
@@ -287,12 +282,6 @@ def db():
 
 
 def salvar(forcar_u=None):
-    """
-    1) sobe a versão da conta alterada; 2) lê a fonte da verdade; 3) se outra sessão alterou a mesma conta
-    nesse meantime, NÃO grava (evita sobrescrever dados novos com antigos); 4) senão mescla e grava
-    no cache local e na nuvem. Falha da nuvem nunca apaga dados: o cache local fica à frente e é sincronizado depois.
-    Retorna True se gravou.
-    """
     ss = st.session_state
     u = forcar_u or ss.get("u")
     dados = db()
@@ -324,101 +313,88 @@ def salvar(forcar_u=None):
 def get_css(tema, nome):
     p = PALETAS.get(nome, PALETAS["Padrão"])
     if tema == "light":
-        p = {k: "color-mix(in srgb," + v + " 70%,#000)" for k, v in p.items()}
+        p = {k: "color-mix(in srgb," + v + " 85%,#000)" for k, v in p.items()}
     cores = f"--blue:{p['blue']};--pur:{p['pur']};--gold:{p['gold']};--grn:{p['grn']};--red:{p['red']}"
     if tema == "light":
-        return ":root{--bg:#eceef4;--c1:#fff;--c2:#f3f4f9;--tx:#14141c;--mu:#656575;--ln:rgba(0,0,0,.09);--s1:rgba(120,125,150,.3);--s2:rgba(255,255,255,.95);--glass:rgba(255,255,255,.68);color-scheme:light;" + cores + "}"
-    return ":root{--bg:#07070b;--c1:#16161f;--c2:#0e0e15;--tx:#f4f4f8;--mu:#8b8b9a;--ln:rgba(255,255,255,.09);--s1:rgba(0,0,0,.6);--s2:rgba(255,255,255,.04);--glass:rgba(34,34,48,.58);color-scheme:dark;" + cores + "}"
+        return ":root{--bg:#f2f2f7;--c1:#ffffff;--c2:#f2f2f7;--tx:#1c1c1e;--mu:#8e8e93;--ln:rgba(0,0,0,.06);--s1:rgba(0,0,0,.04);--glass:rgba(255,255,255,.8);color-scheme:light;" + cores + "}"
+    return ":root{--bg:#000000;--c1:#1c1c1e;--c2:#2c2c2e;--tx:#f2f2f7;--mu:#8e8e93;--ln:rgba(255,255,255,.08);--s1:rgba(0,0,0,.2);--glass:rgba(28,28,30,.8);color-scheme:dark;" + cores + "}"
 
 
 CSS_BASE = """
 html,body,[data-testid="stApp"],[data-testid="stMain"],[data-testid="stMainBlockContainer"]{background:var(--bg)!important;overscroll-behavior-y:none;margin:0;padding:0}
-[data-testid="stApp"]{background:radial-gradient(900px 520px at 12% -8%,color-mix(in srgb,var(--pur) 13%,transparent),transparent 62%),radial-gradient(760px 460px at 100% 6%,color-mix(in srgb,var(--blue) 10%,transparent),transparent 60%),var(--bg)!important;background-attachment:fixed!important}
 .stApp{color:var(--tx);overflow-x:hidden}
 header[data-testid="stHeader"],#MainMenu,footer{display:none!important}
-.block-container{max-width:480px!important;padding:1.2rem 1rem 10rem!important;margin:0 auto!important}
+.block-container{max-width:520px!important;padding:2rem 1.5rem 10rem!important;margin:0 auto!important}
 .stApp p,.stApp label,.stApp h1,.stApp li,[data-testid="stDialog"] *{color:var(--tx)}
-.stApp input,[data-baseweb="select"]>div,[data-baseweb="input"],[data-baseweb="base-input"]{background:var(--c2)!important;color:var(--tx)!important;border-radius:14px!important}
-div[role="dialog"]{background:var(--c1)!important;border-radius:28px!important;border:1px solid var(--ln)!important;max-width:calc(100vw - 24px)!important;box-shadow:0 24px 70px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.06)!important;animation:dialogIn .28s cubic-bezier(.16,1,.3,1)}
+.stApp input,[data-baseweb="select"]>div,[data-baseweb="input"],[data-baseweb="base-input"]{background:var(--c2)!important;color:var(--tx)!important;border-radius:12px!important;border:1px solid transparent!important;transition:border .2s}
+.stApp input:focus,[data-baseweb="select"]>div:focus-within{border:1px solid var(--pur)!important}
+div[role="dialog"]{background:var(--c1)!important;border-radius:24px!important;border:1px solid var(--ln)!important;box-shadow:0 20px 40px rgba(0,0,0,.15)!important;max-width:calc(100vw - 32px)!important;animation:dialogIn .28s cubic-bezier(.16,1,.3,1)}
 @keyframes dialogIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
-button[kind="secondary"],[data-testid="stBaseButton-secondary"]{background:var(--c2);border:1px solid var(--ln);border-radius:16px}
-button[kind="secondary"] p,[data-testid="stBaseButton-secondary"] p{color:var(--tx)}
-button[kind="primary"],[data-testid="stBaseButton-primary"]{background:linear-gradient(135deg,var(--pur),var(--blue))!important;border:0!important;border-radius:16px!important}
-button[kind="primary"] *,[data-testid="stBaseButton-primary"] *{color:#fff!important}
+button[kind="secondary"],[data-testid="stBaseButton-secondary"]{background:var(--c2);border:1px solid var(--ln);border-radius:14px}
+button[kind="secondary"] p,[data-testid="stBaseButton-secondary"] p{color:var(--tx);font-weight:500}
+button[kind="primary"],[data-testid="stBaseButton-primary"]{background:var(--pur)!important;border:0!important;border-radius:14px!important;box-shadow:0 4px 12px color-mix(in srgb,var(--pur) 25%,transparent)!important}
+button[kind="primary"] *,[data-testid="stBaseButton-primary"] *{color:#fff!important;font-weight:600!important}
+button{transition:transform .2s ease,opacity .2s ease!important}button:active{transform:scale(.97)!important;opacity:.8}label{transition:background .25s ease!important}
 [data-testid="stForm"]{border:0;padding:0;background:transparent}
 .st-key-bak{position:fixed;left:0;bottom:0;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none}
-.hd h1{margin:0;font-size:26px;letter-spacing:-.03em;padding:0}.hd{margin-bottom:16px}
-.rkw{position:relative;display:inline-block}
-.rkw::before{content:"";position:absolute;inset:-22px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--pur) 28%,transparent),transparent 68%)}
-.logo{position:relative;font-size:64px;line-height:1;display:inline-block;animation:rocketLaunch .7s cubic-bezier(.175,.885,.32,1.275) both}
-@keyframes rocketLaunch{0%{transform:translateY(80px) scale(.4);opacity:0}60%{transform:translateY(-15px) scale(1.1);opacity:1}100%{transform:none;opacity:1}}
-
-.brand{font-size:34px;font-weight:800;letter-spacing:.14em;text-indent:.14em;line-height:1.1;margin:14px 0 6px;color:var(--tx)}
-@supports ((-webkit-background-clip:text) or (background-clip:text)){.brand{background:linear-gradient(135deg,var(--tx) 35%,var(--pur));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}}
-.card{background:linear-gradient(145deg,var(--c1),var(--c2));border:1px solid color-mix(in srgb,var(--c,var(--ln)) 50%,transparent);border-radius:25px;padding:18px;box-shadow:8px 9px 24px var(--s1),-4px -4px 16px var(--s2),inset 0 1px 0 rgba(255,255,255,.05);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);margin-bottom:16px}
-button{transition:transform .18s cubic-bezier(.2,.8,.2,1),background .25s ease,box-shadow .25s ease!important}button:active{transform:scale(.97)!important}label{transition:background .25s ease!important}
-.k{color:var(--mu);font-size:13px}.lb{font-size:14px;font-weight:600}.big{font-size:34px;font-weight:700;letter-spacing:-.035em;margin:2px 0 8px;font-variant-numeric:tabular-nums}
-.pg{height:8px;border-radius:9px;background:var(--ln);overflow:hidden;margin:6px 0}
-.pg i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--blue),var(--grn));animation:grow 1.4s cubic-bezier(.25,1,.5,1)}
-@keyframes grow{from{width:0}}
-.rkbar{position:relative;padding-top:14px}
-.rkbar s{position:absolute;top:-6px;margin-left:-9px;font-size:17px;text-decoration:none;animation:fly .9s cubic-bezier(.25,1,.5,1) both}
-@keyframes fly{from{left:0}}
-.as{font-size:15px;border-style:dashed}.sup{background:color-mix(in srgb,var(--gold) 16%,transparent);border:1px solid var(--gold);border-radius:18px;padding:12px 14px;margin-bottom:16px;font-size:14px}
+.hd h1{margin:0;font-size:28px;letter-spacing:-.03em;padding:0}.hd{margin-bottom:20px}
+.logo{font-size:56px;line-height:1;display:inline-block;animation:fadeScale .6s cubic-bezier(.16,1,.3,1) both}
+@keyframes fadeScale{from{opacity:0;transform:scale(.9) translateY(10px)}to{opacity:1;transform:none}}
+.brand{font-size:32px;font-weight:700;letter-spacing:-1px;line-height:1.1;color:var(--tx)}
+.card{background:var(--c1);border:1px solid var(--ln);border-radius:20px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,.03);margin-bottom:16px;transition:transform .2s ease}
+.k{color:var(--mu);font-size:13px}.lb{font-size:14px;font-weight:500}.big{font-size:32px;font-weight:700;letter-spacing:-.03em;margin:2px 0 8px;font-variant-numeric:tabular-nums}
+.as{font-size:14px;border-style:dashed}.sup{background:color-mix(in srgb,var(--gold) 12%,transparent);border:1px solid var(--gold);border-radius:16px;padding:12px 14px;margin-bottom:16px;font-size:14px}
 .sp{display:flex;gap:10px;align-items:flex-start;padding:7px 0}.sp>span{font-size:18px;line-height:1.3}.sp.ok b{text-decoration:line-through;opacity:.5}
-.tx{display:flex;align-items:center;gap:12px;padding:13px 0;border-bottom:1px solid var(--ln)}.tx:last-child{border:0}.tx .g{flex:1;min-width:0}
-.ic{width:40px;height:40px;border-radius:14px;background:var(--c2);display:grid;place-items:center;font-size:19px;flex:none;border:1px solid var(--ln)}
-table{width:100%;border-collapse:collapse;font-size:13.5px}th{color:var(--mu);font-weight:500;text-align:right;padding:6px 0}td{padding:10px 0;text-align:right;border-top:1px solid var(--ln)}th:first-child,td:first-child{text-align:left}
-.bar{fill:var(--grn);opacity:.9}.bt{fill:var(--mu);font-size:10px;text-anchor:middle}.tl{stroke:var(--gold);stroke-dasharray:4 4;stroke-width:1.2}
-.al{display:flex;justify-content:space-between;align-items:baseline}.al b{font-size:20px}
-.st-key-nav,.st-key-bolha{position:fixed;left:16px;bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:999;width:auto!important}
-.st-key-nav{width:min(calc(100vw - 32px),420px)!important;display:flex!important;flex-direction:row!important;align-items:center;gap:4px!important;padding:6px;overflow:hidden;background:var(--glass);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--ln);border-radius:34px;box-shadow:0 14px 40px var(--s1),inset 0 1px 0 rgba(255,255,255,.14);animation:stretch .7s cubic-bezier(.16,1,.3,1) forwards}
+.tx{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--ln)}.tx:last-child{border:0}.tx .g{flex:1;min-width:0}
+.ic{width:44px;height:44px;border-radius:12px;background:var(--c2);display:grid;place-items:center;font-size:20px;flex:none;border:0}
+table{width:100%;border-collapse:collapse;font-size:14px}th{color:var(--mu);font-weight:500;text-align:right;padding:12px 0;border-bottom:1px solid var(--ln)}td{padding:12px 0;text-align:right;border-bottom:1px solid var(--ln)}th:first-child,td:first-child{text-align:left}tr:last-child td{border-bottom:none}
+.bar{fill:var(--grn);opacity:.9;border-radius:4px}.bt{fill:var(--mu);font-size:10px;text-anchor:middle}.tl{stroke:var(--gold);stroke-dasharray:4 4;stroke-width:1.2}
+.al{display:flex;justify-content:space-between;align-items:baseline}.al b{font-size:18px;font-weight:600}
+.st-key-nav,.st-key-bolha{position:fixed;left:16px;bottom:calc(30px + env(safe-area-inset-bottom,0px));z-index:999;width:auto!important}
+.st-key-nav{width:min(calc(100vw - 32px),420px)!important;display:flex!important;flex-direction:row!important;align-items:center;gap:4px!important;padding:6px;overflow:hidden;background:var(--glass);backdrop-filter:blur(24px) saturate(150%);-webkit-backdrop-filter:blur(24px) saturate(150%);border:1px solid var(--ln);border-radius:30px;box-shadow:0 10px 30px rgba(0,0,0,.1),inset 0 1px 0 rgba(255,255,255,.1);animation:stretch .4s cubic-bezier(.16,1,.3,1) forwards}
 @keyframes stretch{from{width:58px!important;padding:0;opacity:0}}
-.st-key-nav>div{width:auto!important;animation:fi .6s .15s cubic-bezier(.16,1,.3,1) both}@keyframes fi{from{opacity:0;transform:translateX(-16px)}}
+.st-key-nav>div{width:auto!important;animation:fi .4s .1s cubic-bezier(.16,1,.3,1) both}@keyframes fi{from{opacity:0;transform:translateX(-10px)}}
 .st-key-aba{flex:1!important}
 .st-key-nav [role="radiogroup"]{display:flex;flex-wrap:nowrap;gap:2px;width:100%}
-.st-key-nav label{flex:1;justify-content:center;margin:0;padding:8px 0;border-radius:26px;cursor:pointer}
+.st-key-nav label{flex:1;justify-content:center;margin:0;padding:8px 0;border-radius:24px;cursor:pointer}
 .st-key-nav label>div:first-child{display:none}
-.st-key-nav label p{font-size:10px;line-height:1.3;font-weight:600;text-align:center;word-spacing:100vw;margin:0;opacity:.55;transition:opacity .3s}
-.st-key-nav label p::first-line{font-size:21px}
-.st-key-nav label:has(input:checked){background:color-mix(in srgb,var(--pur) 26%,transparent)}
-.st-key-nav label:has(input:checked) p{opacity:1}
-.st-key-b_min button,.st-key-b_plus button,.st-key-bolha button,.st-key-b_tema button,.st-key-b_ajustes_top button,.st-key-b_sair button{border-radius:50%;padding:0;background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--ln)}
-.st-key-b_min button{width:34px;height:34px}.st-key-b_plus button{width:46px;height:46px;border:0;background:linear-gradient(135deg,var(--pur),var(--blue))}
-.st-key-b_plus button p{color:#fff;font-size:24px;line-height:1}
-.st-key-bolha{animation:popin .4s cubic-bezier(.2,1.4,.4,1)}.st-key-bolha button{width:58px;height:58px;font-size:24px;box-shadow:0 10px 30px var(--s1)}
-@keyframes popin{from{transform:scale(.4);opacity:0}}
-.st-key-b_tema,.st-key-b_ajustes_top,.st-key-b_sair{position:fixed;z-index:1000;width:auto!important;top:calc(12px + env(safe-area-inset-top,0px))}
+.st-key-nav label p{font-size:10px;line-height:1.3;font-weight:600;text-align:center;word-spacing:100vw;margin:0;opacity:.5;transition:opacity .3s}
+.st-key-nav label p::first-line{font-size:20px}
+.st-key-nav label:has(input:checked){background:color-mix(in srgb,var(--pur) 20%,transparent)}
+.st-key-nav label:has(input:checked) p{opacity:1;color:var(--pur)}
+.st-key-b_min button,.st-key-b_plus button,.st-key-bolha button,.st-key-b_tema button,.st-key-b_ajustes_top button,.st-key-b_sair button{border-radius:50%;padding:0;background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--ln)}
+.st-key-b_min button{width:34px;height:34px}.st-key-b_plus button{width:46px;height:46px;border:0;background:var(--pur)}
+.st-key-b_plus button p{color:#fff;font-size:24px;line-height:1;font-weight:400}
+.st-key-bolha{animation:popin .3s cubic-bezier(.2,1.4,.4,1)}.st-key-bolha button{width:58px;height:58px;font-size:24px;box-shadow:0 10px 30px var(--s1)}
+@keyframes popin{from{transform:scale(.6);opacity:0}}
+.st-key-b_tema,.st-key-b_ajustes_top,.st-key-b_sair{position:fixed;z-index:1000;width:auto!important;top:calc(16px + env(safe-area-inset-top,0px))}
 .st-key-b_tema{right:118px}.st-key-b_ajustes_top{right:66px}.st-key-b_sair{right:14px}
 .st-key-b_tema button,.st-key-b_ajustes_top button,.st-key-b_sair button{width:44px;height:44px;font-size:18px}
-[class*="_fromR"]{animation:slR .6s cubic-bezier(.25,1,.5,1) forwards}[class*="_fromL"]{animation:slL .6s cubic-bezier(.25,1,.5,1) forwards}
-@keyframes slR{from{transform:translateX(50px);opacity:0}to{transform:none;opacity:1}}@keyframes slL{from{transform:translateX(-50px);opacity:0}to{transform:none;opacity:1}}
+[class*="_fromR"]{animation:slR .4s cubic-bezier(.25,1,.5,1) forwards}[class*="_fromL"]{animation:slL .4s cubic-bezier(.25,1,.5,1) forwards}
+@keyframes slR{from{transform:translateX(30px);opacity:0}to{transform:none;opacity:1}}@keyframes slL{from{transform:translateX(-30px);opacity:0}to{transform:none;opacity:1}}
 .fx,.lift{position:fixed;inset:0;pointer-events:none;z-index:2000;overflow:hidden}
-.fx i{position:absolute;bottom:-50px;font-style:normal;opacity:0;animation:rise 2.4s ease-out forwards}
-.fx b{position:absolute;left:50%;top:36%;font-size:36px;color:var(--grn);opacity:0;animation:pop 2.4s ease forwards;text-shadow:0 4px 24px rgba(0,0,0,.35)}
-@keyframes rise{0%{transform:translateY(0) scale(.6);opacity:0}15%{opacity:1}100%{transform:translateY(-90vh) rotate(25deg) scale(1.1);opacity:0}}
-@keyframes pop{0%{opacity:0;transform:translate(-50%,30px) scale(.7)}20%{opacity:1;transform:translate(-50%,0) scale(1.05)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-40px)}}
-.lift i{position:absolute;left:6%;bottom:-70px;font-size:56px;font-style:normal;filter:drop-shadow(0 0 18px var(--gold));animation:blast 1.4s cubic-bezier(.5,0,.9,.4) forwards}
-@keyframes blast{to{transform:translate(78vw,-118vh) scale(.6)}}
-html,body,.stApp,.stApp p,.stApp label,.stApp input,.stApp textarea,.stApp button,.stApp [data-baseweb],div[role="dialog"] p{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",system-ui,sans-serif!important}
-.big,.hd h1,.al b,.lb,.brand{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",system-ui,sans-serif!important}
-.dh{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);padding:12px 0 2px}.dh:first-child{padding-top:8px}
-.mes{display:flex;gap:8px;margin-top:8px}.mes>div{flex:1}.mes b{font-size:16px;font-variant-numeric:tabular-nums}
+.fx i{position:absolute;bottom:-50px;font-style:normal;opacity:0;animation:floatUp 2s ease-out forwards}
+.fx b{position:absolute;left:50%;top:36%;font-size:32px;font-weight:600;color:var(--grn);opacity:0;animation:fadePop 2s ease forwards;text-shadow:0 4px 16px rgba(0,0,0,.1)}
+@keyframes floatUp{0%{transform:translateY(0) scale(.8);opacity:0}10%{opacity:.8}100%{transform:translateY(-40vh) scale(1.1);opacity:0}}
+@keyframes fadePop{0%{opacity:0;transform:translate(-50%,20px) scale(.9)}15%{opacity:1;transform:translate(-50%,0) scale(1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-20px)}}
+html,body,.stApp,.stApp p,.stApp label,.stApp input,.stApp textarea,.stApp button,.stApp [data-baseweb],div[role="dialog"] p{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text",system-ui,sans-serif!important}
+.big,.hd h1,.al b,.lb,.brand{font-family:-apple-system,BlinkMacSystemFont,"SF Pro Display",system-ui,sans-serif!important}
+.dh{font-size:12px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--mu);padding:16px 0 8px}.dh:first-child{padding-top:8px}
 [class*="st-key-conf"] [data-testid="stHorizontalBlock"],[class*="st-key-dl"] [data-testid="stHorizontalBlock"]{flex-direction:row!important;flex-wrap:nowrap!important;gap:10px!important}
 [class*="st-key-conf"] [data-testid="stColumn"],[class*="st-key-dl"] [data-testid="stColumn"],[class*="st-key-conf"] [data-testid="column"],[class*="st-key-dl"] [data-testid="column"]{min-width:0!important;flex:1 1 0!important;width:auto!important}
-.bar{transform-box:fill-box;transform-origin:50% 100%;animation:barUp .9s cubic-bezier(.25,1,.5,1) both}
+.bar{transform-box:fill-box;transform-origin:50% 100%;animation:barUp .6s cubic-bezier(.25,1,.5,1) both}
 @keyframes barUp{from{transform:scaleY(0)}}
-[data-baseweb="popover"],[data-baseweb="popover"]>div,[data-baseweb="menu"],ul[role="listbox"]{background:var(--c1)!important;border-radius:16px!important}
+[data-baseweb="popover"],[data-baseweb="popover"]>div,[data-baseweb="menu"],ul[role="listbox"]{background:var(--c1)!important;border-radius:16px!important;box-shadow:0 10px 30px rgba(0,0,0,.1)!important}
 [data-baseweb="popover"] *,ul[role="listbox"] *{color:var(--tx)!important}
 li[role="option"]:hover,li[aria-selected="true"]{background:var(--c2)!important}
 [data-baseweb="calendar"],[data-baseweb="calendar"] *{background-color:var(--c1)!important;color:var(--tx)!important}
 [data-testid="stCaptionContainer"],[data-testid="stCaptionContainer"] *{color:var(--mu)!important}
-[data-testid="stAlert"]{background:color-mix(in srgb,var(--pur) 12%,var(--c1))!important;border:1px solid var(--ln)!important;border-radius:16px!important}
+[data-testid="stAlert"]{background:color-mix(in srgb,var(--pur) 8%,var(--c1))!important;border:1px solid var(--ln)!important;border-radius:16px!important}
 [data-testid="stAlert"] *,[data-testid="stToast"] *{color:var(--tx)!important}
-[data-testid="stToast"]{background:var(--c1)!important;border:1px solid var(--ln)!important;border-radius:16px!important}
+[data-testid="stToast"]{background:var(--c1)!important;border:1px solid var(--ln)!important;border-radius:16px!important;box-shadow:0 10px 30px rgba(0,0,0,.1)!important}
 [data-testid="stNumberInput"] button,[data-testid="stDownloadButton"] button{background:var(--c2)!important;color:var(--tx)!important;border-color:var(--ln)!important}
 [data-testid="stDownloadButton"] button p{color:var(--tx)!important}
-button[data-baseweb="tab"] p{color:var(--mu)!important}button[data-baseweb="tab"][aria-selected="true"] p{color:var(--tx)!important}
+button[data-baseweb="tab"] p{color:var(--mu)!important;font-weight:500}button[data-baseweb="tab"][aria-selected="true"] p{color:var(--tx)!important;font-weight:600}
 [data-baseweb="tab-border"]{background:var(--ln)!important}[data-baseweb="tab-highlight"]{background:var(--pur)!important}
 hr{border-color:var(--ln)!important}input::placeholder{color:var(--mu)!important;opacity:1}
 [data-baseweb="select"] *{color:var(--tx)!important}[data-baseweb="select"] svg{fill:var(--mu)!important}
@@ -429,7 +405,7 @@ hr{border-color:var(--ln)!important}input::placeholder{color:var(--mu)!important
 st.markdown("<style>" + get_css(st.session_state["tema"], st.session_state["paleta"]) + CSS_BASE + "</style>", unsafe_allow_html=True)
 
 try:
-    refrescar_db(force=st.session_state["u"] is None)      # tela de login sempre lê dados frescos
+    refrescar_db(force=st.session_state["u"] is None)
 except Exception:
     st.error("Não foi possível carregar os dados. Atualize a página em instantes.")
     st.stop()
@@ -475,14 +451,14 @@ done({kind:"get",id:c.id,user:u,ad:e64(r.authenticatorData),cd:e64(r.clientDataJ
 }catch(e){M.textContent="Face ID cancelado."}}
 addEventListener("message",ev=>{if(ev.data.type!="streamlit:render")return;A=ev.data.args;const d=A.tema=="dark";
 document.body.style.color=d?"#8b8b9a":"#656575";M.style.cssText="font-size:12px;text-align:center;margin-top:6px";
-B.style.cssText="width:100%;padding:14px;border-radius:16px;font-size:16px;font-weight:600;cursor:pointer;border:1px solid "+(d?"rgba(255,255,255,.14)":"rgba(0,0,0,.14)")+";background:"+(d?"#16161f":"#fff")+";color:"+(d?"#f4f4f8":"#14141c");
+B.style.cssText="width:100%;padding:14px;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;transition:transform 0.2s;border:1px solid "+(d?"rgba(255,255,255,.1)":"rgba(0,0,0,.1)")+";background:"+(d?"#2c2c2e":"#f2f2f7")+";color:"+(d?"#f2f2f7":"#1c1c1e");
+B.onmousedown=()=>B.style.transform="scale(0.97)"; B.onmouseup=()=>B.style.transform="scale(1)";
 B.textContent=(A.modo=="reg"?"Ativar Face ID neste aparelho":"Entrar com Face ID");B.onclick=A.modo=="reg"?reg:get;P("streamlit:setFrameHeight",{height:88})});
 P("streamlit:componentReady",{apiVersion:1});</script></body></html>"""
 BACKUP, FACEID = _componente("bak", BAK_HTML), _componente("faceid", FACEID_HTML)
 
 
 def _fernet():
-    """Backup do aparelho: criptografado e autenticado com a backup_key dos Secrets (sem chave = desativado)."""
     if not (BK and HAS_CRYPTO):
         return None
     from cryptography.fernet import Fernet
@@ -495,14 +471,13 @@ def _payload():
         return None
     corpo = json.dumps(db()["contas"][u], sort_keys=True, ensure_ascii=False)
     h = hashlib.sha256(corpo.encode()).hexdigest()
-    if st.session_state.get("bak_hash") != h:      # só gera um novo backup quando algo mudou
+    if st.session_state.get("bak_hash") != h:
         blob = f.encrypt(json.dumps({"u": u, "c": json.loads(corpo)}, ensure_ascii=False).encode()).decode()
         st.session_state.update(bak_hash=h, bak_payload=json.dumps({"u": _th(u), "blob": blob}))
     return st.session_state["bak_payload"]
 
 
 def restaurar(itens):
-    """Restaura contas que o servidor perdeu, só se o backup for MAIS NOVO que o dado atual."""
     f = _fernet()
     if not f:
         return False
@@ -586,8 +561,8 @@ def entrar(u, modo):
     tok = secrets.token_urlsafe(24)
     sess = db()["contas"][u].setdefault("sess", {})
     for h in [h for h, r in sess.items() if time.time() - r[2] >= SESSAO_SEG]:
-        sess.pop(h, None)                     # limpa sessões vencidas
-    sess[_th(tok)] = [u, modo, time.time()]   # só o hash do token é guardado
+        sess.pop(h, None)
+    sess[_th(tok)] = [u, modo, time.time()]
     st.query_params["s"] = tok
     salvar(u)
     d = db()["contas"][u]["d"]
@@ -620,16 +595,16 @@ def _falha(k):
     t[0] += 1
     if t[0] >= 5:
         t[:] = [0, time.time() + 60]
-    st.error("Dados incorretos. Após 5 erros a conta fica bloqueada por 1 minuto.")
+    st.error("Dados incorretos. Após 5 erros a conta fica bloqueada temporariamente.")
 
 
 def tela_login():
     t = st.session_state["tela"]
     sub = {"login": "INICIAR SESSÃO", "criar": "CRIAR CONTA", "pais": "CONTROLE PARENTAL"}[t]
-    st.markdown('<div style="display:flex;flex-direction:column;align-items:center;width:100%;text-align:center;padding:5vh 0 2vh">'
-                '<div class="rkw"><div class="logo">🚀</div></div>'
+    st.markdown('<div style="display:flex;flex-direction:column;align-items:center;width:100%;text-align:center;padding:8vh 0 4vh">'
+                '<div class="logo" style="margin-bottom:8px;">🚀</div>'
                 '<div class="brand">FUTURE</div>'
-                '<div style="color:var(--mu);font-size:13px;letter-spacing:.2em;width:100%;text-align:center">' + sub + '</div></div>', unsafe_allow_html=True)
+                '<div style="color:var(--mu);font-size:12px;font-weight:600;letter-spacing:1px;margin-top:4px;">' + sub + '</div></div>', unsafe_allow_html=True)
     if t == "login":
         with st.form("f_login"):
             n = st.text_input("Nome", placeholder="Nome da conta", label_visibility="collapsed", max_chars=24)
@@ -654,8 +629,8 @@ def tela_login():
                 st.error("Face ID não reconhecido.")
         st.button("🛡️ Controle parental", key="b_pais", use_container_width=True, on_click=_ir, args=("pais",))
         st.button("Criar nova conta", key="b_criar", use_container_width=True, on_click=_ir, args=("criar",))
-        st.caption({"cloud": "☁️ Dados sincronizados na nuvem.", "local-fallback": "⚠️ Nuvem indisponível: usando o cache deste servidor.",
-                    "local": "💾 Dados salvos neste servidor."}.get(st.session_state["storage_mode"], ""))
+        st.caption({"cloud": "☁️ Dados sincronizados na nuvem.", "local-fallback": "⚠️ Usando dados locais (Nuvem offline).",
+                    "local": "💾 Dados salvos localmente."}.get(st.session_state["storage_mode"], ""))
         return
     if t == "criar":
         with st.form("f_criar"):
@@ -678,7 +653,7 @@ def tela_login():
                 db()["contas"][k] = nova_conta(n.strip(), p, pin, nasc=nasc.isoformat())
                 if salvar(k):
                     entrar(k, "filho")
-                db()["contas"].pop(k, None)      # nome tomado por outra sessão no mesmo instante
+                db()["contas"].pop(k, None)
                 st.error("Esse nome acabou de ser usado. Escolha outro.")
     else:
         with st.form("f_pais"):
@@ -698,7 +673,7 @@ def tela_login():
 
 
 if not st.session_state["u"]:
-    _r = achar_sessao(st.query_params.get("s", ""))        # lembra a sessão (30 dias)
+    _r = achar_sessao(st.query_params.get("s", ""))
     if _r:
         _d = db()["contas"][_r[0]]["d"]
         st.session_state.update(u=_r[0], modo=_r[1], tema=_d.get("tema", "dark"), paleta=_d.get("paleta", "Padrão"))
@@ -714,7 +689,7 @@ S.setdefault("caixas", {})
 S.setdefault("caixas_meta", {})
 for _k, _v in dict(meta=62000.0, reserva=100.0, tutorial=False, ajustado=True, cdi=9.5, gastos=0.0, renda=0.0, guardar=0.0).items():
     S["cfg"].setdefault(_k, _v)
-for _k, _t in (("futuro", ["Caixinha Futuro", "pur", "Principal · rende 100% do CDI"]), ("sonho", ["Caixinha Sonho", "gold", "Rende 100% do CDI · resgate imediato"])):
+for _k, _t in (("futuro", ["Caixinha Futuro", "pur", "Principal"]), ("sonho", ["Caixinha Sonho", "gold", "Resgate imediato"])):
     if _k in S["caixas"]:
         S["caixas_meta"].setdefault(_k, _t)
 
@@ -764,7 +739,6 @@ def fecha(msg=None):
 
 
 def visivel(k):
-    """Caixinha zerada some da tela, exceto se acabou de ser criada (nunca foi usada)."""
     return S["caixas"][k] > 0.004 or not any(x.get("c") == k or x.get("d") == k for x in S["extrato"])
 
 
@@ -776,7 +750,7 @@ def aplicar(t, v, cx=None, obs=""):
     v, reserva, cxs = round(safe_float(v), 2), safe_float(S["cfg"]["reserva"]), S["caixas"]
     if v <= 0:
         return "Informe um valor maior que zero."
-    if t in ("save", "take", "yld") and cx not in cxs:       # valida tudo ANTES de alterar qualquer saldo
+    if t in ("save", "take", "yld") and cx not in cxs:
         return "Escolha uma caixinha válida."
     if t == "save":
         if S["livre"] - v < reserva - 1e-9:
@@ -844,11 +818,6 @@ def liberar_sonho():
 
 
 def creditar_mes():
-    """
-    Todo dia 1: entra a renda, saem os gastos fixos e parte vai para a primeira caixinha.
-    O saldo livre NUNCA fica negativo: sem saldo, o gasto é lançado só até o que existe (e isso aparece no extrato).
-    Meses sem nada configurado só avançam a data, sem lançamentos.
-    """
     h, c = agora(), S["cfg"]
     try:
         a, m = S["ultimo_credito"].split("-")
@@ -881,13 +850,12 @@ def creditar_mes():
     if n:
         if renda > 0:
             fx(renda)
-        fecha("Entradas e saídas do mês lançadas automaticamente.")
+        fecha("Movimentações mensais processadas.")
     else:
         salvar()
 
 
 def _passos(extra=0.0, limite_meses=None):
-    """Simula mês a mês, sempre a 100% do CDI. O guardado automático vai para a caixinha principal; o resto, para o saldo livre."""
     c, h = S["cfg"], agora()
     r = (1 + max(0.0, safe_float(c["cdi"])) / 100) ** (1 / 12) - 1
     cx = {k: max(0.0, safe_float(v)) for k, v in S["caixas"].items()}
@@ -912,7 +880,6 @@ def _passos(extra=0.0, limite_meses=None):
 
 
 def _limite():
-    """Meses da simulação: até a data EXATA dos 18 anos; depois dos 18, uma janela de 10 anos."""
     meses = idade_info()[2]
     return meses if meses > 0 else 120
 
@@ -920,7 +887,7 @@ def _limite():
 def periodo_txt():
     h, (idade, b18, meses) = agora().date(), idade_info()
     fim = b18 if meses > 0 else date(h.year + 10, h.month, min(h.day, 28))
-    return f"Período considerado: {h:%d/%m/%Y} até {fim:%d/%m/%Y}" + (" (aniversário de 18 anos)" if meses > 0 else " (próximos 10 anos)")
+    return f"Período: {h:%d/%m/%Y} até {fim:%d/%m/%Y}" + (" (maioridade)" if meses > 0 else " (próximos 10 anos)")
 
 
 def projetar():
@@ -962,7 +929,7 @@ def mes_meta(extra=0.0):
 
 
 def fmt_mes(t):
-    return f"{MESES[t[1] - 1]}/{t[0]}" if t else "fora do período projetado"
+    return f"{MESES[t[1] - 1]}/{t[0]}" if t else "-"
 
 
 def destino(x):
@@ -992,7 +959,7 @@ def _xlsx(titulo, cab, linhas, fmts, larg, notas=(), grafico=False):
     ws = wb.active
     ws.title = titulo
     ws.sheet_view.showGridLines = False
-    ws["A1"] = "🚀 FUTURE · " + titulo
+    ws["A1"] = "FUTURE · " + titulo
     ws["A1"].font = Font(bold=True, size=16, color="5B2BE0")
     ws["A2"] = f"{CONTA['nome']} · gerado em {agora():%d/%m/%Y às %H:%M}"
     ws["A2"].font = Font(size=10, color="888888")
@@ -1006,7 +973,7 @@ def _xlsx(titulo, cab, linhas, fmts, larg, notas=(), grafico=False):
         for j, v in enumerate(lin, 1):
             x = ws.cell(4 + i, j, v)
             if isinstance(v, str) and v[:1] in ("=", "+", "-", "@"):
-                x.data_type = "s"      # texto do usuário nunca vira fórmula no Excel
+                x.data_type = "s"
             if fmts[j - 1]:
                 x.number_format = fmts[j - 1]
             if i % 2 == 0:
@@ -1118,7 +1085,7 @@ def pdf_proj():
     P.txt(40, 790, f"{CONTA['nome']}  ·  gerado em {agora():%d/%m/%Y}", 9, (0.9, 0.85, 1))
     P.txt(40, 752, brl(fim), 34, (1, 1, 1), True)
     P.txt(40, 735, f"Projeção para {ano_fim}  ·  meta de {brl(meta)}" + (" alcançada" if fim >= meta else f"  ·  faltam {brl(meta - fim)}"), 10, (1, 1, 1))
-    P.txt(40, 700, f"Hoje: {brl(total())}   |   Aporte líquido: {brl(max(0.0, c['renda'] - c['gastos']))}/mês   |   100% do CDI (cerca de {str(c['cdi']).replace('.', ',')}% a.a.)", 9, cinza)
+    P.txt(40, 700, f"Hoje: {brl(total())}   |   Aporte líquido: {brl(max(0.0, c['renda'] - c['gastos']))}/mês   |   100% do CDI ({str(c['cdi']).replace('.', ',')}% a.a.)", 9, cinza)
     P.txt(40, 686, periodo_txt(), 8.5, cinza)
     P.txt(40, 664, "Evolução do patrimônio", 11, bold=True)
     mx, slot, base = (max([meta] + [x[3] for x in L]) * 1.1) or 1, 515 / len(L), 470
@@ -1154,7 +1121,6 @@ def pdf_proj():
                 break
             P.txt(40, y, nm, 9.5)
             P.txt(555, y, f"{brl(hoje)} hoje  >  {brl(fut)}", 9.5, al="r")
-    P.txt(40, 36, "Simulação educativa: rendimento de 100% do CDI estimado, bruto e sem impostos. Não é recomendação de investimento.", 7.5, cinza)
     return P.pdf()
 
 
@@ -1174,12 +1140,12 @@ def card(cor, tit, val, sub="", extra=""):
 
 def passos():
     c = S["cfg"]
-    p = [("Definir sua meta e reserva", "Toque em ⚙️ no topo da tela", c["ajustado"]),
-         ("Cadastrar renda e gastos do mês", "⚙️ › Balanço mensal (cai todo dia 1)", c["renda"] > 0),
-         ("Criar sua primeira caixinha", "＋ › Montar Caixinha", bool(S["caixas"])),
-         ("Fazer seu primeiro lançamento", "＋ › Conta ou Caixinhas", bool(S["extrato"]))]
+    p = [("Definir sua meta e reserva", "Ajuste em ⚙️ no topo", c["ajustado"]),
+         ("Cadastrar renda e gastos mensais", "Ajuste em ⚙️ > Dinheiro", c["renda"] > 0),
+         ("Criar uma caixinha", "Toque em ＋ > Montar Caixinha", bool(S["caixas"])),
+         ("Fazer seu primeiro lançamento", "Toque em ＋", bool(S["extrato"]))]
     if HAS_CRYPTO:
-        p.append(("Ativar o Face ID", "⚙️ › Ativar Face ID neste aparelho", bool(CONTA.get("fid"))))
+        p.append(("Ativar o Face ID", "⚙️ > Conta > Face ID", bool(CONTA.get("fid"))))
     return p
 
 
@@ -1187,12 +1153,12 @@ def v_tutorial():
     idade, b18, meses = idade_info()
     ps = passos()
     feitos = sum(1 for p in ps if p[2])
-    frase = (f"Faltam <b>{prazo_txt(meses)}</b> para os 18 anos. Cada mês conta!" if meses > 0
-             else f"Você já tem {idade} anos, então a projeção olha 10 anos à frente.")
+    frase = (f"Faltam <b>{prazo_txt(meses)}</b> para os 18 anos." if meses > 0
+             else f"Você já tem {idade} anos. A projeção será para os próximos 10 anos.")
     lis = "".join('<div class="sp' + (" ok" if f else "") + '"><span>' + ("✅" if f else "⭕") + '</span><div><b>' + a + '</b><div class="k">' + b + '</div></div></div>' for a, b, f in ps)
-    tit = "🎉 Tudo pronto!" if feitos == len(ps) else "👋 Vamos começar, " + html.escape(CONTA["nome"]) + "?"
+    tit = "🎉 Tudo pronto!" if feitos == len(ps) else "👋 Olá, " + html.escape(CONTA["nome"]) + "!"
     return ('<div class="card as" style="border-color:var(--pur)"><div class="lb" style="color:var(--pur);font-size:16px">' + tit + '</div>'
-            '<div class="k" style="margin:4px 0 8px">' + frase + '</div><div class="pg"><i style="width:' + str(feitos / len(ps) * 100) + '%"></i></div>'
+            '<div class="k" style="margin:4px 0 8px">' + frase + '</div><div class="pg" style="height:6px; background:var(--ln); border-radius:4px;"><i style="width:' + str(feitos / len(ps) * 100) + '%; background:var(--pur);"></i></div>'
             '<div class="k">' + str(feitos) + ' de ' + str(len(ps)) + ' passos</div><div style="margin-top:8px">' + lis + '</div></div>')
 
 
@@ -1202,26 +1168,52 @@ def v_home():
     idade, b18, meses = idade_info()
     reserva = c["reserva"]
     pc = min(100, t / meta * 100) if meta > 0 else 0
+
     if f > reserva + .005:
-        msg = "Você tem <b>" + brl(f - reserva) + "</b> acima da reserva fixa. Veja onde aplicar na aba Ideias."
+        msg = f"Você tem {brl(f - reserva)} disponíveis para investir na aba Ideias."
     elif f < reserva - .005:
-        msg = "Atenção: faltam <b>" + brl(reserva - f) + "</b> para completar a sua reserva fixa."
+        msg = f"Faltam {brl(reserva - f)} para completar sua reserva fixa."
     else:
-        msg = "Sua reserva fixa está completa. Tudo em ordem."
-    h = agora()
-    prox = f"01/{h.month + 1:02d}/{h.year}" if h.month < 12 else f"01/01/{h.year + 1}"
-    mesada = ("<br>Próxima entrada automática: " + prox) if (c["renda"] > 0 or c["gastos"] > 0) else "<br>Configure renda e gastos em ⚙️."
+        msg = "Sua reserva de emergência está completa."
+
     pct = f"{pc:.1f}".replace(".", ",")
-    prazo = f"faltam {prazo_txt(meses)} para os 18 anos" if meses > 0 else f"projeção até {ano_fim}"
-    out = card("grn", "Patrimônio total", brl(t), f"{pct}% da meta de {brl(meta)} · {prazo}",
-               '<div class="rkbar"><div class="pg"><i style="width:' + str(pc) + '%"></i></div><s style="left:' + str(max(pc, 2)) + '%">🚀</s></div>')
-    out += '<div class="card as">💡 ' + msg + '</div>'
-    out += card("blue", "Saldo livre", brl(f), "Reserva fixa: " + brl(reserva) + mesada)
+    
+    # Seção 1: Saldo Disponível Principal
+    out = f'''
+    <div style="text-align:center; padding: 10px 0 24px;">
+        <div style="color:var(--mu); font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Saldo Disponível</div>
+        <div style="font-size:46px; font-weight:700; letter-spacing:-0.04em; margin-top:4px;">{brl(f)}</div>
+    </div>
+    '''
+
+    # Seção 2: Informação Financeira Principal (Card de Patrimônio)
+    out += f'''
+    <div class="card" style="padding: 24px; border: 0; background: linear-gradient(135deg, var(--pur), var(--blue)); color: #fff; box-shadow: 0 10px 30px color-mix(in srgb, var(--pur) 20%, transparent);">
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 12px;">
+            <div>
+                <div style="color: rgba(255,255,255,0.8); font-size:13px; font-weight:500; margin-bottom:4px;">Patrimônio Total</div>
+                <div style="font-size:26px; font-weight:700;">{brl(t)}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="color: #fff; font-size:14px; font-weight:600;">{pct}% da meta</div>
+            </div>
+        </div>
+        <div class="pg" style="height:6px; background:rgba(0,0,0,0.15); border-radius:4px; margin:0;"><i style="width:{pc}%; background:#fff; border-radius:4px;"></i></div>
+    </div>
+    '''
+
+    if msg:
+        out += f'<div style="background:var(--c2); color:var(--tx); border-radius:16px; padding:16px; font-size:14px; display:flex; align-items:center; gap:12px; margin-bottom:16px;"><span style="font-size:18px;">💡</span> <span>{msg}</span></div>'
+
     out += v_mes()
-    for k, v in S["caixas"].items():
-        if visivel(k):
-            m = S["caixas_meta"].get(k, ["Caixinha", "blue", ""])
-            out += card(m[1], html.escape(m[0]), brl(v), html.escape(m[2]) or "Faça o primeiro aporte em ＋ › Caixinhas")
+
+    if S["caixas"]:
+        out += '<div class="dh" style="margin-top: 24px; margin-bottom: 8px;">MINHAS CAIXINHAS</div>'
+        for k, v in S["caixas"].items():
+            if visivel(k):
+                m = S["caixas_meta"].get(k, ["Caixinha", "blue", ""])
+                out += card(m[1], html.escape(m[0]), brl(v), html.escape(m[2]) or "Rende 100% do CDI")
+
     return out
 
 
@@ -1237,11 +1229,8 @@ def v_mes():
                 sd += x["v"]
             elif x["t"] == "yld":
                 r += x["v"]
-    rend = sum(S["caixas"].values()) * ((1 + S["cfg"]["cdi"] / 100) ** (1 / 252) - 1)
-    cel = lambda t, v, cor: '<div><div class="k">' + t + '</div><b style="color:var(--' + cor + ')">' + brl(v) + '</b></div>'
-    nota = f"Suas caixinhas rendem cerca de {brl(rend)} por dia útil (100% do CDI)." if rend >= 0.005 else "Guarde um valor em uma caixinha para começar a render."
-    return ('<div class="card"><div class="lb">Este mês · ' + MESES[h.month - 1] + '/' + str(h.year) + '</div><div class="mes">'
-            + cel("Entrou", e, "grn") + cel("Saiu", sd, "red") + cel("Rendeu", r, "pur") + '</div><div class="k" style="margin-top:10px">' + nota + '</div></div>')
+    cel = lambda t, v, cor: f'<div style="flex:1; text-align:center;"><div class="k" style="font-size:12px; text-transform:uppercase;">{t}</div><b style="color:var(--{cor}); font-size:16px; font-weight:600;">{brl(v)}</b></div>'
+    return f'<div class="card"><div class="lb" style="margin-bottom:14px;">Resumo · {MESES[h.month - 1]}/{h.year}</div><div class="mes" style="display:flex; justify-content:space-between;">{cel("Entradas", e, "grn")}{cel("Saídas", sd, "tx")}{cel("Rendeu", r, "pur")}</div></div>'
 
 
 def dia_rotulo(iso):
@@ -1255,20 +1244,20 @@ def dia_rotulo(iso):
 
 def v_ext():
     if not S["extrato"]:
-        return '<div class="card"><div class="k">🌱 Nenhum lançamento ainda. Toque em ＋ para começar.</div></div>'
+        return '<div class="card"><div class="k" style="text-align:center; padding: 20px 0;">🌱 Nenhuma movimentação. Toque em ＋ para adicionar.</div></div>'
     rows, ult = "", None
     for _, x in sorted(enumerate(S["extrato"]), key=lambda p: (p[1]["ts"], p[0]), reverse=True):
         dia = dia_rotulo(x["ts"])
         if dia != ult:
-            rows, ult = rows + '<div class="dh">' + dia + '</div>', dia
+            rows, ult = rows + '<div class="dh" style="margin-top:16px;">' + dia + '</div>', dia
         ic, nome = TIPOS[x["t"]]
         tr, ps = x["t"] in ("save", "take", "mov"), x["t"] in ("in", "yld")
-        cor = "blue" if tr else "grn" if ps else "red"
+        cor = "tx" if tr else "grn" if ps else "tx"
         sg = {"save": "→ ", "take": "← ", "mov": "↔ "}.get(x["t"], "+" if ps else "−")
         det = (html.escape(destino(x)) + " · " if x.get("c") else "") + (html.escape(x["o"]) + " · " if x["o"] else "") + fmt_dt(x["ts"])
-        rows += ('<div class="tx"><span class="ic">' + ic + '</span><div class="g"><b>' + nome + '</b><div class="k">' + det + '</div></div>'
+        rows += ('<div class="tx"><span class="ic">' + ic + '</span><div class="g"><b>' + nome + '</b><div class="k" style="margin-top:2px;">' + det + '</div></div>'
                  '<b style="color:var(--' + cor + ')">' + sg + brl(x["v"]) + '</b></div>')
-    return '<div class="card" style="padding:6px 16px">' + rows + '</div>'
+    return '<div class="card" style="padding:4px 20px">' + rows + '</div>'
 
 
 def svg_barras(L, meta):
@@ -1281,7 +1270,7 @@ def svg_barras(L, meta):
     for i, (ano, ap, j, b) in enumerate(L):
         h = b / mx * (H - 44)
         x = i * bw + bw * .17
-        s += ('<rect class="bar" style="animation-delay:%dms" x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="7"/><text class="bt" x="%.1f" y="%.1f">%s</text><text class="bt" x="%.1f" y="%d">%s</text>'
+        s += ('<rect class="bar" style="animation-delay:%dms" x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="4"/><text class="bt" x="%.1f" y="%.1f">%s</text><text class="bt" x="%.1f" y="%d">%s</text>'
               % (i * 70, x, H - 24 - h, bw * .66, h, x + bw * .33, H - 28 - h, kf(b), x + bw * .33, H - 7, ano))
     return s + "</svg>"
 
@@ -1291,24 +1280,24 @@ def v_proj():
     fim, c = L[-1][3], S["cfg"]
     meta_em = mes_meta()
     if fim >= meta:
-        sub = f"Meta de {brl(meta)} alcançada em {fmt_mes(meta_em)}, com {brl(fim - meta)} de folga no fim do período."
+        sub = f"Meta de {brl(meta)} alcançada em {fmt_mes(meta_em)}."
     elif meta_em:
         sub = f"A meta chega em {fmt_mes(meta_em)}."
     else:
-        sub = f"No ritmo atual a meta não é alcançada no período. O aporte mensal precisaria ser de cerca de {brl(falta)}."
-    topo = card("grn" if fim >= meta else "gold", "Projeção até " + (str(L[-1][0]) if not isinstance(L[-1][0], int) else str(ano_fim)),
+        sub = f"Faltará um aporte extra de ~{brl(falta)}/mês para bater a meta no tempo estipulado."
+    topo = card("grn" if fim >= meta else "gold", "Projeção Financeira",
                 brl(fim), sub + "<br>" + periodo_txt())
     tab = '<table><tr><th>Ano</th><th>Investido</th><th>Juros</th><th>Total</th></tr>'
     for a, p, j, b in L:
         tab += '<tr><td>' + str(a) + '</td><td>' + brl(p) + '</td><td style="color:var(--grn)">' + brl(j) + '</td><td><b>' + brl(b) + '</b></td></tr>'
     partes = [("Saldo livre", S["livre"], lv, "blue")] + [(nome_cx(k), S["caixas"][k], cxf.get(k, 0.0), S["caixas_meta"].get(k, ["", "pur"])[1]) for k in S["caixas"]]
-    onde = "".join('<div class="al" style="padding:6px 0"><span class="lb" style="color:var(--' + cor + ')">' + html.escape(nm) + '</span><span class="k">'
-                   + brl(h0) + ' → <span style="color:var(--tx);font-weight:700">' + brl(h1) + '</span></span></div>' for nm, h0, h1, cor in partes)
+    onde = "".join('<div class="al" style="padding:8px 0; border-bottom: 1px solid var(--ln);"><span class="lb" style="color:var(--' + cor + ')">' + html.escape(nm) + '</span><span class="k">'
+                   + brl(h0) + ' → <span style="color:var(--tx);font-weight:600">' + brl(h1) + '</span></span></div>' for nm, h0, h1, cor in partes)
     resto = ('<div class="card">' + svg_barras(L, meta) + '</div>'
-             '<div class="card"><div class="lb" style="margin-bottom:4px">Onde seu dinheiro estará em ' + str(ano_fim) + '</div>' + onde + '</div>'
+             '<div class="card"><div class="lb" style="margin-bottom:8px">Seu dinheiro em ' + str(ano_fim) + '</div>' + onde + '</div>'
              '<div class="card">' + tab + '</table></div>'
-             '<div class="k" style="padding:0 6px">Ponto de partida de hoje: ' + brl(total()) + ' (saldo livre + caixinhas) · aporte líquido de '
-             + brl(max(0.0, c["renda"] - c["gastos"])) + '/mês · sempre 100% do CDI (cerca de ' + str(c["cdi"]).replace(".", ",") + '% a.a., bruto e estimado).</div>')
+             '<div class="k" style="padding:0 6px">Ponto de partida: ' + brl(total()) + ' · aporte líquido de '
+             + brl(max(0.0, c["renda"] - c["gastos"])) + '/mês · rendimento de 100% do CDI (' + str(c["cdi"]).replace(".", ",") + '% a.a., estimado).</div>')
     return topo, resto
 
 
@@ -1321,28 +1310,28 @@ def v_idea():
             continue
         m = S["caixas_meta"].get(k, ["Caixinha", "blue", ""])
         if k == main:
-            partes, dica = [("Liquidez diária (100% do CDI)", .4), ("RDB de 2 a 5 anos", .35), ("Tesouro IPCA+", .25)], "Objetivo de longo prazo: mantenha uma parte com liquidez e deixe o resto trabalhando por mais tempo."
+            partes, dica = [("Liquidez diária (100% do CDI)", .4), ("RDB de 2 a 5 anos", .35), ("Tesouro IPCA+", .25)], "Objetivos de longo prazo: separe o que é imediato do que pode ficar investido."
         else:
-            partes, dica = [("Liquidez diária (100% do CDI)", 1.0)], "Objetivo mais próximo: o melhor é manter com resgate imediato e sem risco."
-        linhas = "".join('<div class="al" style="padding:4px 0"><span class="k">' + n + ' · ' + str(round(p * 100)) + '%</span><b style="font-size:15px">' + brl(v * p) + '</b></div>' for n, p in partes)
+            partes, dica = [("Liquidez diária (100% do CDI)", 1.0)], "Objetivos curtos: resgate imediato e sem risco."
+        linhas = "".join('<div class="al" style="padding:6px 0; border-bottom: 1px solid var(--ln);"><span class="k">' + n + ' · ' + str(round(p * 100)) + '%</span><b style="font-size:15px">' + brl(v * p) + '</b></div>' for n, p in partes)
         out += card(m[1], html.escape(m[0]), brl(v), dica, linhas)
-    sub = "Esse valor pode ir para a sua caixinha principal e começar a render." if ex else "Seu saldo livre precisa passar de " + brl(reserva + 1) + " para sobrar algo além da reserva."
-    out += card("blue", "Saldo livre acima da reserva", brl(ex), sub)
-    return out + '<div class="k" style="padding:0 6px">Hoje todas as caixinhas rendem 100% do CDI com resgate imediato. As ideias acima mostram como buscar mais retorno. São sugestões educativas, não recomendação de investimento.</div>'
+    sub = "Disponível para ir à caixinha principal." if ex else "Seu saldo livre precisa passar de " + brl(reserva + 1) + " para sobrar."
+    out += card("blue", "Saldo acima da reserva", brl(ex), sub)
+    return out + '<div class="k" style="padding:0 6px; margin-top: 20px;">Sugestões educativas. Não são recomendações de investimento direto.</div>'
 
 
 def tela_ideias():
     ks = list(S["caixas"])
     sig = "|".join(sorted(ks))
     if not ks:
-        st.markdown(card("blue", "Ideias sob medida", "Sem caixinhas", "Crie sua primeira caixinha para receber ideias de como fazer cada uma render mais."), unsafe_allow_html=True)
+        st.markdown(card("blue", "Ideias", "Sem caixinhas", "Crie sua primeira caixinha para visualizar sugestões."), unsafe_allow_html=True)
         if not SUP and st.button("➕ Criar caixinha", key="b_ic", use_container_width=True):
             dlg_novo()
         return
     if st.session_state.get("ideias_ok") != sig:
         n = len(ks)
         nomes = ", ".join(nome_cx(k).replace("Caixinha ", "") for k in ks)
-        st.markdown('<div class="card as" style="padding:14px 16px">🤔 Você tem <b>' + str(n) + (" caixinha" if n == 1 else " caixinhas") + '</b> (' + html.escape(nomes) + '), está correto?</div>', unsafe_allow_html=True)
+        st.markdown('<div class="card as" style="padding:20px; font-size:15px;">🤔 Você possui <b>' + str(n) + (" caixinha" if n == 1 else " caixinhas") + '</b> (' + html.escape(nomes) + '), certo?</div>', unsafe_allow_html=True)
         with st.container(key="conf"):
             a, b = st.columns(2)
             if a.button("Sim", key="ok_s", type="primary", use_container_width=True):
@@ -1351,7 +1340,7 @@ def tela_ideias():
             if b.button("Não", key="ok_n", use_container_width=True):
                 st.session_state["ideias_no"] = True
         if st.session_state.get("ideias_no"):
-            st.caption("Sem problemas! Ajuste suas caixinhas e volte aqui." if not SUP else "Peça ao titular para ajustar as caixinhas.")
+            st.caption("Ajuste as caixinhas antes de prosseguir." if not SUP else "Solicite ao titular o ajuste.")
             if not SUP:
                 with st.container(key="conf2"):
                     c1, c2 = st.columns(2)
@@ -1368,48 +1357,96 @@ def tela_ideias():
             st.error(e)
         else:
             st.rerun()
-    if st.button("Revisar minhas caixinhas", key="b_rev", use_container_width=True):
+    if st.button("Revisar caixinhas", key="b_rev", use_container_width=True):
         st.session_state["ideias_ok"] = None
         st.rerun()
 
 
 # ------------------------------------------------------------------ diálogos
-@st.dialog("⚙️ Ajustes da conta")
+@st.dialog("Ajustes")
 def dlg_ajustes():
     c = S["cfg"]
     tem_sonho = "sonho" in S["caixas"] and "futuro" in S["caixas"]
-    pal = list(PALETAS)
-    with st.form("f_ajustes"):
-        nome = st.text_input("Nome da conta", CONTA["nome"], max_chars=24)
-        paleta = st.selectbox("Cores do app", pal, index=pal.index(S["paleta"]) if S.get("paleta") in pal else 0)
-        tutorial = st.checkbox("Mostrar tutorial na tela Início", value=c["tutorial"])
-        st.caption("🎯 META E RESERVA")
-        meta = st.number_input("Meta financeira (R$)", min_value=0.0, value=float(c["meta"]), step=1000.0, format="%.2f")
-        reserva = st.number_input("Reserva fixa protegida no Saldo Livre (R$)", min_value=0.0, value=float(c["reserva"]), step=50.0, format="%.2f")
-        st.caption("💰 BALANÇO MENSAL (lançado todo dia 1)")
-        renda = st.number_input("Renda mensal (R$)", min_value=0.0, value=float(c["renda"]), step=50.0, format="%.2f")
-        gast = st.number_input("Gastos fixos do mês (R$)", min_value=0.0, value=float(c["gastos"]), step=10.0, format="%.2f")
-        guard = st.number_input("Guardar automático na primeira caixinha (R$)", min_value=0.0, value=float(c["guardar"]), step=50.0, format="%.2f")
-        cdi = st.number_input("CDI estimado (% ao ano). O app sempre projeta 100% dele", min_value=0.0, max_value=100.0, value=float(c["cdi"]), step=0.1, format="%.2f")
-        sd = st.date_input("Liberar a Sonho para a Futuro em (opcional)", value=date.fromisoformat(c["sonho_data"]) if c.get("sonho_data") else None,
-                           format="DD/MM/YYYY") if tem_sonho else None
-        if st.form_submit_button("Salvar", type="primary", use_container_width=True):
-            CONTA["nome"] = nome.strip() or CONTA["nome"]
-            S["paleta"] = st.session_state["paleta"] = paleta
-            S["cfg"].update(renda=renda, gastos=gast, guardar=min(guard, max(0.0, renda - gast)), cdi=cdi, meta=meta, reserva=reserva, tutorial=tutorial, ajustado=True)
-            if tem_sonho:
-                S["cfg"]["sonho_data"] = sd.isoformat() if sd else None
-            fecha("Ajustes salvos!")
-            st.rerun()
-    if HAS_CRYPTO:
-        st.divider()
-        r = FACEID(modo="reg", chal=st.session_state["chal"], user=U, tema=st.session_state["tema"], key="fid_reg", default=None)
-        if r and r.get("kind") == "reg" and r["n"] != st.session_state["fid_done"]:
-            st.session_state["fid_done"] = r["n"]
-            if fid_registrar(U, r):
-                st.session_state["msg"] = "Face ID ativado neste aparelho!"
+
+    t1, t2, t3, t4 = st.tabs(["Conta", "Dinheiro", "Aparência", "Dados"])
+
+    with t1:
+        with st.form("f_conta"):
+            st.markdown('<div class="dh">Perfil</div>', unsafe_allow_html=True)
+            nome = st.text_input("Como quer ser chamado?", CONTA["nome"], max_chars=24)
+            if st.form_submit_button("Atualizar perfil", type="primary", use_container_width=True):
+                CONTA["nome"] = nome.strip() or CONTA["nome"]
+                salvar()
                 st.rerun()
-            st.error("Não foi possível validar o Face ID.")
+
+        st.markdown('<div class="dh">Autenticação</div>', unsafe_allow_html=True)
+        if HAS_CRYPTO:
+            r = FACEID(modo="reg", chal=st.session_state["chal"], user=U, tema=st.session_state["tema"], key="fid_reg", default=None)
+            if r and r.get("kind") == "reg" and r["n"] != st.session_state["fid_done"]:
+                st.session_state["fid_done"] = r["n"]
+                if fid_registrar(U, r):
+                    st.session_state["msg"] = "Face ID ativado com sucesso!"
+                    st.rerun()
+                st.error("Erro ao configurar biometria.")
+
+        with st.expander("Alterar senha"):
+            with st.form("f_senha"):
+                nova_senha = st.text_input("Nova senha (mín. 4)", type="password")
+                if st.form_submit_button("Mudar senha", type="primary", use_container_width=True):
+                    if len(nova_senha) >= 4:
+                        CONTA["s"], CONTA["h"] = mk(nova_senha)
+                        salvar()
+                        st.success("Sua senha foi atualizada com segurança.")
+                    else:
+                        st.error("Digite no mínimo 4 caracteres.")
+
+        st.markdown('<div class="dh">Sessão</div>', unsafe_allow_html=True)
+        if st.button("Sair do aplicativo", use_container_width=True):
+            _sair()
+            st.rerun()
+
+    with t2:
+        with st.form("f_financas"):
+            st.markdown('<div class="dh">Fluxo Mensal (Cai dia 1º)</div>', unsafe_allow_html=True)
+            renda = st.number_input("Entrada de dinheiro (R$)", min_value=0.0, value=float(c["renda"]), step=50.0, format="%.2f")
+            gast = st.number_input("Gastos fixos (R$)", min_value=0.0, value=float(c["gastos"]), step=10.0, format="%.2f")
+            guard = st.number_input("Guardar na caixinha (R$)", min_value=0.0, value=float(c["guardar"]), step=50.0, format="%.2f")
+
+            st.markdown('<div class="dh">Objetivos de Vida</div>', unsafe_allow_html=True)
+            meta = st.number_input("Sua meta principal (R$)", min_value=0.0, value=float(c["meta"]), step=1000.0, format="%.2f")
+            reserva = st.number_input("Reserva de emergência (R$)", min_value=0.0, value=float(c["reserva"]), step=50.0, format="%.2f")
+            cdi = st.number_input("Taxa Selic/CDI estimada (% a.a.)", min_value=0.0, max_value=100.0, value=float(c["cdi"]), step=0.1, format="%.2f")
+
+            if st.form_submit_button("Salvar finanças", type="primary", use_container_width=True):
+                S["cfg"].update(renda=renda, gastos=gast, guardar=min(guard, max(0.0, renda - gast)), cdi=cdi, meta=meta, reserva=reserva, ajustado=True)
+                fecha("Valores financeiros atualizados.")
+                st.rerun()
+
+    with t3:
+        with st.form("f_aparencia"):
+            st.markdown('<div class="dh">Personalização Visual</div>', unsafe_allow_html=True)
+            pal = list(PALETAS)
+            paleta = st.selectbox("Cor de Destaque", pal, index=pal.index(S["paleta"]) if S.get("paleta") in pal else 0)
+            tutorial = st.checkbox("Exibir dicas na tela Inicial", value=c["tutorial"])
+
+            if st.form_submit_button("Aplicar visual", type="primary", use_container_width=True):
+                S["paleta"] = st.session_state["paleta"] = paleta
+                S["cfg"]["tutorial"] = tutorial
+                fecha("Aparência atualizada.")
+                st.rerun()
+
+    with t4:
+        st.markdown('<div class="dh">Nuvem e Armazenamento</div>', unsafe_allow_html=True)
+        status_map = {
+            "cloud": "☁️ Sincronizados na nuvem com segurança",
+            "local-fallback": "⚠️ Salvos no aparelho (Nuvem offline)",
+            "local": "💾 Salvos apenas no aparelho local"
+        }
+        st.info(status_map.get(st.session_state["storage_mode"], "Status Desconhecido"))
+        st.caption("O FUTURE protege todas as informações em tempo real. Seus dados nunca são exibidos no código e estão seguros por criptografia de ponta a ponta PBKDF2.")
+
+        st.markdown('<div class="dh">Exportação</div>', unsafe_allow_html=True)
+        st.caption("Você pode exportar extratos, PDF e planilhas diretamente através do menu principal nas abas **Extrato** e **Projeção**.")
 
 
 def form_op(op):
@@ -1417,20 +1454,20 @@ def form_op(op):
     if op in ("save", "take", "yld", "mov"):
         ops = [k for k in S["caixas"] if op == "save" or S["caixas"][k] > 0]
         if not ops:
-            st.info("Nenhuma caixinha disponível ainda. Crie uma na aba ➕ Montar Caixinha." if op == "save" else "Nenhuma caixinha com saldo ainda.")
+            st.info("Nenhuma caixinha criada ainda." if op == "save" else "Nenhuma caixinha possui saldo disponível.")
             return
         cx = st.selectbox("De" if op == "mov" else "Caixinha", ops, key="c_" + op, format_func=lambda k: nome_cx(k) + " · " + brl(S["caixas"][k]))
         if op == "mov":
             outras = [k for k in S["caixas"] if k != cx]
             if not outras:
-                st.info("Crie outra caixinha para poder mover valores.")
+                st.info("É preciso ter pelo menos duas caixinhas para mover saldos.")
                 return
             cx2 = st.selectbox("Para", outras, key="d_mov", format_func=nome_cx)
     v = st.number_input("Valor (R$)", min_value=0.0, value=0.0, step=0.10 if op == "yld" else 1.0, format="%.2f", key="v_" + op)
     if op == "yld" and cx:
-        st.caption(f"100% do CDI rende cerca de {brl(S['caixas'][cx] * ((1 + S['cfg']['cdi'] / 100) ** (1 / 252) - 1))} por dia útil nessa caixinha.")
-    obs = st.text_input("Observação (opcional)", max_chars=40, key="o_" + op)
-    if st.button("Confirmar", type="primary", use_container_width=True, key="ok_" + op):
+        st.caption(f"Essa caixinha rende cerca de {brl(S['caixas'][cx] * ((1 + S['cfg']['cdi'] / 100) ** (1 / 252) - 1))} por dia útil.")
+    obs = st.text_input("Nota descritiva (Opcional)", max_chars=40, key="o_" + op)
+    if st.button("Confirmar transação", type="primary", use_container_width=True, key="ok_" + op):
         e = mover(cx, cx2, v, obs.strip()) if op == "mov" else aplicar(op, v, cx, obs.strip())
         if e:
             st.error(e)
@@ -1439,24 +1476,24 @@ def form_op(op):
 
 
 def form_criar_cx():
-    st.caption("Crie caixinhas para cada objetivo. Todas rendem 100% do CDI com resgate imediato.")
-    nome = st.text_input("Nome do objetivo (ex: Intercâmbio)", max_chars=24)
-    cor = st.selectbox("Cor", ["pur", "blue", "gold", "grn", "red"], format_func={"pur": "Roxo", "blue": "Azul", "gold": "Dourado", "grn": "Verde", "red": "Vermelho"}.get)
-    desc = st.text_input("Descrição (opcional)", max_chars=40)
-    if st.button("Criar caixinha", type="primary", use_container_width=True):
+    st.caption("Todas as caixinhas rendem 100% do CDI.")
+    nome = st.text_input("Qual o seu objetivo?", max_chars=24)
+    cor = st.selectbox("Identificação Visual", ["pur", "blue", "gold", "grn", "red"], format_func={"pur": "Roxo", "blue": "Azul", "gold": "Dourado", "grn": "Verde", "red": "Vermelho"}.get)
+    desc = st.text_input("Breve descrição (Opcional)", max_chars=40)
+    if st.button("Criar objetivo", type="primary", use_container_width=True):
         if not nome.strip():
             st.error("Dê um nome para a caixinha.")
         else:
             k = chave(nome) + "-" + secrets.token_hex(2)
             S["caixas"][k] = 0.0
             S["caixas_meta"][k] = [nome.strip(), cor, desc.strip()]
-            fecha("Caixinha criada! Agora guarde um valor nela em ＋ › Caixinhas.")
+            fecha("Pronto! Agora você já pode adicionar saldo nela.")
             st.rerun()
 
 
-@st.dialog("Novo lançamento")
+@st.dialog("Nova transação")
 def dlg_novo():
-    t1, t2, t3 = st.tabs(["💳 Conta", "🐷 Caixinhas", "➕ Montar Caixinha"])
+    t1, t2, t3 = st.tabs(["Conta", "Caixinhas", "Nova Caixinha"])
     with t1:
         form_op(st.radio("Conta", ["in", "out"], horizontal=True, format_func=CURTO.get, label_visibility="collapsed", key="r1"))
     with t2:
@@ -1465,34 +1502,34 @@ def dlg_novo():
         form_criar_cx()
 
 
-@st.dialog("🗑️ Excluir caixinha")
+@st.dialog("Excluir Caixinha")
 def dlg_excluir():
     ops = list(S["caixas"])
     if not ops:
         st.info("Nenhuma caixinha para excluir.")
         return
-    cx = st.selectbox("Qual caixinha?", ops, format_func=lambda k: nome_cx(k) + " · " + brl(S["caixas"][k]))
-    modo = st.radio("O que fazer com o saldo?", ["Resgatar para o Saldo Livre", "Apenas zerar (sai do patrimônio)"])
-    if st.button("Excluir caixinha", type="primary", use_container_width=True):
+    cx = st.selectbox("Selecione a caixinha", ops, format_func=lambda k: nome_cx(k) + " · " + brl(S["caixas"][k]))
+    modo = st.radio("Destino do Saldo", ["Resgatar para a Conta (Saldo Livre)", "Zerar valor (Sai do patrimônio)"])
+    if st.button("Excluir definitivamente", type="primary", use_container_width=True):
         excluir_caixinha(cx, modo.startswith("Resgatar"))
         st.rerun()
 
 
-@st.dialog("🛡️ Painel dos pais")
+@st.dialog("Painel Parental")
 def dlg_pais():
-    st.caption("Modo supervisão: somente leitura. Aqui você pode redefinir os acessos.")
-    senha = st.text_input("Nova senha do titular (mín. 4)", type="password")
-    pin = st.text_input("Novo PIN dos pais (4 números)", type="password", max_chars=4)
-    if st.button("Salvar", type="primary", use_container_width=True):
+    st.caption("Você está no modo de auditoria. Lançamentos ficam bloqueados aqui.")
+    senha = st.text_input("Nova senha da conta (mín. 4)", type="password")
+    pin = st.text_input("Novo PIN de supervisão (4 dígitos)", type="password", max_chars=4)
+    if st.button("Atualizar credenciais", type="primary", use_container_width=True):
         if (senha and len(senha) < 4) or (pin and not (pin.isdigit() and len(pin) == 4)):
-            st.error("Senha com 4+ caracteres e PIN com exatamente 4 números.")
+            st.error("Preencha corretamente os campos para atualizar.")
         else:
             if senha:
                 CONTA["s"], CONTA["h"] = mk(senha)
             if pin:
                 CONTA["ps"], CONTA["ph"] = mk(pin)
             salvar()
-            st.session_state["msg"] = "Acessos atualizados"
+            st.session_state["msg"] = "Credenciais alteradas com sucesso."
             st.rerun()
 
 
@@ -1526,40 +1563,40 @@ def _nav(v):
     st.session_state["nav"] = v
 
 
-st.button("☀️" if st.session_state["tema"] == "dark" else "🌙", key="b_tema", on_click=_tema, help="Alternar tema")
-if not SUP and st.button("⚙️", key="b_ajustes_top", help="Ajustes da conta"):
+st.button("☀️" if st.session_state["tema"] == "dark" else "🌙", key="b_tema", on_click=_tema, help="Trocar modo de cor")
+if not SUP and st.button("⚙️", key="b_ajustes_top", help="Abrir Ajustes"):
     dlg_ajustes()
-st.button("🔒", key="b_sair", on_click=_sair, help="Encerrar sessão")
+st.button("🔒", key="b_sair", on_click=_sair, help="Bloquear o app e sair")
 
 tab = st.session_state["tab"]
 if st.session_state["nav"]:
     with st.container(key="nav"):
-        st.button("‹", key="b_min", on_click=_nav, args=(False,), help="Recolher menu")
+        st.button("‹", key="b_min", on_click=_nav, args=(False,), help="Fechar menu")
         aba = st.radio("Atalhos", ABAS, index=tab, key="aba", horizontal=True, label_visibility="collapsed")
-        if st.button("🛡️" if SUP else "＋", key="b_plus", help="Painel dos pais" if SUP else "Novo lançamento"):
+        if st.button("🛡️" if SUP else "＋", key="b_plus", help="Menu Parental" if SUP else "Adicionar Movimentação"):
             (dlg_pais if SUP else dlg_novo)()
     idx = ABAS.index(aba)
 else:
-    st.button(ABAS[tab].split()[0], key="bolha", on_click=_nav, args=(True,), help="Abrir menu")
+    st.button(ABAS[tab].split()[0], key="bolha", on_click=_nav, args=(True,), help="Menu principal")
     idx = tab
 if idx != tab:
     st.session_state.update(dir="R" if idx > tab else "L", tab=idx)
 
 st.markdown('<div class="hd"><div class="k">' + TITULOS[idx] + ' · ' + hoje_txt() + '</div><h1>' + html.escape(CONTA["nome"]) + '</h1></div>', unsafe_allow_html=True)
 if SUP:
-    st.markdown('<div class="sup">🔐 <b>Modo supervisão:</b> somente leitura. Lançamentos e ajustes ficam ocultos.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sup">🔐 <b>Modo Segurança</b> Lançamentos desativados. Visão de auditoria ativada.</div>', unsafe_allow_html=True)
 
 with st.container(key=f"view_{idx}_from{st.session_state['dir']}"):
     if idx == 0:
         if S["cfg"]["tutorial"] and not SUP:
             st.markdown(v_tutorial(), unsafe_allow_html=True)
-            if st.button("Concluir tutorial", key="b_tut", use_container_width=True):
+            if st.button("Dispensar dicas", key="b_tut", use_container_width=True):
                 S["cfg"]["tutorial"] = False
-                fecha("Tutorial concluído. Você pode reativá-lo em ⚙️ Ajustes.")
+                fecha("Dicas ocultadas. Você pode ativá-las novamente nos Ajustes.")
                 st.rerun()
         st.markdown(v_home(), unsafe_allow_html=True)
         if not SUP and S["caixas"]:
-            if st.button("🗑️ Excluir caixinha", key="b_del", use_container_width=True):
+            if st.button("🗑️ Gerenciar Caixinhas", key="b_del", use_container_width=True):
                 dlg_excluir()
     elif idx == 1:
         st.markdown(v_ext(), unsafe_allow_html=True)
@@ -1573,19 +1610,19 @@ with st.container(key=f"view_{idx}_from{st.session_state['dir']}"):
     elif idx == 2:
         topo, resto = v_proj()
         st.markdown(topo, unsafe_allow_html=True)
-        extra = st.slider("E se eu guardasse mais por mês? (R$)", 0, 1000, 0, 50, key="sl_extra")
+        extra = st.slider("Investimento Adicional (R$/mês)", 0, 1000, 0, 50, key="sl_extra")
         if extra:
-            st.markdown(card("pur", "Com +" + brl(extra) + " por mês", brl(final_com(extra)),
-                             "Meta em: " + fmt_mes(mes_meta(extra)) + " (hoje: " + fmt_mes(mes_meta()) + ")."), unsafe_allow_html=True)
+            st.markdown(card("pur", "Com +" + brl(extra) + "/mês", brl(final_com(extra)),
+                             "A meta seria batida em: " + fmt_mes(mes_meta(extra)) + " (atual: " + fmt_mes(mes_meta()) + ").", bg_fill=False), unsafe_allow_html=True)
         st.markdown(resto, unsafe_allow_html=True)
         hoje, x = f"{agora():%Y-%m-%d}", xlsx_proj()
         with st.container(key="dl2"):
             c1, c2 = st.columns(2)
             if x:
-                c1.download_button("📊 Excel", x, file_name=f"projecao_future_{hoje}.xlsx", mime=XL, use_container_width=True)
+                c1.download_button("📊 Planilha Excel", x, file_name=f"projecao_future_{hoje}.xlsx", mime=XL, use_container_width=True)
             else:
-                c1.download_button("📄 CSV", csv_proj(), file_name=f"projecao_future_{hoje}.csv", mime="text/csv", use_container_width=True)
-            c2.download_button("📄 PDF", pdf_proj(), file_name=f"projecao_future_{hoje}.pdf", mime="application/pdf", use_container_width=True)
+                c1.download_button("📄 Dados CSV", csv_proj(), file_name=f"projecao_future_{hoje}.csv", mime="text/csv", use_container_width=True)
+            c2.download_button("📄 Relatório PDF", pdf_proj(), file_name=f"projecao_future_{hoje}.pdf", mime="application/pdf", use_container_width=True)
     else:
         tela_ideias()
 
@@ -1593,5 +1630,4 @@ if st.session_state["fx"]:
     st.markdown(fx_html(st.session_state["fx"]), unsafe_allow_html=True)
     st.session_state["fx"] = None
 if st.session_state["launch"]:
-    st.markdown('<div class="lift"><i>🚀</i></div>', unsafe_allow_html=True)
     st.session_state["launch"] = False
