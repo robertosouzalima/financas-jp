@@ -60,7 +60,6 @@ st.set_page_config(page_title="FUTURE", page_icon="🚀", layout="centered", ini
 
 
 def secret_str(nome, padrao=""):
-    """Lê um secret sem quebrar o app quando ele não existe."""
     try:
         v = st.secrets.get(nome, padrao)
         return padrao if v is None else str(v)
@@ -72,7 +71,7 @@ CODIGO, PIN_PAIS = secret_str("seed_codigo"), secret_str("seed_pin")
 SEED, SEED_NOME = secret_str("seed_user", "joao"), secret_str("seed_nome", "João")
 SB_URL, SB_KEY = secret_str("supabase_url").rstrip("/"), secret_str("supabase_key")
 _BACKUP_KEY = secret_str("backup_key")
-BK = hashlib.sha256(_BACKUP_KEY.encode()).digest() if _BACKUP_KEY else None    # sem chave = backup desativado
+BK = hashlib.sha256(_BACKUP_KEY.encode()).digest() if _BACKUP_KEY else None
 GEMINI_KEY = secret_str("gemini_key")
 
 if HAS_AI and GEMINI_KEY:
@@ -91,7 +90,7 @@ DIAS = ["segunda", "terça", "quarta", "quinta", "sexta", "sábado", "domingo"]
 MESES = ["jan", "fev", "mar", "abr", "mai", "jun", "jul", "ago", "set", "out", "nov", "dez"]
 PALETAS = {
     "Padrão": {"pur": "#b57bff", "blue": "#4aa3ff", "gold": "#f0c24b", "grn": "#3fdc78", "red": "#ff6b62"},
-    "Neon": {"pur": "#ff00ff", "blue": "#00ffff", "gold": "#ffff00", "grn": "#00ff00", "red": "#ff0000"},
+    "Neon": {"pur": "#cc33cc", "blue": "#00cccc", "gold": "#cccc00", "grn": "#00cc66", "red": "#ff3344"},
     "Oceano": {"pur": "#3a0ca3", "blue": "#4361ee", "gold": "#4cc9f0", "grn": "#2ec4b6", "red": "#e71d36"},
     "Outono": {"pur": "#6a4c93", "blue": "#1982c4", "gold": "#ffca3a", "grn": "#8ac926", "red": "#ff595e"},
 }
@@ -101,7 +100,6 @@ for _k, _v in dict(u=None, modo=None, tela="login", tema="dark", paleta="Padrão
     st.session_state.setdefault(_k, _v)
 
 
-# ---------------------------------------------------------------- utilidades
 def agora():
     return datetime.now(TZ) if TZ else datetime.now()
 
@@ -321,7 +319,7 @@ def salvar(forcar_u=None):
     return True
 
 
-# ------------------------------------------------------------------ visual
+# ------------------------------------------------------------------ visual (adaptado para computador e celular)
 def get_css(tema, nome):
     p = PALETAS.get(nome, PALETAS["Padrão"])
     if tema == "light":
@@ -337,7 +335,7 @@ html,body,[data-testid="stApp"],[data-testid="stMain"],[data-testid="stMainBlock
 [data-testid="stApp"]{background:radial-gradient(900px 520px at 12% -8%,color-mix(in srgb,var(--pur) 13%,transparent),transparent 62%),radial-gradient(760px 460px at 100% 6%,color-mix(in srgb,var(--blue) 10%,transparent),transparent 60%),var(--bg)!important;background-attachment:fixed!important}
 .stApp{color:var(--tx);overflow-x:hidden}
 header[data-testid="stHeader"],#MainMenu,footer{display:none!important}
-.block-container{max-width:480px!important;padding:1.2rem 1rem 10rem!important;margin:0 auto!important}
+.block-container{max-width:580px!important;padding:2rem 1.5rem 10rem!important;margin:0 auto!important}
 .stApp p,.stApp label,.stApp h1,.stApp li,[data-testid="stDialog"] *{color:var(--tx)}
 .stApp input,[data-baseweb="select"]>div,[data-baseweb="input"],[data-baseweb="base-input"]{background:var(--c2)!important;color:var(--tx)!important;border-radius:14px!important}
 div[role="dialog"]{background:var(--c1)!important;border-radius:28px!important;border:1px solid var(--ln)!important;max-width:calc(100vw - 24px)!important;box-shadow:0 24px 70px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.06)!important;animation:dialogIn .28s cubic-bezier(.16,1,.3,1)}
@@ -348,7 +346,7 @@ button[kind="primary"],[data-testid="stBaseButton-primary"]{background:linear-gr
 button[kind="primary"] *,[data-testid="stBaseButton-primary"] *{color:#fff!important}
 [data-testid="stForm"]{border:0;padding:0;background:transparent}
 .st-key-bak{position:fixed;left:0;bottom:0;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none}
-.hd h1{margin:0;font-size:26px;letter-spacing:-.03em;padding:0}.hd{margin-bottom:16px}
+.hd h1{margin:0;font-size:28px;letter-spacing:-.03em;padding:0}.hd{margin-bottom:16px}
 .rkw{position:relative;display:inline-block}
 .rkw::before{content:"";position:absolute;inset:-22px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--pur) 28%,transparent),transparent 68%)}
 .logo{position:relative;font-size:64px;line-height:1;display:inline-block;animation:rocketLaunch .7s cubic-bezier(.175,.885,.32,1.275) both}
@@ -356,8 +354,8 @@ button[kind="primary"] *,[data-testid="stBaseButton-primary"] *{color:#fff!impor
 
 .brand{font-size:34px;font-weight:800;letter-spacing:.14em;text-indent:.14em;line-height:1.1;margin:14px 0 6px;color:var(--tx)}
 @supports ((-webkit-background-clip:text) or (background-clip:text)){.brand{background:linear-gradient(135deg,var(--tx) 35%,var(--pur));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}}
-.card{background:linear-gradient(145deg,var(--c1),var(--c2));border:1px solid color-mix(in srgb,var(--c,var(--ln)) 50%,transparent);border-radius:25px;padding:18px;box-shadow:8px 9px 24px var(--s1),-4px -4px 16px var(--s2),inset 0 1px 0 rgba(255,255,255,.05);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);margin-bottom:16px}
-button{transition:transform .18s cubic-bezier(.2,.8,.2,1),background .25s ease,box-shadow .25s ease!important}button:active{transform:scale(.97)!important}label{transition:background .25s ease!important}
+.card{background:linear-gradient(145deg,var(--c1),var(--c2));border:1px solid color-mix(in srgb,var(--c,var(--ln)) 50%,transparent);border-radius:25px;padding:20px;box-shadow:8px 9px 24px var(--s1),-4px -4px 16px var(--s2),inset 0 1px 0 rgba(255,255,255,.05);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);margin-bottom:16px}
+button{transition:transform .18s cubic-bezier(.2,.8,.2,1),background .25s ease,box-shadow .25s ease!important}button:active{transform:scale(.97)!important}
 .k{color:var(--mu);font-size:13px}.lb{font-size:14px;font-weight:600}.big{font-size:34px;font-weight:700;letter-spacing:-.035em;margin:2px 0 8px;font-variant-numeric:tabular-nums}
 .pg{height:8px;border-radius:9px;background:var(--ln);overflow:hidden;margin:6px 0}
 .pg i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--blue),var(--grn));animation:grow 1.4s cubic-bezier(.25,1,.5,1)}
@@ -372,8 +370,8 @@ button{transition:transform .18s cubic-bezier(.2,.8,.2,1),background .25s ease,b
 table{width:100%;border-collapse:collapse;font-size:13.5px}th{color:var(--mu);font-weight:500;text-align:right;padding:6px 0}td{padding:10px 0;text-align:right;border-top:1px solid var(--ln)}th:first-child,td:first-child{text-align:left}
 .bar{fill:var(--grn);opacity:.9}.bt{fill:var(--mu);font-size:10px;text-anchor:middle}.tl{stroke:var(--gold);stroke-dasharray:4 4;stroke-width:1.2}
 .al{display:flex;justify-content:space-between;align-items:baseline}.al b{font-size:20px}
-.st-key-nav,.st-key-bolha{position:fixed;left:16px;bottom:calc(66px + env(safe-area-inset-bottom,0px));z-index:999;width:auto!important}
-.st-key-nav{width:min(calc(100vw - 32px),420px)!important;display:flex!important;flex-direction:row!important;align-items:center;gap:4px!important;padding:6px;overflow:hidden;background:var(--glass);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--ln);border-radius:34px;box-shadow:0 14px 40px var(--s1),inset 0 1px 0 rgba(255,255,255,.14);animation:stretch .7s cubic-bezier(.16,1,.3,1) forwards}
+.st-key-nav,.st-key-bolha{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:999;width:auto!important}
+.st-key-nav{width:min(calc(100vw - 32px),440px)!important;display:flex!important;flex-direction:row!important;align-items:center;gap:4px!important;padding:6px;overflow:hidden;background:var(--glass);backdrop-filter:blur(20px) saturate(160%);-webkit-backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--ln);border-radius:34px;box-shadow:0 14px 40px var(--s1),inset 0 1px 0 rgba(255,255,255,.14);animation:stretch .7s cubic-bezier(.16,1,.3,1) forwards}
 @keyframes stretch{from{width:58px!important;padding:0;opacity:0}}
 .st-key-nav>div{width:auto!important;animation:fi .6s .15s cubic-bezier(.16,1,.3,1) both}@keyframes fi{from{opacity:0;transform:translateX(-16px)}}
 .st-key-aba{flex:1!important}
@@ -389,7 +387,7 @@ table{width:100%;border-collapse:collapse;font-size:13.5px}th{color:var(--mu);fo
 .st-key-b_plus button p{color:#fff;font-size:24px;line-height:1}
 .st-key-bolha{animation:popin .4s cubic-bezier(.2,1.4,.4,1)}.st-key-bolha button{width:58px;height:58px;font-size:24px;box-shadow:0 10px 30px var(--s1)}
 @keyframes popin{from{transform:scale(.4);opacity:0}}
-.st-key-b_tema,.st-key-b_lunatic,.st-key-b_ajustes_top,.st-key-b_sair{position:fixed;z-index:1000;width:auto!important;top:calc(12px + env(safe-area-inset-top,0px))}
+.st-key-b_tema,.st-key-b_lunatic,.st-key-b_ajustes_top,.st-key-b_sair{position:fixed;z-index:1000;width:auto!important;top:calc(16px + env(safe-area-inset-top,0px))}
 .st-key-b_tema{right:170px}.st-key-b_lunatic{right:118px}.st-key-b_ajustes_top{right:66px}.st-key-b_sair{right:14px}
 .st-key-b_tema button,.st-key-b_lunatic button,.st-key-b_ajustes_top button,.st-key-b_sair button{width:44px;height:44px;font-size:18px}
 [class*="_fromR"]{animation:slR .6s cubic-bezier(.25,1,.5,1) forwards}[class*="_fromL"]{animation:slL .6s cubic-bezier(.25,1,.5,1) forwards}
@@ -436,7 +434,6 @@ except Exception:
     st.stop()
 
 
-# ------------------------------- componentes de navegador (backup + Face ID)
 def _componente(nome, html_src):
     d = Path(__file__).with_name("_" + nome)
     try:
@@ -457,29 +454,7 @@ if(first){first=false;P("streamlit:setComponentValue",{value:{n:Date.now()+Math.
 P("streamlit:setFrameHeight",{height:0})});
 P("streamlit:componentReady",{apiVersion:1});</script></body></html>"""
 
-FACEID_HTML = """<!DOCTYPE html><html><body style="margin:0;font-family:-apple-system,system-ui,sans-serif"><button id="b"></button><div id="m"></div><script>
-const P=(t,d)=>parent.postMessage(Object.assign({isStreamlitMessage:true,type:t},d),"*");
-const e64=b=>btoa(String.fromCharCode(...new Uint8Array(b))).replace(/\\+/g,"-").replace(/\\//g,"_").replace(/=+$/,"");
-const d64=s=>Uint8Array.from(atob(s.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0));
-const B=document.getElementById("b"),M=document.getElementById("m");let A={};
-const done=v=>P("streamlit:setComponentValue",{value:Object.assign({n:Date.now()+Math.random()},v),dataType:"json"});
-async function reg(){try{
-const c=await navigator.credentials.create({publicKey:{challenge:d64(A.chal),rp:{name:"FUTURE",id:location.hostname},user:{id:new TextEncoder().encode(A.user),name:A.user,displayName:A.user},pubKeyCredParams:[{type:"public-key",alg:-7},{type:"public-key",alg:-257}],authenticatorSelection:{authenticatorAttachment:"platform",userVerification:"required"},timeout:60000}});
-const r=c.response,L=JSON.parse(localStorage.getItem("future_auth")||"[]").filter(x=>x.id!=c.id);L.push({id:c.id,user:A.user});localStorage.setItem("future_auth",JSON.stringify(L));
-done({kind:"reg",id:c.id,pk:e64(r.getPublicKey()),alg:r.getPublicKeyAlgorithm(),cd:e64(r.clientDataJSON)});
-}catch(e){M.textContent="Não foi possível ativar ("+e.name+")"}}
-async function get(){try{
-const L=JSON.parse(localStorage.getItem("future_auth")||"[]");if(!L.length){M.textContent="Ative o Face ID nos Ajustes depois de entrar.";return}
-const c=await navigator.credentials.get({publicKey:{challenge:d64(A.chal),rpId:location.hostname,allowCredentials:L.map(x=>({type:"public-key",id:d64(x.id)})),userVerification:"required",timeout:60000}});
-const r=c.response,u=(L.find(x=>x.id==c.id)||{}).user;
-done({kind:"get",id:c.id,user:u,ad:e64(r.authenticatorData),cd:e64(r.clientDataJSON),sg:e64(r.signature)});
-}catch(e){M.textContent="Face ID cancelado."}}
-addEventListener("message",ev=>{if(ev.data.type!="streamlit:render")return;A=ev.data.args;const d=A.tema=="dark";
-document.body.style.color=d?"#8b8b9a":"#656575";M.style.cssText="font-size:12px;text-align:center;margin-top:6px";
-B.style.cssText="width:100%;padding:14px;border-radius:16px;font-size:16px;font-weight:600;cursor:pointer;border:1px solid "+(d?"rgba(255,255,255,.14)":"rgba(0,0,0,.14)")+";background:"+(d?"#16161f":"#fff")+";color:"+(d?"#f4f4f8":"#14141c");
-B.textContent=(A.modo=="reg"?"Ativar Face ID neste aparelho":"Entrar com Face ID");B.onclick=A.modo=="reg"?reg:get;P("streamlit:setFrameHeight",{height:88})});
-P("streamlit:componentReady",{apiVersion:1});</script></body></html>"""
-BACKUP, FACEID = _componente("bak", BAK_HTML), _componente("faceid", FACEID_HTML)
+BACKUP = _componente("bak", BAK_HTML)
 
 
 def _fernet():
@@ -531,47 +506,6 @@ if _fernet():
             st.rerun()
 
 
-def _cd(p, tipo):
-    try:
-        cd = json.loads(b64d(p["cd"]))
-    except Exception:
-        return None
-    return cd if cd.get("type") == tipo and cd.get("challenge") == st.session_state["chal"] else None
-
-
-def fid_registrar(u, p):
-    cd = _cd(p, "webauthn.create")
-    st.session_state["chal"] = secrets.token_urlsafe(32)
-    if cd:
-        db()["contas"][u]["fid"][p["id"]] = {"pk": p["pk"], "alg": p["alg"]}
-        salvar()
-    return bool(cd)
-
-
-def fid_entrar(p):
-    cd = _cd(p, "webauthn.get")
-    st.session_state["chal"] = secrets.token_urlsafe(32)
-    c = db()["contas"].get(p.get("user") or "")
-    cr = c["fid"].get(p.get("id")) if c else None
-    if not (cd and cr and HAS_CRYPTO):
-        return None
-    try:
-        ad = b64d(p["ad"])
-        host = urlparse(cd["origin"]).hostname or ""
-        if ad[:32] != hashlib.sha256(host.encode()).digest() or not (ad[32] & 1 and ad[32] & 4):
-            return None
-        msg = ad + hashlib.sha256(b64d(p["cd"])).digest()
-        pub, sig = serialization.load_der_public_key(b64d(cr["pk"])), b64d(p["sg"])
-        if cr["alg"] == -7:
-            pub.verify(sig, msg, ec.ECDSA(hashes.SHA256()))
-        else:
-            pub.verify(sig, msg, padding.PKCS1v15(), hashes.SHA256())
-        return p["user"]
-    except Exception:
-        return None
-
-
-# ------------------------------------------------------------ login / sessão
 def achar_sessao(token):
     th = _th(token)
     for u, c in db()["contas"].items():
@@ -643,18 +577,10 @@ def tela_login():
                     entrar(chave(n), "filho")
                 else:
                     _falha(k)
-        if HAS_CRYPTO:
-            r = FACEID(modo="get", chal=st.session_state["chal"], user="", tema=st.session_state["tema"], key="fid_get", default=None)
-            if r and r.get("kind") == "get" and r["n"] != st.session_state["fid_done"]:
-                st.session_state["fid_done"] = r["n"]
-                u = fid_entrar(r)
-                if u:
-                    entrar(u, "filho")
-                st.error("Face ID não reconhecido.")
         st.button("🛡️ Controle parental", key="b_pais", use_container_width=True, on_click=_ir, args=("pais",))
         st.button("Criar nova conta", key="b_criar", use_container_width=True, on_click=_ir, args=("criar",))
-        st.caption({"cloud": "☁️ Dados sincronizados na nuvem.", "local-fallback": "⚠️ Nuvem indisponível: usando o cache deste servidor.",
-                    "local": "💾 Dados salvos neste servidor."}.get(st.session_state["storage_mode"], ""))
+        st.caption({"cloud": "☁️ Dados seguros sincronizados na nuvem.", "local-fallback": "⚠️ Nuvem temporariamente indisponível.",
+                    "local": "💾 Dados locais."}.get(st.session_state["storage_mode"], ""))
         return
     if t == "criar":
         with st.form("f_criar"):
@@ -718,7 +644,6 @@ for _k, _t in (("futuro", ["Caixinha Futuro", "pur", "Principal · rende 100% do
         S["caixas_meta"].setdefault(_k, _t)
 
 
-# ------------------------------------------------------------ regras de negócio
 def total():
     return round(S["livre"] + sum(S["caixas"].values()), 2)
 
@@ -758,7 +683,7 @@ def fecha(msg=None):
     S["livre"] = round(S["livre"], 2)
     for k in S["caixas"]:
         S["caixas"][k] = round(S["caixas"][k], 2)
-    st.session_state["msg"] = msg or "Lançado em " + fmt_dt(S["extrato"][-1]["ts"])
+    st.session_state["msg"] = msg or "Lançado com sucesso em " + fmt_dt(S["extrato"][-1]["ts"])
     salvar()
 
 
@@ -962,7 +887,6 @@ def destino(x):
     return s + (" → " + d if d else "")
 
 
-# ------------------------------------------------------------------ downloads
 def _csv(cab, linhas):
     buf = io.StringIO()
     w = csv.writer(buf, delimiter=";")
@@ -1154,7 +1078,6 @@ def pdf_proj():
 def dlg_lunatic():
     st.markdown('<div class="dh" style="padding-top:0;">Pergunte o que quiser ao Lunatic. Ele responde na hora com os dados da sua conta!</div>', unsafe_allow_html=True)
     
-    # Inicializa sessão volátil do chat apenas em memória para esta aba aberta
     if "lunatic_msgs" not in st.session_state:
         st.session_state["lunatic_msgs"] = [
             {"role": "assistant", "content": f"Olá, {CONTA['nome']}! Sou o Lunatic, seu assistente financeiro inteligente. Como posso te ajudar hoje?"}
@@ -1172,23 +1095,22 @@ def dlg_lunatic():
             
         with st.chat_message("assistant"):
             if not (HAS_AI and GEMINI_KEY):
-                resposta = "⚠️ **Lunatic desativado:** adicione a chave `gemini_key` nos seus Streamlit Secrets para habilitar as respostas em tempo real."
+                resposta = "⚠️ **Lunatic desativado:** adicione a chave `gemini_key` nos seus Streamlit Secrets."
                 st.markdown(resposta)
                 st.session_state["lunatic_msgs"].append({"role": "assistant", "content": resposta})
             else:
                 with st.spinner("Pensando..."):
                     t_patrimonio = total()
                     cxs_info = ", ".join([f"{nome_cx(k)}: R$ {v:.2f}" for k, v in S["caixas"].items() if v > 0])
-                    contexto = f"""Você é o Lunatic, o assistente financeiro inteligente do app FUTURE.
+                    contexto = f"""Você é o Lunatic, assistente inteligente do FUTURE.
 Usuário: {CONTA['nome']}
-Meta Financeira: R$ {S['cfg']['meta']:.2f}
-Reserva de Emergência Ideal: R$ {S['cfg']['reserva']:.2f}
+Meta: R$ {S['cfg']['meta']:.2f}
+Reserva Fixa: R$ {S['cfg']['reserva']:.2f}
 Saldo Livre Atual: R$ {S['livre']:.2f}
-Patrimônio Total Atual: R$ {t_patrimonio:.2f}
-Caixinhas ativas: {cxs_info or 'Nenhuma'}
-CDI estimado: {S['cfg']['cdi']}% a.a.
-
-INSTRUÇÕES: Responda de forma direta, clara, acolhedora e inteligente, utilizando os dados reais acima. Não invente valores."""
+Patrimônio Total: R$ {t_patrimonio:.2f}
+Caixinhas: {cxs_info or 'Nenhuma'}
+CDI: {S['cfg']['cdi']}% a.a.
+INSTRUÇÕES: Seja direto, claro e use os dados reais."""
                     try:
                         modelo = genai.GenerativeModel("gemini-1.5-flash", system_instruction=contexto)
                         historico = [{"role": m["role"], "parts": [m["content"]]} for m in st.session_state["lunatic_msgs"][:-1]]
@@ -1197,12 +1119,11 @@ INSTRUÇÕES: Responda de forma direta, clara, acolhedora e inteligente, utiliza
                         st.markdown(resposta)
                         st.session_state["lunatic_msgs"].append({"role": "assistant", "content": resposta})
                     except Exception as e:
-                        err_msg = f"Erro ao consultar o Lunatic: {str(e)}"
+                        err_msg = f"Erro: {str(e)}"
                         st.markdown(err_msg)
                         st.session_state["lunatic_msgs"].append({"role": "assistant", "content": err_msg})
 
 
-# ------------------------------------------------------------------ telas
 def fx_html(d):
     random.seed(d["n"])
     itens = "".join('<i style="left:%d%%;font-size:%dpx;animation-delay:%.2fs;animation-duration:%.2fs">%s</i>'
@@ -1218,24 +1139,19 @@ def card(cor, tit, val, sub="", extra=""):
 
 def passos():
     c = S["cfg"]
-    p = [("Definir sua meta e reserva", "Toque em ⚙️ no topo da tela", c["ajustado"]),
-         ("Cadastrar renda e gastos do mês", "⚙️ › Balanço mensal (cai todo dia 1)", c["renda"] > 0),
-         ("Criar sua primeira caixinha", "＋ › Montar Caixinha", bool(S["caixas"])),
-         ("Fazer seu primeiro lançamento", "＋ › Conta ou Caixinhas", bool(S["extrato"]))]
-    if HAS_CRYPTO:
-        p.append(("Ativar o Face ID", "⚙️ › Ativar Face ID neste aparelho", bool(CONTA.get("fid"))))
-    return p
+    return [("Definir sua meta e reserva", "Toque em ⚙️ no topo da tela", c["ajustado"]),
+            ("Cadastrar renda e gastos do mês", "⚙️ › Balanço mensal", c["renda"] > 0),
+            ("Criar sua primeira caixinha", "＋ › Montar Caixinha", bool(S["caixas"])),
+            ("Fazer seu primeiro lançamento", "＋ › Conta ou Caixinhas", bool(S["extrato"]))]
 
 
 def v_tutorial():
     idade, b18, meses = idade_info()
     ps = passos()
     feitos = sum(1 for p in ps if p[2])
-    frase = (f"Faltam <b>{prazo_txt(meses)}</b> para os 18 anos. Cada mês conta!" if meses > 0
-             else f"Você já tem {idade} anos, então a projeção olha 10 anos à frente.")
+    frase = (f"Faltam <b>{prazo_txt(meses)}</b> para os 18 anos." if meses > 0 else f"Você já tem {idade} anos.")
     lis = "".join('<div class="sp' + (" ok" if f else "") + '"><span>' + ("✅" if f else "⭕") + '</span><div><b>' + a + '</b><div class="k">' + b + '</div></div></div>' for a, b, f in ps)
-    tit = "🎉 Tudo pronto!" if feitos == len(ps) else "👋 Vamos começar, " + html.escape(CONTA["nome"]) + "?"
-    return ('<div class="card as" style="border-color:var(--pur)"><div class="lb" style="color:var(--pur);font-size:16px">' + tit + '</div>'
+    return ('<div class="card as" style="border-color:var(--pur)"><div class="lb" style="color:var(--pur);font-size:16px">👋 Vamos começar, ' + html.escape(CONTA["nome"]) + '?</div>'
             '<div class="k" style="margin:4px 0 8px">' + frase + '</div><div class="pg"><i style="width:' + str(feitos / len(ps) * 100) + '%"></i></div>'
             '<div class="k">' + str(feitos) + ' de ' + str(len(ps)) + ' passos</div><div style="margin-top:8px">' + lis + '</div></div>')
 
@@ -1257,15 +1173,17 @@ def v_home():
     mesada = ("<br>Próxima entrada automática: " + prox) if (c["renda"] > 0 or c["gastos"] > 0) else "<br>Configure renda e gastos em ⚙️."
     pct = f"{pc:.1f}".replace(".", ",")
     prazo = f"faltam {prazo_txt(meses)} para os 18 anos" if meses > 0 else f"projeção até {ano_fim}"
-    out = card("grn", "Patrimônio total", brl(t), f"{pct}% da meta de {brl(meta)} · {prazo}",
-               '<div class="rkbar"><div class="pg"><i style="width:' + str(pc) + '%"></i></div><s style="left:' + str(max(pc, 2)) + '%">🚀</s></div>')
-    out += '<div class="card as">💡 ' + msg + '</div>'
-    out += card("blue", "Saldo livre", brl(f), "Reserva fixa: " + brl(reserva) + mesada)
+    
+    # SALDO LIVRE PRIMEIRO E PATRIMÔNIO EMBAIXO
+    out = card("blue", "Saldo livre", brl(f), "Reserva fixa: " + brl(reserva) + mesada)
     out += v_mes()
     for k, v in S["caixas"].items():
         if visivel(k):
             m = S["caixas_meta"].get(k, ["Caixinha", "blue", ""])
             out += card(m[1], html.escape(m[0]), brl(v), html.escape(m[2]) or "Faça o primeiro aporte em ＋ › Caixinhas")
+    out += '<div class="card as">💡 ' + msg + '</div>'
+    out += card("grn", "Patrimônio total", brl(t), f"{pct}% da meta de {brl(meta)} · {prazo}",
+               '<div class="rkbar"><div class="pg"><i style="width:' + str(pc) + '%"></i></div><s style="left:' + str(max(pc, 2)) + '%">🚀</s></div>')
     return out
 
 
@@ -1284,7 +1202,7 @@ def v_mes():
     rend = sum(S["caixas"].values()) * ((1 + S["cfg"]["cdi"] / 100) ** (1 / 252) - 1)
     cel = lambda t, v, cor: '<div><div class="k">' + t + '</div><b style="color:var(--' + cor + ')">' + brl(v) + '</b></div>'
     nota = f"Suas caixinhas rendem cerca de {brl(rend)} por dia útil (100% do CDI)." if rend >= 0.005 else "Guarde um valor em uma caixinha para começar a render."
-    return ('<div class="card"><div class="lb">Este mês · ' + MESES[h.month - 1] + '/' + str(h.year) + '</div><div class="mes">'
+    return ('<div class="card"><div class="lb">Balanço do mês · ' + MESES[h.month - 1] + '/' + str(h.year) + '</div><div class="mes">'
             + cel("Entrou", e, "grn") + cel("Saiu", sd, "red") + cel("Rendeu", r, "pur") + '</div><div class="k" style="margin-top:10px">' + nota + '</div></div>')
 
 
@@ -1335,25 +1253,16 @@ def v_proj():
     fim, c = L[-1][3], S["cfg"]
     meta_em = mes_meta()
     if fim >= meta:
-        sub = f"Meta de {brl(meta)} alcançada em {fmt_mes(meta_em)}, com {brl(fim - meta)} de folga no fim do período."
+        sub = f"Meta de {brl(meta)} alcançada em {fmt_mes(meta_em)}."
     elif meta_em:
         sub = f"A meta chega em {fmt_mes(meta_em)}."
     else:
-        sub = f"No ritmo atual a meta não é alcançada no período. O aporte mensal precisaria ser de cerca de {brl(falta)}."
-    topo = card("grn" if fim >= meta else "gold", "Projeção até " + (str(L[-1][0]) if not isinstance(L[-1][0], int) else str(ano_fim)),
-                brl(fim), sub + "<br>" + periodo_txt())
+        sub = f"Faltam aportes para atingir a meta no período."
+    topo = card("grn" if fim >= meta else "gold", "Projeção", brl(fim), sub + "<br>" + periodo_txt())
     tab = '<table><tr><th>Ano</th><th>Investido</th><th>Juros</th><th>Total</th></tr>'
     for a, p, j, b in L:
         tab += '<tr><td>' + str(a) + '</td><td>' + brl(p) + '</td><td style="color:var(--grn)">' + brl(j) + '</td><td><b>' + brl(b) + '</b></td></tr>'
-    partes = [("Saldo livre", S["livre"], lv, "blue")] + [(nome_cx(k), S["caixas"][k], cxf.get(k, 0.0), S["caixas_meta"].get(k, ["", "pur"])[1]) for k in S["caixas"]]
-    onde = "".join('<div class="al" style="padding:6px 0"><span class="lb" style="color:var(--' + cor + ')">' + html.escape(nm) + '</span><span class="k">'
-                   + brl(h0) + ' → <span style="color:var(--tx);font-weight:700">' + brl(h1) + '</span></span></div>' for nm, h0, h1, cor in partes)
-    resto = ('<div class="card">' + svg_barras(L, meta) + '</div>'
-             '<div class="card"><div class="lb" style="margin-bottom:4px">Onde seu dinheiro estará em ' + str(ano_fim) + '</div>' + onde + '</div>'
-             '<div class="card">' + tab + '</table></div>'
-             '<div class="k" style="padding:0 6px">Ponto de partida de hoje: ' + brl(total()) + ' (saldo livre + caixinhas) · aporte líquido de '
-             + brl(max(0.0, c["renda"] - c["gastos"])) + '/mês · sempre 100% do CDI (cerca de ' + str(c["cdi"]).replace(".", ",") + '% a.a., bruto e estimado).</div>')
-    return topo, resto
+    return topo, '<div class="card">' + svg_barras(L, meta) + '</div><div class="card">' + tab + '</table></div>'
 
 
 def v_idea():
@@ -1364,96 +1273,46 @@ def v_idea():
         if v <= 0.004:
             continue
         m = S["caixas_meta"].get(k, ["Caixinha", "blue", ""])
-        if k == main:
-            partes, dica = [("Liquidez diária (100% do CDI)", .4), ("RDB de 2 a 5 anos", .35), ("Tesouro IPCA+", .25)], "Objetivo de longo prazo: mantenha uma parte com liquidez e deixe o resto trabalhando por mais tempo."
-        else:
-            partes, dica = [("Liquidez diária (100% do CDI)", 1.0)], "Objetivo mais próximo: o melhor é manter com resgate imediato e sem risco."
-        linhas = "".join('<div class="al" style="padding:4px 0"><span class="k">' + n + ' · ' + str(round(p * 100)) + '%</span><b style="font-size:15px">' + brl(v * p) + '</b></div>' for n, p in partes)
-        out += card(m[1], html.escape(m[0]), brl(v), dica, linhas)
-    sub = "Esse valor pode ir para a sua caixinha principal e começar a render." if ex else "Seu saldo livre precisa passar de " + brl(reserva + 1) + " para sobrar algo além da reserva."
-    out += card("blue", "Saldo livre acima da reserva", brl(ex), sub)
-    return out + '<div class="k" style="padding:0 6px">Hoje todas as caixinhas rendem 100% do CDI com resgate imediato. As ideias acima mostram como buscar mais retorno. São sugestões educativas, não recomendação de investimento.</div>'
+        out += card(m[1], html.escape(m[0]), brl(v), "Rende 100% do CDI com resgate imediato.")
+    out += card("blue", "Saldo livre acima da reserva", brl(ex), "Disponível para aplicar.")
+    return out
 
 
 def tela_ideias():
     ks = list(S["caixas"])
-    sig = "|".join(sorted(ks))
     if not ks:
-        st.markdown(card("blue", "Ideias sob medida", "Sem caixinhas", "Crie sua primeira caixinha para receber ideias de como fazer cada uma render mais."), unsafe_allow_html=True)
+        st.markdown(card("blue", "Ideias", "Sem caixinhas", "Crie sua primeira caixinha."), unsafe_allow_html=True)
         if not SUP and st.button("➕ Criar caixinha", key="b_ic", use_container_width=True):
             dlg_novo()
         return
-    if st.session_state.get("ideias_ok") != sig:
-        n = len(ks)
-        nomes = ", ".join(nome_cx(k).replace("Caixinha ", "") for k in ks)
-        st.markdown('<div class="card as" style="padding:14px 16px">🤔 Você tem <b>' + str(n) + (" caixinha" if n == 1 else " caixinhas") + '</b> (' + html.escape(nomes) + '), está correto?</div>', unsafe_allow_html=True)
-        with st.container(key="conf"):
-            a, b = st.columns(2)
-            if a.button("Sim", key="ok_s", type="primary", use_container_width=True):
-                st.session_state.update(ideias_ok=sig, ideias_no=False)
-                st.rerun()
-            if b.button("Não", key="ok_n", use_container_width=True):
-                st.session_state["ideias_no"] = True
-        if st.session_state.get("ideias_no"):
-            st.caption("Sem problemas! Ajuste suas caixinhas e volte aqui." if not SUP else "Peça ao titular para ajustar as caixinhas.")
-            if not SUP:
-                with st.container(key="conf2"):
-                    c1, c2 = st.columns(2)
-                    if c1.button("➕ Criar", key="b_ic2", use_container_width=True):
-                        dlg_novo()
-                    if c2.button("🗑️ Excluir", key="b_ie2", use_container_width=True):
-                        dlg_excluir()
-        return
     st.markdown(v_idea(), unsafe_allow_html=True)
-    ex = round(max(0.0, S["livre"] - S["cfg"]["reserva"]), 2)
-    if ex >= 1 and not SUP and st.button("🔒 Guardar " + brl(ex) + " na " + nome_cx(ks[0]), key="b_ex", use_container_width=True):
-        e = aplicar("save", ex, ks[0], "Excedente guardado")
-        if e:
-            st.error(e)
-        else:
-            st.rerun()
-    if st.button("Revisar minhas caixinhas", key="b_rev", use_container_width=True):
-        st.session_state["ideias_ok"] = None
-        st.rerun()
 
 
-# ------------------------------------------------------------------ diálogos
-@st.dialog("⚙️ Ajustes da conta")
+# --- CONFIGURAÇÕES EM BARRAS ORGANIZADAS ---
+@st.dialog("⚙️ Ajustes")
 def dlg_ajustes():
     c = S["cfg"]
-    tem_sonho = "sonho" in S["caixas"] and "futuro" in S["caixas"]
     pal = list(PALETAS)
     with st.form("f_ajustes"):
-        nome = st.text_input("Nome da conta", CONTA["nome"], max_chars=24)
-        paleta = st.selectbox("Cores do app", pal, index=pal.index(S["paleta"]) if S.get("paleta") in pal else 0)
-        tutorial = st.checkbox("Mostrar tutorial na tela Início", value=c["tutorial"])
-        st.caption("🎯 META E RESERVA")
-        meta = st.number_input("Meta financeira (R$)", min_value=0.0, value=float(c["meta"]), step=1000.0, format="%.2f")
-        reserva = st.number_input("Reserva fixa protegida no Saldo Livre (R$)", min_value=0.0, value=float(c["reserva"]), step=50.0, format="%.2f")
-        st.caption("💰 BALANÇO MENSAL (lançado todo dia 1)")
-        renda = st.number_input("Renda mensal (R$)", min_value=0.0, value=float(c["renda"]), step=50.0, format="%.2f")
-        gast = st.number_input("Gastos fixos do mês (R$)", min_value=0.0, value=float(c["gastos"]), step=10.0, format="%.2f")
-        guard = st.number_input("Guardar automático na primeira caixinha (R$)", min_value=0.0, value=float(c["guardar"]), step=50.0, format="%.2f")
-        cdi = st.number_input("CDI estimado (% ao ano). O app sempre projeta 100% dele", min_value=0.0, max_value=100.0, value=float(c["cdi"]), step=0.1, format="%.2f")
-        sd = st.date_input("Liberar a Sonho para a Futuro em (opcional)", value=date.fromisoformat(c["sonho_data"]) if c.get("sonho_data") else None,
-                           format="DD/MM/YYYY") if tem_sonho else None
-        if st.form_submit_button("Salvar", type="primary", use_container_width=True):
+        st.markdown("### 👤 Perfil")
+        nome = st.text_input("Nome", CONTA["nome"], max_chars=24)
+        paleta = st.selectbox("Tema de Cores", pal, index=pal.index(S["paleta"]) if S.get("paleta") in pal else 0)
+        
+        st.markdown("### 🎯 Metas & Reservas")
+        meta = st.number_input("Meta (R$)", value=float(c["meta"]), step=1000.0)
+        reserva = st.number_input("Reserva Fixa (R$)", value=float(c["reserva"]), step=50.0)
+        
+        st.markdown("### 💳 Balanço Mensal")
+        renda = st.number_input("Renda Mensal (R$)", value=float(c["renda"]), step=50.0)
+        gast = st.number_input("Gastos Fixos (R$)", value=float(c["gastos"]), step=10.0)
+        cdi = st.number_input("CDI (% a.a.)", value=float(c["cdi"]), step=0.1)
+        
+        if st.form_submit_button("Salvar Alterações", type="primary", use_container_width=True):
             CONTA["nome"] = nome.strip() or CONTA["nome"]
             S["paleta"] = st.session_state["paleta"] = paleta
-            S["cfg"].update(renda=renda, gastos=gast, guardar=min(guard, max(0.0, renda - gast)), cdi=cdi, meta=meta, reserva=reserva, tutorial=tutorial, ajustado=True)
-            if tem_sonho:
-                S["cfg"]["sonho_data"] = sd.isoformat() if sd else None
-            fecha("Ajustes salvos!")
+            S["cfg"].update(renda=renda, gastos=gast, cdi=cdi, meta=meta, reserva=reserva, ajustado=True)
+            fecha("Configurações salvas com sucesso!")
             st.rerun()
-    if HAS_CRYPTO:
-        st.divider()
-        r = FACEID(modo="reg", chal=st.session_state["chal"], user=U, tema=st.session_state["tema"], key="fid_reg", default=None)
-        if r and r.get("kind") == "reg" and r["n"] != st.session_state["fid_done"]:
-            st.session_state["fid_done"] = r["n"]
-            if fid_registrar(U, r):
-                st.session_state["msg"] = "Face ID ativado neste aparelho!"
-                st.rerun()
-            st.error("Não foi possível validar o Face ID.")
 
 
 def form_op(op):
@@ -1461,20 +1320,14 @@ def form_op(op):
     if op in ("save", "take", "yld", "mov"):
         ops = [k for k in S["caixas"] if op == "save" or S["caixas"][k] > 0]
         if not ops:
-            st.info("Nenhuma caixinha disponível ainda. Crie uma na aba ➕ Montar Caixinha." if op == "save" else "Nenhuma caixinha com saldo ainda.")
+            st.info("Crie uma caixinha primeiro.")
             return
-        cx = st.selectbox("De" if op == "mov" else "Caixinha", ops, key="c_" + op, format_func=lambda k: nome_cx(k) + " · " + brl(S["caixas"][k]))
+        cx = st.selectbox("Caixinha", ops, key="c_" + op, format_func=lambda k: nome_cx(k) + " · " + brl(S["caixas"][k]))
         if op == "mov":
-            outras = [k for k in S["caixas"] if k != cx]
-            if not outras:
-                st.info("Crie outra caixinha para poder mover valores.")
-                return
-            cx2 = st.selectbox("Para", outras, key="d_mov", format_func=nome_cx)
-    v = st.number_input("Valor (R$)", min_value=0.0, value=0.0, step=0.10 if op == "yld" else 1.0, format="%.2f", key="v_" + op)
-    if op == "yld" and cx:
-        st.caption(f"100% do CDI rende cerca de {brl(S['caixas'][cx] * ((1 + S['cfg']['cdi'] / 100) ** (1 / 252) - 1))} por dia útil nessa caixinha.")
-    obs = st.text_input("Observação (opcional)", max_chars=40, key="o_" + op)
-    if st.button("Confirmar", type="primary", use_container_width=True, key="ok_" + op):
+            cx2 = st.selectbox("Para", [k for k in S["caixas"] if k != cx], key="d_mov", format_func=nome_cx)
+    v = st.number_input("Valor (R$)", min_value=0.0, value=0.0, step=1.0, format="%.2f", key="v_" + op)
+    obs = st.text_input("Observação suave (opcional)", max_chars=40, key="o_" + op)
+    if st.button("Confirmar Lançamento", type="primary", use_container_width=True, key="ok_" + op):
         e = mover(cx, cx2, v, obs.strip()) if op == "mov" else aplicar(op, v, cx, obs.strip())
         if e:
             st.error(e)
@@ -1482,65 +1335,48 @@ def form_op(op):
             st.rerun()
 
 
-def form_criar_cx():
-    st.caption("Crie caixinhas para cada objetivo. Todas rendem 100% do CDI com resgate imediato.")
-    nome = st.text_input("Nome do objetivo (ex: Intercâmbio)", max_chars=24)
-    cor = st.selectbox("Cor", ["pur", "blue", "gold", "grn", "red"], format_func={"pur": "Roxo", "blue": "Azul", "gold": "Dourado", "grn": "Verde", "red": "Vermelho"}.get)
-    desc = st.text_input("Descrição (opcional)", max_chars=40)
-    if st.button("Criar caixinha", type="primary", use_container_width=True):
-        if not nome.strip():
-            st.error("Dê um nome para a caixinha.")
-        else:
-            k = chave(nome) + "-" + secrets.token_hex(2)
-            S["caixas"][k] = 0.0
-            S["caixas_meta"][k] = [nome.strip(), cor, desc.strip()]
-            fecha("Caixinha criada! Agora guarde um valor nela em ＋ › Caixinhas.")
-            st.rerun()
-
-
-@st.dialog("Novo lançamento")
+@st.dialog("Lançamento Fácil")
 def dlg_novo():
-    t1, t2, t3 = st.tabs(["💳 Conta", "🐷 Caixinhas", "➕ Montar Caixinha"])
+    t1, t2, t3 = st.tabs(["💳 Conta", "🐷 Caixinhas", "➕ Nova Caixinha"])
     with t1:
-        form_op(st.radio("Conta", ["in", "out"], horizontal=True, format_func=CURTO.get, label_visibility="collapsed", key="r1"))
+        form_op(st.radio("Tipo", ["in", "out"], horizontal=True, format_func=CURTO.get, label_visibility="collapsed", key="r1"))
     with t2:
-        form_op(st.radio("Caixinhas", ["save", "take", "yld", "mov"], horizontal=True, format_func=CURTO.get, label_visibility="collapsed", key="r2"))
+        form_op(st.radio("Ação", ["save", "take", "yld", "mov"], horizontal=True, format_func=CURTO.get, label_visibility="collapsed", key="r2"))
     with t3:
-        form_criar_cx()
+        nome = st.text_input("Nome da Caixinha", max_chars=24)
+        cor = st.selectbox("Cor", ["pur", "blue", "gold", "grn", "red"], format_func={"pur": "Roxo", "blue": "Azul", "gold": "Dourado", "grn": "Verde", "red": "Vermelho"}.get)
+        if st.button("Criar Caixinha", type="primary", use_container_width=True):
+            if nome.strip():
+                k = chave(nome) + "-" + secrets.token_hex(2)
+                S["caixas"][k] = 0.0
+                S["caixas_meta"][k] = [nome.strip(), cor, ""]
+                fecha("Caixinha criada!")
+                st.rerun()
 
 
 @st.dialog("🗑️ Excluir caixinha")
 def dlg_excluir():
     ops = list(S["caixas"])
     if not ops:
-        st.info("Nenhuma caixinha para excluir.")
         return
-    cx = st.selectbox("Qual caixinha?", ops, format_func=lambda k: nome_cx(k) + " · " + brl(S["caixas"][k]))
-    modo = st.radio("O que fazer com o saldo?", ["Resgatar para o Saldo Livre", "Apenas zerar (sai do patrimônio)"])
-    if st.button("Excluir caixinha", type="primary", use_container_width=True):
+    cx = st.selectbox("Caixinha", ops, format_func=lambda k: nome_cx(k))
+    modo = st.radio("Destino do saldo", ["Resgatar para o Saldo Livre", "Apenas zerar"])
+    if st.button("Confirmar Exclusão", type="primary", use_container_width=True):
         excluir_caixinha(cx, modo.startswith("Resgatar"))
         st.rerun()
 
 
 @st.dialog("🛡️ Painel dos pais")
 def dlg_pais():
-    st.caption("Modo supervisão: somente leitura. Aqui você pode redefinir os acessos.")
-    senha = st.text_input("Nova senha do titular (mín. 4)", type="password")
-    pin = st.text_input("Novo PIN dos pais (4 números)", type="password", max_chars=4)
-    if st.button("Salvar", type="primary", use_container_width=True):
-        if (senha and len(senha) < 4) or (pin and not (pin.isdigit() and len(pin) == 4)):
-            st.error("Senha com 4+ caracteres e PIN com exatamente 4 números.")
-        else:
-            if senha:
-                CONTA["s"], CONTA["h"] = mk(senha)
-            if pin:
-                CONTA["ps"], CONTA["ph"] = mk(pin)
-            salvar()
-            st.session_state["msg"] = "Acessos atualizados"
-            st.rerun()
+    senha = st.text_input("Nova senha da conta", type="password")
+    pin = st.text_input("Novo PIN (4 números)", type="password", max_chars=4)
+    if st.button("Atualizar", type="primary", use_container_width=True):
+        if senha: CONTA["s"], CONTA["h"] = mk(senha)
+        if pin: CONTA["ps"], CONTA["ph"] = mk(pin)
+        salvar()
+        st.rerun()
 
 
-# ------------------------------------------------------------------ app
 if not SUP:
     creditar_mes()
     liberar_sonho()
@@ -1570,30 +1406,30 @@ def _nav(v):
     st.session_state["nav"] = v
 
 
-st.button("☀️" if st.session_state["tema"] == "dark" else "🌙", key="b_tema", on_click=_tema, help="Alternar tema")
+st.button("☀️" if st.session_state["tema"] == "dark" else "🌙", key="b_tema", on_click=_tema, help="Tema")
 if not SUP:
-    st.button("🤖", key="b_lunatic", on_click=dlg_lunatic, help="Consultor Lunatic (IA)")
-if not SUP and st.button("⚙️", key="b_ajustes_top", help="Ajustes da conta"):
+    st.button("🤖", key="b_lunatic", on_click=dlg_lunatic, help="Lunatic (IA)")
+if not SUP and st.button("⚙️", key="b_ajustes_top", help="Ajustes"):
     dlg_ajustes()
-st.button("🔒", key="b_sair", on_click=_sair, help="Encerrar sessão")
+st.button("🔒", key="b_sair", on_click=_sair, help="Sair")
 
 tab = st.session_state["tab"]
 if st.session_state["nav"]:
     with st.container(key="nav"):
-        st.button("‹", key="b_min", on_click=_nav, args=(False,), help="Recolher menu")
+        st.button("‹", key="b_min", on_click=_nav, args=(False,))
         aba = st.radio("Atalhos", ABAS, index=tab, key="aba", horizontal=True, label_visibility="collapsed")
-        if st.button("🛡️" if SUP else "＋", key="b_plus", help="Painel dos pais" if SUP else "Novo lançamento"):
+        if st.button("🛡️" if SUP else "＋", key="b_plus"):
             (dlg_pais if SUP else dlg_novo)()
     idx = ABAS.index(aba)
 else:
-    st.button(ABAS[tab].split()[0], key="bolha", on_click=_nav, args=(True,), help="Abrir menu")
+    st.button(ABAS[tab].split()[0], key="bolha", on_click=_nav, args=(True,))
     idx = tab
 if idx != tab:
     st.session_state.update(dir="R" if idx > tab else "L", tab=idx)
 
-st.markdown('<div class="hd"><div class="k">' + TITULOS[idx] + ' · ' + hoje_txt() + '</div><h1>' + html.escape(CONTA["nome"]) + '</h1></div>', unsafe_allow_html=True)
+st.markdown('<div class="hd" style="margin-top:8px"><div class="k">' + TITULOS[idx] + ' · ' + hoje_txt() + '</div><h1>' + html.escape(CONTA["nome"]) + '</h1></div>', unsafe_allow_html=True)
 if SUP:
-    st.markdown('<div class="sup">🔐 <b>Modo supervisão:</b> somente leitura. Lançamentos e ajustes ficam ocultos.</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sup" style="margin-top:0">🔐 <b>Modo supervisão:</b> somente leitura.</div>', unsafe_allow_html=True)
 
 with st.container(key=f"view_{idx}_from{st.session_state['dir']}"):
     if idx == 0:
@@ -1601,7 +1437,7 @@ with st.container(key=f"view_{idx}_from{st.session_state['dir']}"):
             st.markdown(v_tutorial(), unsafe_allow_html=True)
             if st.button("Concluir tutorial", key="b_tut", use_container_width=True):
                 S["cfg"]["tutorial"] = False
-                fecha("Tutorial concluído. Você pode reativá-lo em ⚙️ Ajustes.")
+                fecha("Tutorial concluído.")
                 st.rerun()
         st.markdown(v_home(), unsafe_allow_html=True)
         if not SUP and S["caixas"]:
@@ -1614,24 +1450,12 @@ with st.container(key=f"view_{idx}_from{st.session_state['dir']}"):
             with st.container(key="dl"):
                 c1, c2 = st.columns(2)
                 if x:
-                    c1.download_button("📊 Excel", x, file_name=f"extrato_future_{hoje}.xlsx", mime=XL, use_container_width=True)
-                c2.download_button("📄 CSV", csv_ext(), file_name=f"extrato_future_{hoje}.csv", mime="text/csv", use_container_width=True)
+                    c1.download_button("📊 Excel", x, file_name=f"extrato_{hoje}.xlsx", mime=XL, use_container_width=True)
+                c2.download_button("📄 CSV", csv_ext(), file_name=f"extrato_{hoje}.csv", mime="text/csv", use_container_width=True)
     elif idx == 2:
         topo, resto = v_proj()
         st.markdown(topo, unsafe_allow_html=True)
-        extra = st.slider("E se eu guardasse mais por mês? (R$)", 0, 1000, 0, 50, key="sl_extra")
-        if extra:
-            st.markdown(card("pur", "Com +" + brl(extra) + " por mês", brl(final_com(extra)),
-                             "Meta em: " + fmt_mes(mes_meta(extra)) + " (hoje: " + fmt_mes(mes_meta()) + ")."), unsafe_allow_html=True)
         st.markdown(resto, unsafe_allow_html=True)
-        hoje, x = f"{agora():%Y-%m-%d}", xlsx_proj()
-        with st.container(key="dl2"):
-            c1, c2 = st.columns(2)
-            if x:
-                c1.download_button("📊 Excel", x, file_name=f"projecao_future_{hoje}.xlsx", mime=XL, use_container_width=True)
-            else:
-                c1.download_button("📄 CSV", csv_proj(), file_name=f"projecao_future_{hoje}.csv", mime="text/csv", use_container_width=True)
-            c2.download_button("📄 PDF", pdf_proj(), file_name=f"projecao_future_{hoje}.pdf", mime="application/pdf", use_container_width=True)
     else:
         tela_ideias()
 
