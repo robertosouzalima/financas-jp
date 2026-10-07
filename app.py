@@ -178,8 +178,8 @@ def get_css(tema, nome):
         p = {k: "color-mix(in srgb," + v + " 70%,#000)" for k, v in p.items()}
     cores = f"--blue:{p['blue']};--pur:{p['pur']};--gold:{p['gold']};--grn:{p['grn']};--red:{p['red']}"
     if tema == "light":
-        return ":root{--bg:#eceef4;--c1:#fff;--c2:#f3f4f9;--tx:#14141c;--mu:#656575;--ln:rgba(0,0,0,.09);--s1:rgba(120,125,150,.3);--s2:rgba(255,255,255,.95);--glass:rgba(255,255,255,.68);" + cores + "}"
-    return ":root{--bg:#07070b;--c1:#16161f;--c2:#0e0e15;--tx:#f4f4f8;--mu:#8b8b9a;--ln:rgba(255,255,255,.09);--s1:rgba(0,0,0,.6);--s2:rgba(255,255,255,.04);--glass:rgba(34,34,48,.58);" + cores + "}"
+        return ":root{--bg:#eceef4;--c1:#fff;--c2:#f3f4f9;--tx:#14141c;--mu:#656575;--ln:rgba(0,0,0,.09);--s1:rgba(120,125,150,.3);--s2:rgba(255,255,255,.95);--glass:rgba(255,255,255,.68);color-scheme:light;" + cores + "}"
+    return ":root{--bg:#07070b;--c1:#16161f;--c2:#0e0e15;--tx:#f4f4f8;--mu:#8b8b9a;--ln:rgba(255,255,255,.09);--s1:rgba(0,0,0,.6);--s2:rgba(255,255,255,.04);--glass:rgba(34,34,48,.58);color-scheme:dark;" + cores + "}"
 
 
 CSS_BASE = """
@@ -203,8 +203,7 @@ button[kind="primary"] *,[data-testid="stBaseButton-primary"] *{color:#fff!impor
 @keyframes rocketLaunch{0%{transform:translateY(80px) scale(.4);opacity:0}60%{transform:translateY(-15px) scale(1.1);opacity:1}100%{transform:none;opacity:1}}
 @keyframes bob{50%{transform:translateY(-7px) rotate(-3deg)}}
 @keyframes halo{50%{opacity:.45;transform:scale(1.12)}}
-.card{background:linear-gradient(145deg,var(--c1),var(--c2));border:1px solid color-mix(in srgb,var(--c,var(--ln)) 50%,transparent);border-radius:26px;padding:18px;box-shadow:9px 9px 22px var(--s1),-5px -5px 16px var(--s2);margin-bottom:16px;transition:transform .2s cubic-bezier(.25,1,.5,1)}
-.card:active{transform:scale(.97)}
+.card{background:linear-gradient(145deg,var(--c1),var(--c2));border:1px solid color-mix(in srgb,var(--c,var(--ln)) 50%,transparent);border-radius:26px;padding:18px;box-shadow:9px 9px 22px var(--s1),-5px -5px 16px var(--s2);margin-bottom:16px}
 button,label{transition:transform .15s ease,background .3s!important}button:active,label:active{transform:scale(.94)!important}
 .k{color:var(--mu);font-size:13px}.lb{font-size:14px;font-weight:600}.big{font-size:34px;font-weight:700;letter-spacing:-.035em;margin:2px 0 8px;font-variant-numeric:tabular-nums}
 .pg{height:8px;border-radius:9px;background:var(--ln);overflow:hidden;margin:6px 0}
@@ -251,6 +250,28 @@ table{width:100%;border-collapse:collapse;font-size:13.5px}th{color:var(--mu);fo
 @keyframes blast{to{transform:translate(78vw,-118vh) scale(.6)}}
 html,body,.stApp,.stApp p,.stApp label,.stApp input,.stApp textarea,.stApp button,.stApp [data-baseweb],div[role="dialog"] p{font-family:Inter,-apple-system,"SF Pro Text",system-ui,sans-serif!important}
 .big,.hd h1,.al b,.lb{font-family:"Plus Jakarta Sans",Inter,system-ui,sans-serif!important}
+.dh{font-size:11.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);padding:12px 0 2px}.dh:first-child{padding-top:8px}
+.mes{display:flex;gap:8px;margin-top:8px}.mes>div{flex:1}.mes b{font-size:16px;font-variant-numeric:tabular-nums}
+[class*="st-key-conf"] [data-testid="stHorizontalBlock"],[class*="st-key-dl"] [data-testid="stHorizontalBlock"]{flex-direction:row!important;flex-wrap:nowrap!important;gap:10px!important}
+[class*="st-key-conf"] [data-testid="stColumn"],[class*="st-key-dl"] [data-testid="stColumn"],[class*="st-key-conf"] [data-testid="column"],[class*="st-key-dl"] [data-testid="column"]{min-width:0!important;flex:1 1 0!important;width:auto!important}
+.bar{transform-box:fill-box;transform-origin:50% 100%;animation:barUp .9s cubic-bezier(.25,1,.5,1) both}
+@keyframes barUp{from{transform:scaleY(0)}}
+[data-baseweb="popover"],[data-baseweb="popover"]>div,[data-baseweb="menu"],ul[role="listbox"]{background:var(--c1)!important;border-radius:16px!important}
+[data-baseweb="popover"] *,ul[role="listbox"] *{color:var(--tx)!important}
+li[role="option"]:hover,li[aria-selected="true"]{background:var(--c2)!important}
+[data-baseweb="calendar"],[data-baseweb="calendar"] *{background-color:var(--c1)!important;color:var(--tx)!important}
+[data-testid="stCaptionContainer"],[data-testid="stCaptionContainer"] *{color:var(--mu)!important}
+[data-testid="stAlert"]{background:color-mix(in srgb,var(--pur) 12%,var(--c1))!important;border:1px solid var(--ln)!important;border-radius:16px!important}
+[data-testid="stAlert"] *,[data-testid="stToast"] *{color:var(--tx)!important}
+[data-testid="stToast"]{background:var(--c1)!important;border:1px solid var(--ln)!important;border-radius:16px!important}
+[data-testid="stNumberInput"] button,[data-testid="stDownloadButton"] button{background:var(--c2)!important;color:var(--tx)!important;border-color:var(--ln)!important}
+[data-testid="stDownloadButton"] button p{color:var(--tx)!important}
+button[data-baseweb="tab"] p{color:var(--mu)!important}button[data-baseweb="tab"][aria-selected="true"] p{color:var(--tx)!important}
+[data-baseweb="tab-border"]{background:var(--ln)!important}[data-baseweb="tab-highlight"]{background:var(--pur)!important}
+hr{border-color:var(--ln)!important}input::placeholder{color:var(--mu)!important;opacity:1}
+[data-baseweb="select"] *{color:var(--tx)!important}[data-baseweb="select"] svg{fill:var(--mu)!important}
+[data-testid="stSlider"] *,[data-testid="stSliderThumbValue"],[data-testid="stTickBarMin"],[data-testid="stTickBarMax"],[data-testid="stCheckbox"] *{color:var(--tx)!important}
+[data-baseweb="slider"] [role="slider"]{background:var(--pur)!important}
 @media (prefers-reduced-motion:reduce){*,::before,::after{animation:none!important;transition:none!important}}
 """
 FONTES = "@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap');"
@@ -654,23 +675,68 @@ def creditar_mes():
         salvar()
 
 
-def projetar():
+def _passos(extra=0.0):
+    """Simula mês a mês, sempre a 100% do CDI. O guardado automático vai para a caixinha principal; o resto, para o saldo livre."""
     c, h = S["cfg"], agora()
     r = (1 + c["cdi"] / 100) ** (1 / 12) - 1
-    b = ap = total()
-    n, linhas = 0, []
+    cx, lv, ap = dict(S["caixas"]), S["livre"], total()
+    main = next(iter(cx), None)
+    net = c["renda"] - c["gastos"] + extra
+    g = (min(c["guardar"], max(0.0, c["renda"] - c["gastos"])) + extra) if main else 0.0
+    ano, mes = h.year, h.month
+    while True:
+        mes += 1
+        if mes > 12:
+            mes, ano = 1, ano + 1
+        lv = max(0.0, lv * (1 + r) + net - g)
+        for k in cx:
+            cx[k] *= 1 + r
+        if main:
+            cx[main] += g
+        ap += net
+        yield ano, mes, lv + sum(cx.values()), ap, lv, dict(cx)
+
+
+def projetar():
+    h = agora()
     idade, b18, meses = idade_info()
     ano_fim = b18.year if meses > 0 else h.year + 10
-    aporte = max(0.0, c["renda"] - c["gastos"])
-    for ano in range(h.year, ano_fim + 1):
-        for _ in range(12 - h.month if ano == h.year else 12):
-            b = b * (1 + r) + aporte
-            ap += aporte
-            n += 1
-        linhas.append((ano, ap, b - ap, b))
-    g = (1 + r) ** n
-    falta = max(0.0, (c["meta"] - total() * g) / ((g - 1) / r)) if n and r > 0 else (max(0.0, (c["meta"] - total()) / n) if n else 0.0)
-    return linhas, falta, ano_fim, c["meta"]
+    por_ano = {h.year: (total(), total(), S["livre"], dict(S["caixas"]))}
+    for ano, mes, b, ap, lv, cx in _passos():
+        if ano > ano_fim:
+            break
+        por_ano[ano] = (b, ap, lv, cx)
+    linhas = [(a, v[1], v[0] - v[1], v[0]) for a, v in sorted(por_ano.items())]
+    n = (ano_fim - h.year) * 12 + 12 - h.month
+    r = (1 + S["cfg"]["cdi"] / 100) ** (1 / 12) - 1
+    g, meta = (1 + r) ** n, S["cfg"]["meta"]
+    falta = max(0.0, (meta - total() * g) / ((g - 1) / r)) if n and r > 0 else (max(0.0, (meta - total()) / n) if n else 0.0)
+    return linhas, falta, ano_fim, meta, por_ano[ano_fim][2:]
+
+
+def final_com(extra):
+    ano_fim, ult = projetar()[2], total()
+    for ano, mes, b, *_ in _passos(extra):
+        if ano > ano_fim:
+            break
+        ult = b
+    return ult
+
+
+def mes_meta(extra=0.0):
+    h = agora()
+    if total() >= S["cfg"]["meta"]:
+        return h.year, h.month
+    for i, (ano, mes, b, *_) in enumerate(_passos(extra)):
+        if b >= S["cfg"]["meta"]:
+            return ano, mes
+        if i > 720:
+            break
+    return None
+
+
+def fmt_mes(t):
+    return f"{MESES[t[1] - 1]}/{t[0]}" if t else "além de 60 anos"
 
 
 def destino(x):
@@ -739,7 +805,7 @@ MOEDA = '"R$" #,##0.00;[Red]-"R$" #,##0.00'
 
 
 def proj_dados():
-    L, _, _, meta = projetar()
+    L, _, _, meta, _ = projetar()
     return [(a, p, j, b, b / meta if meta > 0 else 0) for a, p, j, b in L]
 
 
@@ -776,34 +842,91 @@ def csv_ext():
                  for d, t, c, o, v in _extrato_linhas()])
 
 
-RELATORIO = """<!DOCTYPE html><html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Relatório FUTURE</title><style>
-:root{--gold:#d69b00}*{box-sizing:border-box}body{margin:0;background:#f3f1fb;color:#1a1530;font:15px/1.5 Inter,-apple-system,"Segoe UI",Roboto,sans-serif}
-.w{max-width:760px;margin:0 auto;padding:28px 18px}.hero{background:linear-gradient(135deg,#6d3fe0,#3b82f6);color:#fff;border-radius:24px;padding:26px}
-.hero small{opacity:.85;letter-spacing:.14em;text-transform:uppercase;font-size:11px}.hero h1{margin:6px 0 2px;font-size:38px;letter-spacing:-.03em}
-.ch{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.ch span{background:rgba(255,255,255,.2);border-radius:99px;padding:6px 12px;font-size:13px}
-.c{background:#fff;border-radius:22px;padding:18px;margin-top:16px;box-shadow:0 8px 30px rgba(60,40,140,.08)}
-table{width:100%;border-collapse:collapse;font-size:14px}th{text-align:right;color:#7a7596;font-weight:600;padding:8px 6px;border-bottom:2px solid #eee}td{text-align:right;padding:10px 6px;border-bottom:1px solid #f0eef8}th:first-child,td:first-child{text-align:left}.g{color:#12843f}
-.bar{fill:#6d3fe0}.bt{fill:#7a7596;font-size:10px;text-anchor:middle}.tl{stroke:#d69b00;stroke-dasharray:4 4;stroke-width:1.2}
-.n{color:#7a7596;font-size:12px;margin-top:14px}button{margin-top:16px;width:100%;padding:14px;border:0;border-radius:14px;background:#6d3fe0;color:#fff;font-size:15px;font-weight:600;cursor:pointer}
-@media print{body{background:#fff}button{display:none}.c{box-shadow:none;border:1px solid #eee}}
-</style></head><body><div class="w"><div class="hero"><small>🚀 FUTURE · Projeção financeira de __NOME__</small><h1>__FIM__</h1><div>__SUB__</div><div class="ch">__CHIPS__</div></div>
-<div class="c">__SVG__</div><div class="c"><table><tr><th>Ano</th><th>Investido</th><th>Juros</th><th>Total</th><th>Meta</th></tr>__ROWS__</table></div>
-<div class="n">__NOTA__</div><button onclick="window.print()">Imprimir / salvar como PDF</button></div></body></html>"""
+_W = {**{str(i): 556 for i in range(10)}, ",": 278, ".": 278, " ": 278, "R": 722, "$": 556, "%": 889, "-": 333, "/": 278, "|": 260, "k": 500}
 
 
-def relatorio_html():
-    L, falta, ano_fim, meta = projetar()
-    fim = L[-1][3] if L else total()
-    c = S["cfg"]
-    sub = f"Projeção para {ano_fim} · meta de {brl(meta)}" + (" alcançada ✅" if fim >= meta else f" · faltam {brl(meta - fim)}")
-    chips = "".join("<span>" + x + "</span>" for x in (f"Hoje: {brl(total())}", f"Aporte: {brl(max(0.0, c['renda'] - c['gastos']))}/mês", f"CDI: {c['cdi']}% a.a.", f"Gerado em {agora():%d/%m/%Y}"))
-    rows = "".join(f'<tr><td>{a}</td><td>{brl(p)}</td><td class="g">{brl(j)}</td><td><b>{brl(b)}</b></td><td>{q * 100:.0f}%</td></tr>' for a, p, j, b, q in proj_dados())
-    nota = "Simulação educativa com rendimento de 100% do CDI estimado, bruto e sem impostos. Não é recomendação de investimento."
-    rep = {"__NOME__": html.escape(CONTA["nome"]), "__FIM__": brl(fim), "__SUB__": sub, "__CHIPS__": chips, "__SVG__": svg_barras(L, meta), "__ROWS__": rows, "__NOTA__": nota}
-    out = RELATORIO
-    for k, v in rep.items():
-        out = out.replace(k, v)
-    return out.encode("utf-8")
+class _Pdf:
+    def __init__(self):
+        self.o = []
+
+    @staticmethod
+    def _c(c):
+        return "%.3f %.3f %.3f" % c
+
+    def rect(self, x, y, w, h, c):
+        self.o.append("%s rg %.1f %.1f %.1f %.1f re f" % (self._c(c), x, y, w, h))
+
+    def line(self, x1, y1, x2, y2, c, lw=1.0, dash=False):
+        self.o.append("%s RG %.1f w %s %.1f %.1f m %.1f %.1f l S [] 0 d" % (self._c(c), lw, "[4 3] 0 d" if dash else "", x1, y1, x2, y2))
+
+    def txt(self, x, y, t, sz=10, c=(0.1, 0.1, 0.15), bold=False, al="l"):
+        wd = sum(_W.get(ch, 520) for ch in t) * sz / 1000
+        x = x - wd if al == "r" else x - wd / 2 if al == "c" else x
+        e = t.encode("cp1252", "replace").decode("latin-1").replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+        self.o.append("BT /F%d %g Tf %s rg %.1f %.1f Td (%s) Tj ET" % (2 if bold else 1, sz, self._c(c), x, y, e))
+
+    def pdf(self):
+        ct = "\n".join(self.o).encode("latin-1")
+        objs = [b"<< /Type /Catalog /Pages 2 0 R >>", b"<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+                b"<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>",
+                b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>",
+                b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>",
+                b"<< /Length %d >>\nstream\n" % len(ct) + ct + b"\nendstream"]
+        out, offs = b"%PDF-1.4\n", []
+        for i, o in enumerate(objs, 1):
+            offs.append(len(out))
+            out += b"%d 0 obj\n" % i + o + b"\nendobj\n"
+        x = len(out)
+        out += b"xref\n0 %d\n0000000000 65535 f \n" % (len(objs) + 1) + b"".join(b"%010d 00000 n \n" % o for o in offs)
+        return out + b"trailer\n<< /Size %d /Root 1 0 R >>\nstartxref\n%d\n%%%%EOF" % (len(objs) + 1, x)
+
+
+def pdf_proj():
+    L, falta, ano_fim, meta, (lv, cxf) = projetar()
+    fim, c, P = L[-1][3], S["cfg"], _Pdf()
+    roxo, cinza, claro, ouro = (0.43, 0.25, 0.88), (0.45, 0.43, 0.55), (0.95, 0.93, 0.99), (0.84, 0.61, 0.0)
+    P.rect(0, 722, 595, 120, roxo)
+    P.txt(40, 805, "FUTURE  |  Projeção financeira", 10, (1, 1, 1), True)
+    P.txt(40, 790, f"{CONTA['nome']}  ·  gerado em {agora():%d/%m/%Y}", 9, (0.9, 0.85, 1))
+    P.txt(40, 752, brl(fim), 34, (1, 1, 1), True)
+    P.txt(40, 735, f"Projeção para {ano_fim}  ·  meta de {brl(meta)}" + (" alcançada" if fim >= meta else f"  ·  faltam {brl(meta - fim)}"), 10, (1, 1, 1))
+    P.txt(40, 700, f"Hoje: {brl(total())}   |   Aporte líquido: {brl(max(0.0, c['renda'] - c['gastos']))}/mês   |   100% do CDI (cerca de {str(c['cdi']).replace('.', ',')}% a.a.)", 9, cinza)
+    P.txt(40, 672, "Evolução do patrimônio", 11, bold=True)
+    mx, slot, base = (max([meta] + [x[3] for x in L]) * 1.1) or 1, 515 / len(L), 470
+    for i, (a, ap, j, b) in enumerate(L):
+        h, x = b / mx * 165, 40 + i * slot + slot * .19
+        P.rect(x, base, slot * .62, max(h, 0.5), roxo)
+        P.txt(x + slot * .31, base + h + 4, kf(b), 8, cinza, al="c")
+        P.txt(x + slot * .31, base - 12, str(a), 8, cinza, al="c")
+    ym = base + meta / mx * 165
+    P.line(40, ym, 555, ym, ouro, 1, True)
+    P.txt(40, ym + 4, "Meta " + kf(meta), 8, ouro, True)
+    y = 438
+    P.txt(40, y, "Ano", 9, cinza, True)
+    for xr, t in ((215, "Investido"), (335, "Juros"), (455, "Total"), (555, "% da meta")):
+        P.txt(xr, y, t, 9, cinza, True, "r")
+    y -= 8
+    for i, (a, ap, j, b) in enumerate(L):
+        y -= 17
+        if i % 2 == 0:
+            P.rect(34, y - 4, 527, 17, claro)
+        P.txt(40, y, str(a), 9.5)
+        P.txt(215, y, brl(ap), 9.5, al="r")
+        P.txt(335, y, brl(j), 9.5, (0.07, 0.52, 0.25), al="r")
+        P.txt(455, y, brl(b), 9.5, bold=True, al="r")
+        P.txt(555, y, f"{b / meta * 100:.0f}%" if meta else "-", 9.5, al="r")
+    y -= 30
+    if y > 110:
+        P.txt(40, y, f"Onde seu dinheiro estará em {ano_fim}", 11, bold=True)
+        itens = [("Saldo livre", S["livre"], lv)] + [(nome_cx(k), S["caixas"][k], cxf.get(k, 0.0)) for k in S["caixas"]]
+        for nm, hoje, fut in itens[:5]:
+            y -= 16
+            if y < 60:
+                break
+            P.txt(40, y, nm, 9.5)
+            P.txt(555, y, f"{brl(hoje)} hoje  >  {brl(fut)}", 9.5, al="r")
+    P.txt(40, 36, "Simulação educativa: rendimento de 100% do CDI estimado, bruto e sem impostos. Não é recomendação de investimento.", 7.5, cinza)
+    return P.pdf()
 
 
 # ------------------------------------------------------------------ telas
@@ -846,7 +969,7 @@ def v_tutorial():
 
 def v_home():
     t, f, c = total(), S["livre"], S["cfg"]
-    _, _, ano_fim, meta = projetar()
+    _, _, ano_fim, meta, _ = projetar()
     idade, b18, meses = idade_info()
     reserva = c["reserva"]
     pc = min(100, t / meta * 100) if meta > 0 else 0
@@ -865,6 +988,7 @@ def v_home():
                '<div class="rkbar"><div class="pg"><i style="width:' + str(pc) + '%"></i></div><s style="left:' + str(max(pc, 2)) + '%">🚀</s></div>')
     out += '<div class="card as">💡 ' + msg + '</div>'
     out += card("blue", "Saldo livre", brl(f), "Reserva fixa: " + brl(reserva) + mesada)
+    out += v_mes()
     for k, v in S["caixas"].items():
         if visivel(k):
             m = S["caixas_meta"].get(k, ["Caixinha", "blue", ""])
@@ -872,11 +996,42 @@ def v_home():
     return out
 
 
+def v_mes():
+    h = agora()
+    pre = f"{h.year}-{h.month:02d}"
+    e = sd = r = 0.0
+    for x in S["extrato"]:
+        if x["ts"][:7] == pre:
+            if x["t"] == "in":
+                e += x["v"]
+            elif x["t"] == "out":
+                sd += x["v"]
+            elif x["t"] == "yld":
+                r += x["v"]
+    rend = sum(S["caixas"].values()) * ((1 + S["cfg"]["cdi"] / 100) ** (1 / 252) - 1)
+    cel = lambda t, v, cor: '<div><div class="k">' + t + '</div><b style="color:var(--' + cor + ')">' + brl(v) + '</b></div>'
+    nota = f"Suas caixinhas rendem cerca de {brl(rend)} por dia útil (100% do CDI)." if rend >= 0.005 else "Guarde um valor em uma caixinha para começar a render."
+    return ('<div class="card"><div class="lb">Este mês · ' + MESES[h.month - 1] + '/' + str(h.year) + '</div><div class="mes">'
+            + cel("Entrou", e, "grn") + cel("Saiu", sd, "red") + cel("Rendeu", r, "pur") + '</div><div class="k" style="margin-top:10px">' + nota + '</div></div>')
+
+
+def dia_rotulo(iso):
+    d, h = datetime.fromisoformat(iso).date(), agora().date()
+    if d == h:
+        return "Hoje"
+    if (h - d).days == 1:
+        return "Ontem"
+    return f"{DIAS[d.weekday()]}, {d.day} {MESES[d.month - 1]}" + (f" {d.year}" if d.year != h.year else "")
+
+
 def v_ext():
     if not S["extrato"]:
-        return '<div class="card"><div class="k">Nenhum lançamento ainda. Toque em ＋ para começar.</div></div>'
-    rows = ""
+        return '<div class="card"><div class="k">🌱 Nenhum lançamento ainda. Toque em ＋ para começar.</div></div>'
+    rows, ult = "", None
     for _, x in sorted(enumerate(S["extrato"]), key=lambda p: (p[1]["ts"], p[0]), reverse=True):
+        dia = dia_rotulo(x["ts"])
+        if dia != ult:
+            rows, ult = rows + '<div class="dh">' + dia + '</div>', dia
         ic, nome = TIPOS[x["t"]]
         tr, ps = x["t"] in ("save", "take", "mov"), x["t"] in ("in", "yld")
         cor = "blue" if tr else "grn" if ps else "red"
@@ -897,42 +1052,91 @@ def svg_barras(L, meta):
     for i, (ano, ap, j, b) in enumerate(L):
         h = b / mx * (H - 44)
         x = i * bw + bw * .17
-        s += ('<rect class="bar" x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="7"/><text class="bt" x="%.1f" y="%.1f">%s</text><text class="bt" x="%.1f" y="%d">%s</text>'
-              % (x, H - 24 - h, bw * .66, h, x + bw * .33, H - 28 - h, kf(b), x + bw * .33, H - 7, ano))
+        s += ('<rect class="bar" style="animation-delay:%dms" x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="7"/><text class="bt" x="%.1f" y="%.1f">%s</text><text class="bt" x="%.1f" y="%d">%s</text>'
+              % (i * 70, x, H - 24 - h, bw * .66, h, x + bw * .33, H - 28 - h, kf(b), x + bw * .33, H - 7, ano))
     return s + "</svg>"
 
 
 def v_proj():
-    L, falta, ano_fim, meta = projetar()
-    fim = L[-1][3]
-    ok = fim >= meta
-    sub = (f"Meta de {brl(meta)} alcançada, com {brl(fim - meta)} de folga." if ok
-           else f"Para chegar a {brl(meta)}, o aporte líquido precisa ser de cerca de {brl(falta)} por mês.")
+    L, falta, ano_fim, meta, (lv, cxf) = projetar()
+    fim, c = L[-1][3], S["cfg"]
+    quando = fmt_mes(mes_meta())
+    sub = (f"Meta de {brl(meta)} alcançada em {quando}, com {brl(fim - meta)} de folga até {ano_fim}." if fim >= meta
+           else f"No ritmo atual a meta chega em {quando}. Para chegar até {ano_fim}, o aporte mensal precisa ser de cerca de {brl(falta)}.")
+    topo = card("grn" if fim >= meta else "gold", "Projeção até " + str(ano_fim), brl(fim), sub)
     tab = '<table><tr><th>Ano</th><th>Investido</th><th>Juros</th><th>Total</th></tr>'
     for a, p, j, b in L:
         tab += '<tr><td>' + str(a) + '</td><td>' + brl(p) + '</td><td style="color:var(--grn)">' + brl(j) + '</td><td><b>' + brl(b) + '</b></td></tr>'
-    c = S["cfg"]
-    return (card("grn" if ok else "gold", "Projeção até " + str(ano_fim), brl(fim), sub)
-            + '<div class="card">' + svg_barras(L, meta) + '</div><div class="card">' + tab + '</table></div>'
-            + '<div class="k" style="padding:0 6px">Ponto de partida de hoje: ' + brl(total()) + ' · aporte líquido de ' + brl(max(0.0, c["renda"] - c["gastos"]))
-            + '/mês · 100% do CDI a ' + str(c["cdi"]).replace(".", ",") + '% a.a. (bruto, estimado).</div>')
+    partes = [("Saldo livre", S["livre"], lv, "blue")] + [(nome_cx(k), S["caixas"][k], cxf.get(k, 0.0), S["caixas_meta"].get(k, ["", "pur"])[1]) for k in S["caixas"]]
+    onde = "".join('<div class="al" style="padding:6px 0"><span class="lb" style="color:var(--' + cor + ')">' + html.escape(nm) + '</span><span class="k">'
+                   + brl(h0) + ' → <span style="color:var(--tx);font-weight:700">' + brl(h1) + '</span></span></div>' for nm, h0, h1, cor in partes)
+    resto = ('<div class="card">' + svg_barras(L, meta) + '</div>'
+             '<div class="card"><div class="lb" style="margin-bottom:4px">Onde seu dinheiro estará em ' + str(ano_fim) + '</div>' + onde + '</div>'
+             '<div class="card">' + tab + '</table></div>'
+             '<div class="k" style="padding:0 6px">Ponto de partida de hoje: ' + brl(total()) + ' (saldo livre + caixinhas) · aporte líquido de '
+             + brl(max(0.0, c["renda"] - c["gastos"])) + '/mês · sempre 100% do CDI (cerca de ' + str(c["cdi"]).replace(".", ",") + '% a.a., bruto e estimado).</div>')
+    return topo, resto
 
 
 def v_idea():
     reserva = S["cfg"]["reserva"]
     ex = round(max(0.0, S["livre"] - reserva), 2)
-    opc = [("Reserva de liquidez diária", 1.0 if ex < 50 else .4, "blue", "CDB ou RDB com liquidez diária pagando cerca de 100% do CDI. Dinheiro à mão para imprevistos."),
-           ("RDB de longo prazo", .35, "pur", "Prazos de 2 a 5 anos costumam render acima do CDI. Confira a cobertura do FGC."),
-           ("Tesouro IPCA+", .25, "gold", "Rende inflação mais juros fixos e protege o poder de compra. Escolha vencimento próximo da sua meta.")]
-    if ex < 50:
-        opc = opc[:1]
-    sub = "Sugestão de divisão para esse valor:" if ex else "Seu saldo livre precisa passar de " + brl(reserva + 50) + " para liberar sugestões."
-    out = card("blue", "Disponível acima da reserva", brl(ex), sub)
-    if ex:
-        for nome, p, cor, txt in opc:
-            out += ('<div class="card" style="--c:var(--' + cor + ')"><div class="al"><span class="lb">' + nome + '</span><b style="color:var(--' + cor + ')">'
-                    + brl(ex * p) + '</b></div><div class="k">' + str(round(p * 100)) + '% · ' + txt + '</div></div>')
-    return out + '<div class="k" style="padding:0 6px">Sugestões educativas, não são recomendação personalizada de investimento.</div>'
+    main, out = next(iter(S["caixas"]), None), ""
+    for k, v in S["caixas"].items():
+        if v <= 0.004:
+            continue
+        m = S["caixas_meta"].get(k, ["Caixinha", "blue", ""])
+        if k == main:
+            partes, dica = [("Liquidez diária (100% do CDI)", .4), ("RDB de 2 a 5 anos", .35), ("Tesouro IPCA+", .25)], "Objetivo de longo prazo: mantenha uma parte com liquidez e deixe o resto trabalhando por mais tempo."
+        else:
+            partes, dica = [("Liquidez diária (100% do CDI)", 1.0)], "Objetivo mais próximo: o melhor é manter com resgate imediato e sem risco."
+        linhas = "".join('<div class="al" style="padding:4px 0"><span class="k">' + n + ' · ' + str(round(p * 100)) + '%</span><b style="font-size:15px">' + brl(v * p) + '</b></div>' for n, p in partes)
+        out += card(m[1], html.escape(m[0]), brl(v), dica, linhas)
+    sub = "Esse valor pode ir para a sua caixinha principal e começar a render." if ex else "Seu saldo livre precisa passar de " + brl(reserva + 1) + " para sobrar algo além da reserva."
+    out += card("blue", "Saldo livre acima da reserva", brl(ex), sub)
+    return out + '<div class="k" style="padding:0 6px">Hoje todas as caixinhas rendem 100% do CDI com resgate imediato. As ideias acima mostram como buscar mais retorno. São sugestões educativas, não recomendação de investimento.</div>'
+
+
+def tela_ideias():
+    ks = list(S["caixas"])
+    sig = "|".join(sorted(ks))
+    if not ks:
+        st.markdown(card("blue", "Ideias sob medida", "Sem caixinhas", "Crie sua primeira caixinha para receber ideias de como fazer cada uma render mais."), unsafe_allow_html=True)
+        if not SUP and st.button("➕ Criar caixinha", key="b_ic", use_container_width=True):
+            dlg_novo()
+        return
+    if st.session_state.get("ideias_ok") != sig:
+        n = len(ks)
+        nomes = ", ".join(nome_cx(k).replace("Caixinha ", "") for k in ks)
+        st.markdown('<div class="card as" style="padding:14px 16px">🤔 Você tem <b>' + str(n) + (" caixinha" if n == 1 else " caixinhas") + '</b> (' + html.escape(nomes) + '), está correto?</div>', unsafe_allow_html=True)
+        with st.container(key="conf"):
+            a, b = st.columns(2)
+            if a.button("Sim", key="ok_s", type="primary", use_container_width=True):
+                st.session_state.update(ideias_ok=sig, ideias_no=False)
+                st.rerun()
+            if b.button("Não", key="ok_n", use_container_width=True):
+                st.session_state["ideias_no"] = True
+        if st.session_state.get("ideias_no"):
+            st.caption("Sem problemas! Ajuste suas caixinhas e volte aqui." if not SUP else "Peça ao titular para ajustar as caixinhas.")
+            if not SUP:
+                with st.container(key="conf2"):
+                    c1, c2 = st.columns(2)
+                    if c1.button("➕ Criar", key="b_ic2", use_container_width=True):
+                        dlg_novo()
+                    if c2.button("🗑️ Excluir", key="b_ie2", use_container_width=True):
+                        dlg_excluir()
+        return
+    st.markdown(v_idea(), unsafe_allow_html=True)
+    ex = round(max(0.0, S["livre"] - S["cfg"]["reserva"]), 2)
+    if ex >= 1 and not SUP and st.button("🔒 Guardar " + brl(ex) + " na " + nome_cx(ks[0]), key="b_ex", use_container_width=True):
+        e = aplicar("save", ex, ks[0], "Excedente guardado")
+        if e:
+            st.error(e)
+        else:
+            st.rerun()
+    if st.button("Revisar minhas caixinhas", key="b_rev", use_container_width=True):
+        st.session_state["ideias_ok"] = None
+        st.rerun()
 
 
 # ------------------------------------------------------------------ diálogos
@@ -952,7 +1156,7 @@ def dlg_ajustes():
         renda = st.number_input("Renda mensal (R$)", min_value=0.0, value=float(c["renda"]), step=50.0, format="%.2f")
         gast = st.number_input("Gastos fixos do mês (R$)", min_value=0.0, value=float(c["gastos"]), step=10.0, format="%.2f")
         guard = st.number_input("Guardar automático na primeira caixinha (R$)", min_value=0.0, value=float(c["guardar"]), step=50.0, format="%.2f")
-        cdi = st.number_input("CDI estimado (% ao ano)", min_value=0.0, max_value=100.0, value=float(c["cdi"]), step=0.1, format="%.2f")
+        cdi = st.number_input("CDI estimado (% ao ano). O app sempre projeta 100% dele", min_value=0.0, max_value=100.0, value=float(c["cdi"]), step=0.1, format="%.2f")
         sd = st.date_input("Liberar a Sonho para a Futuro em (opcional)", value=date.fromisoformat(c["sonho_data"]) if c.get("sonho_data") else None,
                            format="DD/MM/YYYY") if tem_sonho else None
         if st.form_submit_button("Salvar", type="primary", use_container_width=True):
@@ -1125,21 +1329,29 @@ with st.container(key=f"view_{idx}_from{st.session_state['dir']}"):
         st.markdown(v_ext(), unsafe_allow_html=True)
         if S["extrato"]:
             hoje, x = f"{agora():%Y-%m-%d}", xlsx_ext()
+            with st.container(key="dl"):
+                c1, c2 = st.columns(2)
+                if x:
+                    c1.download_button("📊 Excel", x, file_name=f"extrato_future_{hoje}.xlsx", mime=XL, use_container_width=True)
+                c2.download_button("📄 CSV", csv_ext(), file_name=f"extrato_future_{hoje}.csv", mime="text/csv", use_container_width=True)
+    elif idx == 2:
+        topo, resto = v_proj()
+        st.markdown(topo, unsafe_allow_html=True)
+        extra = st.slider("E se eu guardasse mais por mês? (R$)", 0, 1000, 0, 50, key="sl_extra")
+        if extra:
+            st.markdown(card("pur", "Com +" + brl(extra) + " por mês", brl(final_com(extra)),
+                             "Você chegaria à meta em " + fmt_mes(mes_meta(extra)) + " (hoje: " + fmt_mes(mes_meta()) + ")."), unsafe_allow_html=True)
+        st.markdown(resto, unsafe_allow_html=True)
+        hoje, x = f"{agora():%Y-%m-%d}", xlsx_proj()
+        with st.container(key="dl2"):
             c1, c2 = st.columns(2)
             if x:
-                c1.download_button("📊 Baixar Excel", x, file_name=f"extrato_future_{hoje}.xlsx", mime=XL, use_container_width=True)
-            c2.download_button("📄 Baixar CSV", csv_ext(), file_name=f"extrato_future_{hoje}.csv", mime="text/csv", use_container_width=True)
-    elif idx == 2:
-        st.markdown(v_proj(), unsafe_allow_html=True)
-        hoje, x = f"{agora():%Y-%m-%d}", xlsx_proj()
-        c1, c2 = st.columns(2)
-        if x:
-            c1.download_button("📊 Baixar Excel", x, file_name=f"projecao_future_{hoje}.xlsx", mime=XL, use_container_width=True)
-        else:
-            c1.download_button("📄 Baixar CSV", csv_proj(), file_name=f"projecao_future_{hoje}.csv", mime="text/csv", use_container_width=True)
-        c2.download_button("🖨️ Relatório (PDF)", relatorio_html(), file_name=f"relatorio_future_{hoje}.html", mime="text/html", use_container_width=True)
+                c1.download_button("📊 Excel", x, file_name=f"projecao_future_{hoje}.xlsx", mime=XL, use_container_width=True)
+            else:
+                c1.download_button("📄 CSV", csv_proj(), file_name=f"projecao_future_{hoje}.csv", mime="text/csv", use_container_width=True)
+            c2.download_button("📄 PDF", pdf_proj(), file_name=f"projecao_future_{hoje}.pdf", mime="application/pdf", use_container_width=True)
     else:
-        st.markdown(v_idea(), unsafe_allow_html=True)
+        tela_ideias()
 
 if st.session_state["fx"]:
     st.markdown(fx_html(st.session_state["fx"]), unsafe_allow_html=True)
