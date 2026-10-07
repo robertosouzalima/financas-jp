@@ -319,7 +319,6 @@ button[kind="secondary"] p,[data-testid="stBaseButton-secondary"] p{color:var(--
 button[kind="primary"],[data-testid="stBaseButton-primary"]{background:linear-gradient(135deg,var(--pur),var(--blue))!important;border:0!important;border-radius:16px!important}
 button[kind="primary"] *,[data-testid="stBaseButton-primary"] *{color:#fff!important}
 [data-testid="stForm"]{border:0;padding:0;background:transparent}
-.st-key-bak{position:fixed;left:0;bottom:0;width:0;height:0;overflow:hidden;opacity:0;pointer-events:none}
 .hd h1{margin:0;font-size:28px;letter-spacing:-.03em;padding:0}.hd{margin-bottom:16px}
 .rkw{position:relative;display:inline-block}
 .logo{font-size:64px;line-height:1;display:inline-block;animation:rocketLaunch .7s cubic-bezier(.175,.885,.32,1.275) both}
@@ -599,6 +598,15 @@ def excluir_caixinha(cx, resgatar):
     S["caixas"].pop(cx, None)
     S["caixas_meta"].pop(cx, None)
     fecha(f"{nome} excluída")
+
+
+def liberar_sonho():
+    sd = S["cfg"].get("sonho_data")
+    if sd and agora().date().isoformat() >= sd:
+        if "sonho" in S["caixas"] and "futuro" in S["caixas"] and S["caixas"]["sonho"] > 0.004:
+            mover("sonho", "futuro", S["caixas"]["sonho"], "Sonho liberada → Futuro")
+        S["cfg"]["sonho_data"] = None
+        salvar()
 
 
 def creditar_mes():
