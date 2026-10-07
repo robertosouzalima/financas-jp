@@ -5173,7 +5173,6 @@ def card(
     sub="",
     extra="",
 ):
-
     return (
         '<div class="card" style="--c:var(--'
         + cor
@@ -5187,7 +5186,7 @@ def card(
         + val
         + "</div>"
         + extra
-        '<div class="k">'
+        + '<div class="k">'
         + sub
         + "</div>"
         "</div>"
