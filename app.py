@@ -6,7 +6,7 @@ NADA sensível fica neste arquivo. Configure em Streamlit Cloud > Settings > Sec
     supabase_url = "https://SEU-PROJETO.supabase.co"
     supabase_key = "CHAVE_SERVER_SIDE"         
     backup_key   = "texto-longo-e-aleatorio"   
-    gemini_key   = "CHAVE_DO_GOOGLE_GEMINI"    # <<< NOVA CHAVE PARA O CHATBOT INTELIGENTE
+    gemini_key   = "CHAVE_DO_GOOGLE_GEMINI"    # <<< CHAVE PARA O CHATBOT INTELIGENTE
 
     # conta inicial (opcional):
     seed_user = "joao"  seed_nome = "João"  seed_codigo = "..."  seed_pin = "..."
@@ -327,7 +327,6 @@ def _componente(nome, html_src):
     except Exception: pass
     return components.declare_component(nome, path=str(d))
 
-# (Omitindo as strings compridas HTML por brevidade sem quebrar - mesma string do anterior)
 BAK_HTML = """<!DOCTYPE html><html><body><script>
 const P=(t,d)=>parent.postMessage(Object.assign({isStreamlitMessage:true,type:t},d),"*");
 let first=true,last="";
@@ -351,7 +350,6 @@ P("streamlit:componentReady",{apiVersion:1});</script></body></html>"""
 
 BACKUP, FACEID = _componente("bak", BAK_HTML), _componente("faceid", FACEID_HTML)
 
-# Funções de backup/criptografia (Omitidas por brevidade, mantém original)
 def _fernet():
     if not (BK and HAS_CRYPTO): return None
     from cryptography.fernet import Fernet
@@ -520,7 +518,38 @@ def fecha(msg=None):
     salvar()
 
 def visivel(k): return S["caixas"][k] > 0.004 or not any(x.get("c") == k or x.get("d") == k for x in S["extrato"])
-def nome_cx(k): return S["caixas_meta"].get(k, ["Caixinha"])[0]
+
+# Função segura para pegar nome/cor da caixinha antiga ou nova
+def nome_cx(k):
+    return S["caixas_meta"].get(k, ["Caixinha"])[0]
+
+
+# --- Componentes Visuais Universais que faltaram na última ---
+def fx_html(d):
+    random.seed(d["n"])
+    itens = "".join('<i style="left:%d%%;font-size:%dpx;animation-delay:%.2fs;animation-duration:%.2fs">%s</i>'
+                    % (random.randint(4, 90), random.randint(22, 38), random.random() * .9, 1.8 + random.random() * 1.2,
+                       random.choice(["💵", "💸", "🪙", "💰"])) for _ in range(16))
+    return '<div class="fx">' + itens + '<b>' + d["txt"] + '</b></div>'
+
+def card(cor, tit, val, sub="", extra=""):
+    return ('<div class="card" style="--c:var(--' + cor + ')"><div class="lb" style="color:var(--' + cor + ')">' + tit + '</div>'
+            '<div class="big">' + val + '</div>' + extra + '<div class="k">' + sub + '</div></div>')
+
+def svg_barras(L, meta):
+    W, H = 340, 210
+    mx = max([meta] + [x[3] for x in L]) * 1.12 if meta > 0 else 1000.0
+    bw = W / max(1, len(L))
+    ty = H - 24 - meta / mx * (H - 44)
+    s = ('<svg viewBox="0 0 %d %d" style="width:100%%;height:auto;touch-action:pan-y"><line class="tl" x1="0" x2="%d" y1="%.1f" y2="%.1f"/>'
+         '<text class="bt" style="fill:var(--gold);text-anchor:start" x="2" y="%.1f">Meta %s</text>' % (W, H, W, ty, ty, ty - 5, kf(meta)))
+    for i, (ano, ap, j, b) in enumerate(L):
+        h = b / mx * (H - 44)
+        x = i * bw + bw * .17
+        s += ('<rect class="bar" style="animation-delay:%dms" x="%.1f" y="%.1f" width="%.1f" height="%.1f" rx="4"/><text class="bt" x="%.1f" y="%.1f">%s</text><text class="bt" x="%.1f" y="%d">%s</text>'
+              % (i * 70, x, H - 24 - h, bw * .66, h, x + bw * .33, H - 28 - h, kf(b), x + bw * .33, H - 7, ano))
+    return s + "</svg>"
+
 
 def aplicar(t, v, cx=None, obs=""):
     v, reserva, cxs = round(safe_float(v), 2), safe_float(S["cfg"]["reserva"]), S["caixas"]
@@ -554,7 +583,7 @@ def excluir_caixinha(cx, resgatar):
     S["caixas"].pop(cx, None); S["caixas_meta"].pop(cx, None)
     fecha("Caixinha excluída")
 
-# Projeção (Resumida para espaço)
+# Projeção
 def _passos(extra=0.0, limite_meses=None):
     c, h = S["cfg"], agora()
     r = (1 + max(0.0, safe_float(c["cdi"])) / 100) ** (1 / 12) - 1
@@ -585,12 +614,12 @@ def projetar():
     meta = S["cfg"]["meta"]
     return linhas, 0.0, ult[0] if ult else h.year, meta, estado[2:]
 
+
 # --- CHATBOT INTELIGENTE ---
 @st.dialog("🤖 Consultor FUTURE")
 def dlg_chat():
     st.markdown('<div class="dh" style="padding-top:0;">O que você quer saber sobre suas finanças?</div>', unsafe_allow_html=True)
     
-    # Caixa contêiner para scroll das mensagens
     chat_container = st.container(height=380)
     
     if not S["chat"]:
@@ -608,9 +637,8 @@ def dlg_chat():
 
     if enviou and pergunta.strip():
         S["chat"].append({"r": "user", "t": pergunta.strip()})
-        st.rerun() # Rerun para mostrar a pergunta do user antes de processar a AI
+        st.rerun()
         
-    # Processa AI caso a última mensagem seja do usuário
     if S["chat"] and S["chat"][-1]["r"] == "user":
         if not (HAS_AI and GEMINI_KEY):
             S["chat"].append({"r": "ai", "t": "⚠️ **Integração de IA desativada.** Para que eu possa 'pensar na hora' e analisar seus dados, adicione sua chave `gemini_key` nos Secrets do painel Streamlit."})
@@ -620,7 +648,6 @@ def dlg_chat():
         with chat_container:
             st.markdown(f'<div class="chat-msg chat-ai"><i>Pensando...</i></div>', unsafe_allow_html=True)
             
-        # Constrói o contexto criptografado seguro e em tempo real para a IA
         t_patrimonio = total()
         cxs_info = ", ".join([f"{S['caixas_meta'].get(k,[''])[0]}: R$ {v:.2f}" for k, v in S["caixas"].items() if v > 0])
         contexto_seguro = f"""Você é o Consultor Financeiro FUTURE, um assistente direto e muito educado de dentro do app do usuário.
@@ -633,13 +660,12 @@ Caixinhas: {cxs_info or 'Nenhuma no momento'}
 Rendimento Padrão configurado pelo usuário: {S['cfg']['cdi']}% a.a.
 
 INSTRUÇÕES PARA A IA:
-1. Responda diretamente e sem usar marcações exageradas, seja conversacional e prático.
+1. Responda diretamente e sem usar marcações exageradas.
 2. Utilize os dados reais acima para justificar qualquer conselho. Nunca invente dados da conta dele.
-3. Foque em educação financeira, otimização das caixinhas e reserva de emergência."""
+3. Foque em educação financeira e otimização das caixinhas."""
 
         try:
             modelo = genai.GenerativeModel("gemini-1.5-flash", system_instruction=contexto_seguro)
-            # Constrói o histórico da conversa pro modelo (limitado aos 10 últimos para não pesar)
             historico = [{"role": "user" if m["r"] == "user" else "model", "parts": [m["t"]]} for m in S["chat"][-10:-1]]
             chat_sessao = modelo.start_chat(history=historico)
             resposta = chat_sessao.send_message(S["chat"][-1]["t"]).text
@@ -651,7 +677,7 @@ INSTRUÇÕES PARA A IA:
         st.rerun()
 
 
-# --- RESTO DAS TELAS ---
+# --- TELAS DO APLICATIVO ---
 def v_home():
     t, f, c = total(), S["livre"], S["cfg"]
     _, _, ano_fim, meta, _ = projetar()
@@ -661,7 +687,60 @@ def v_home():
     if S["caixas"]:
         out += '<div class="dh" style="margin-top: 24px;">MINHAS CAIXINHAS</div>'
         for k, v in S["caixas"].items():
-            if visivel(k): out += card(S["caixas_meta"].get(k, ["", "blue"])[1], nome_cx(k), brl(v), "Rende 100% do CDI")
+            if visivel(k): 
+                # Leitura segura para contas antigas que tinham listas menores no dict
+                meta_array = S["caixas_meta"].get(k, ["Caixinha", "blue", ""])
+                cor_cx = meta_array[1] if len(meta_array) > 1 else "blue"
+                out += card(cor_cx, nome_cx(k), brl(v), "Rende 100% do CDI")
+    return out
+
+def dia_rotulo(iso):
+    d, h = datetime.fromisoformat(iso).date(), agora().date()
+    if d == h: return "Hoje"
+    if (h - d).days == 1: return "Ontem"
+    return f"{DIAS[d.weekday()]}, {d.day} {MESES[d.month - 1]}" + (f" {d.year}" if d.year != h.year else "")
+
+def v_ext():
+    if not S["extrato"]:
+        return '<div class="card"><div class="k" style="text-align:center; padding: 20px 0;">🌱 Nenhuma movimentação. Toque em ＋ para adicionar.</div></div>'
+    rows, ult = "", None
+    for _, x in sorted(enumerate(S["extrato"]), key=lambda p: (p[1]["ts"], p[0]), reverse=True):
+        dia = dia_rotulo(x["ts"])
+        if dia != ult:
+            rows, ult = rows + '<div class="dh" style="margin-top:16px;">' + dia + '</div>', dia
+        ic, nome = TIPOS[x["t"]]
+        tr, ps = x["t"] in ("save", "take", "mov"), x["t"] in ("in", "yld")
+        cor = "tx" if tr else "grn" if ps else "tx"
+        sg = {"save": "→ ", "take": "← ", "mov": "↔ "}.get(x["t"], "+" if ps else "−")
+        det = (html.escape(x.get("cn") or "") + " · " if x.get("c") else "") + (html.escape(x["o"]) + " · " if x["o"] else "") + fmt_dt(x["ts"])
+        rows += ('<div class="tx"><span class="ic">' + ic + '</span><div class="g"><b>' + nome + '</b><div class="k" style="margin-top:2px;">' + det + '</div></div>'
+                 '<b style="color:var(--' + cor + ')">' + sg + brl(x["v"]) + '</b></div>')
+    return '<div class="card" style="padding:4px 20px">' + rows + '</div>'
+
+def v_proj():
+    L, falta, ano_fim, meta, (lv, cxf) = projetar()
+    fim, c = L[-1][3], S["cfg"]
+    sub = f"Evolução projetada do seu patrimônio até {ano_fim}."
+    topo = card("grn" if fim >= meta else "gold", "Projeção Financeira", brl(fim), sub)
+    tab = '<table><tr><th>Ano</th><th>Total Acumulado</th></tr>'
+    for a, p, j, b in L:
+        tab += '<tr><td>' + str(a) + '</td><td><b>' + brl(b) + '</b></td></tr>'
+    resto = ('<div class="card">' + svg_barras(L, meta) + '</div>'
+             '<div class="card">' + tab + '</table></div>'
+             '<div class="k" style="padding:0 6px">Projeção considerando 100% do CDI estimado.</div>')
+    return topo, resto
+
+def v_idea():
+    reserva = S["cfg"]["reserva"]
+    ex = round(max(0.0, S["livre"] - reserva), 2)
+    out = ""
+    for k, v in S["caixas"].items():
+        if v > 0.004:
+            meta_array = S["caixas_meta"].get(k, ["Caixinha", "blue", ""])
+            cor_cx = meta_array[1] if len(meta_array) > 1 else "blue"
+            out += card(cor_cx, nome_cx(k), brl(v), "Disponível para resgate imediato.")
+    sub = "Disponível para ir à caixinha principal." if ex > 0 else "Seu saldo livre precisa passar de " + brl(reserva) + " para sobrar."
+    out += card("blue", "Saldo acima da reserva", brl(ex), sub)
     return out
 
 @st.dialog("Ajustes")
@@ -702,6 +781,16 @@ st.markdown(f'<div class="hd"><div class="k">{TITULOS[idx]} · {hoje_txt()}</div
 
 with st.container(key=f"view_{idx}_from{st.session_state['dir']}"):
     if idx == 0: st.markdown(v_home(), unsafe_allow_html=True)
-    elif idx == 1: st.markdown("Extrato", unsafe_allow_html=True) # Resumido visualmente
-    elif idx == 2: st.markdown("Projeção", unsafe_allow_html=True)
-    else: st.markdown("Ideias (Sugestões Educativas)", unsafe_allow_html=True)
+    elif idx == 1: st.markdown(v_ext(), unsafe_allow_html=True)
+    elif idx == 2: 
+        topo, resto = v_proj()
+        st.markdown(topo, unsafe_allow_html=True)
+        st.markdown(resto, unsafe_allow_html=True)
+    else: 
+        st.markdown(v_idea(), unsafe_allow_html=True)
+
+if st.session_state["fx"]:
+    st.markdown(fx_html(st.session_state["fx"]), unsafe_allow_html=True)
+    st.session_state["fx"] = None
+if st.session_state["launch"]:
+    st.session_state["launch"] = False
