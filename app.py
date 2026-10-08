@@ -64,7 +64,7 @@ CODIGO, PIN_PAIS = secret_str("seed_codigo"), secret_str("seed_pin")
 SEED, SEED_NOME = secret_str("seed_user", "joao"), secret_str("seed_nome", "João")
 SB_URL, SB_KEY = secret_str("supabase_url").rstrip("/"), secret_str("supabase_key")
 _BACKUP_KEY = secret_str("backup_key")
-BK = hashlib.sha256(_BACKUP_KEY.encode()).digest() if _BACKUP_KEY else None    # sem chave = backup desativado
+BK = hashlib.sha256(_BACKUP_KEY.encode()).digest() if _BACKUP_KEY else None
 ARQ = Path(__file__).with_name("future_db.json")
 XL = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 SESSAO_SEG = 30 * 86400
@@ -293,7 +293,7 @@ def salvar(forcar_u=None):
             rc = (fonte.get("contas") or {}).get(u)
             if rc is not None and _ver(rc) != ss["base_v"].get(u):
                 ss["recarregar"] = True
-                ss["warn"] = "⚠️ Esses dados foram alterados em outro aparelho. Atualizei a tela; repita a ação."
+                ss["warn"] = "⚠️ Ação interrompida: dados foram alterados em outro aparelho. Atualizei a tela."
                 return False
         if ok:
             for k, c in _merge(fonte, dados)["contas"].items():
@@ -303,9 +303,9 @@ def salvar(forcar_u=None):
         if supabase_configurado():
             ss["storage_mode"] = "cloud" if (ok and ok_n) else "local-fallback"
     if not ok_l:
-        ss["warn"] = "⚠️ Não consegui gravar o cache local."
+        ss["warn"] = "⚠️ Falha ao salvar no armazenamento local do aparelho."
     elif supabase_configurado() and not (ok and ok_n):
-        ss["warn"] = "☁️ Nuvem indisponível agora. Seus dados estão salvos neste servidor e sincronizam depois."
+        ss["warn"] = "☁️ Nuvem temporariamente offline. Os dados estão salvos neste aparelho e sincronizarão depois."
     return True
 
 
@@ -316,8 +316,8 @@ def get_css(tema, nome):
         p = {k: "color-mix(in srgb," + v + " 85%,#000)" for k, v in p.items()}
     cores = f"--blue:{p['blue']};--pur:{p['pur']};--gold:{p['gold']};--grn:{p['grn']};--red:{p['red']}"
     if tema == "light":
-        return ":root{--bg:#f2f2f7;--c1:#ffffff;--c2:#f2f2f7;--tx:#1c1c1e;--mu:#8e8e93;--ln:rgba(0,0,0,.06);--s1:rgba(0,0,0,.04);--glass:rgba(255,255,255,.8);color-scheme:light;" + cores + "}"
-    return ":root{--bg:#000000;--c1:#1c1c1e;--c2:#2c2c2e;--tx:#f2f2f7;--mu:#8e8e93;--ln:rgba(255,255,255,.08);--s1:rgba(0,0,0,.2);--glass:rgba(28,28,30,.8);color-scheme:dark;" + cores + "}"
+        return ":root{--bg:#F2F2F7;--c1:#FFFFFF;--c2:#F2F2F7;--tx:#1C1C1E;--mu:#8E8E93;--ln:rgba(0,0,0,.08);--s1:rgba(0,0,0,.04);--glass:rgba(255,255,255,.8);color-scheme:light;" + cores + "}"
+    return ":root{--bg:#000000;--c1:#1C1C1E;--c2:#2C2C2E;--tx:#F2F2F7;--mu:#8E8E93;--ln:rgba(255,255,255,.08);--s1:rgba(0,0,0,.2);--glass:rgba(28,28,30,.8);color-scheme:dark;" + cores + "}"
 
 
 CSS_BASE = """
@@ -332,7 +332,7 @@ div[role="dialog"]{background:var(--c1)!important;border-radius:24px!important;b
 @keyframes dialogIn{from{opacity:0;transform:translateY(10px) scale(.985)}to{opacity:1;transform:none}}
 button[kind="secondary"],[data-testid="stBaseButton-secondary"]{background:var(--c2);border:1px solid var(--ln);border-radius:14px}
 button[kind="secondary"] p,[data-testid="stBaseButton-secondary"] p{color:var(--tx);font-weight:500}
-button[kind="primary"],[data-testid="stBaseButton-primary"]{background:var(--pur)!important;border:0!important;border-radius:14px!important;box-shadow:0 4px 12px color-mix(in srgb,var(--pur) 25%,transparent)!important}
+button[kind="primary"],[data-testid="stBaseButton-primary"]{background:var(--pur)!important;border:0!important;border-radius:14px!important}
 button[kind="primary"] *,[data-testid="stBaseButton-primary"] *{color:#fff!important;font-weight:600!important}
 button{transition:transform .2s ease,opacity .2s ease!important}button:active{transform:scale(.97)!important;opacity:.8}label{transition:background .25s ease!important}
 [data-testid="stForm"]{border:0;padding:0;background:transparent}
@@ -341,8 +341,8 @@ button{transition:transform .2s ease,opacity .2s ease!important}button:active{tr
 .logo{font-size:56px;line-height:1;display:inline-block;animation:fadeScale .6s cubic-bezier(.16,1,.3,1) both}
 @keyframes fadeScale{from{opacity:0;transform:scale(.9) translateY(10px)}to{opacity:1;transform:none}}
 .brand{font-size:32px;font-weight:700;letter-spacing:-1px;line-height:1.1;color:var(--tx)}
-.card{background:var(--c1);border:1px solid var(--ln);border-radius:20px;padding:20px;box-shadow:0 4px 14px rgba(0,0,0,.03);margin-bottom:16px;transition:transform .2s ease}
-.k{color:var(--mu);font-size:13px}.lb{font-size:14px;font-weight:500}.big{font-size:32px;font-weight:700;letter-spacing:-.03em;margin:2px 0 8px;font-variant-numeric:tabular-nums}
+.card{background:var(--c1);border:none;border-radius:20px;padding:20px;box-shadow:0 4px 20px var(--s1);margin-bottom:16px;transition:transform .2s ease}
+.k{color:var(--mu);font-size:14px}.lb{font-size:15px;font-weight:500}.big{font-size:32px;font-weight:700;letter-spacing:-.03em;margin:2px 0 8px;font-variant-numeric:tabular-nums}
 .as{font-size:14px;border-style:dashed}.sup{background:color-mix(in srgb,var(--gold) 12%,transparent);border:1px solid var(--gold);border-radius:16px;padding:12px 14px;margin-bottom:16px;font-size:14px}
 .sp{display:flex;gap:10px;align-items:flex-start;padding:7px 0}.sp>span{font-size:18px;line-height:1.3}.sp.ok b{text-decoration:line-through;opacity:.5}
 .tx{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--ln)}.tx:last-child{border:0}.tx .g{flex:1;min-width:0}
@@ -411,7 +411,7 @@ except Exception:
     st.stop()
 
 
-# ------------------------------- componentes de navegador (backup + Face ID)
+# ------------------------------- componentes de navegador (backup + WebAuthn)
 def _componente(nome, html_src):
     d = Path(__file__).with_name("_" + nome)
     try:
@@ -444,16 +444,16 @@ const r=c.response,L=JSON.parse(localStorage.getItem("future_auth")||"[]").filte
 done({kind:"reg",id:c.id,pk:e64(r.getPublicKey()),alg:r.getPublicKeyAlgorithm(),cd:e64(r.clientDataJSON)});
 }catch(e){M.textContent="Não foi possível ativar ("+e.name+")"}}
 async function get(){try{
-const L=JSON.parse(localStorage.getItem("future_auth")||"[]");if(!L.length){M.textContent="Ative o Face ID nos Ajustes depois de entrar.";return}
+const L=JSON.parse(localStorage.getItem("future_auth")||"[]");if(!L.length){M.textContent="Ative a biometria nos Ajustes depois de entrar.";return}
 const c=await navigator.credentials.get({publicKey:{challenge:d64(A.chal),rpId:location.hostname,allowCredentials:L.map(x=>({type:"public-key",id:d64(x.id)})),userVerification:"required",timeout:60000}});
 const r=c.response,u=(L.find(x=>x.id==c.id)||{}).user;
 done({kind:"get",id:c.id,user:u,ad:e64(r.authenticatorData),cd:e64(r.clientDataJSON),sg:e64(r.signature)});
-}catch(e){M.textContent="Face ID cancelado."}}
+}catch(e){M.textContent="Autenticação cancelada."}}
 addEventListener("message",ev=>{if(ev.data.type!="streamlit:render")return;A=ev.data.args;const d=A.tema=="dark";
-document.body.style.color=d?"#8b8b9a":"#656575";M.style.cssText="font-size:12px;text-align:center;margin-top:6px";
-B.style.cssText="width:100%;padding:14px;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;transition:transform 0.2s;border:1px solid "+(d?"rgba(255,255,255,.1)":"rgba(0,0,0,.1)")+";background:"+(d?"#2c2c2e":"#f2f2f7")+";color:"+(d?"#f2f2f7":"#1c1c1e");
+document.body.style.color=d?"#8b8b9a":"#8e8e93";M.style.cssText="font-size:13px;text-align:center;margin-top:8px";
+B.style.cssText="width:100%;padding:14px;border-radius:14px;font-size:15px;font-weight:600;cursor:pointer;transition:transform 0.2s;border:1px solid "+(d?"rgba(255,255,255,.1)":"rgba(0,0,0,.1)")+";background:"+(d?"#2C2C2E":"#FFFFFF")+";color:"+(d?"#F2F2F7":"#1C1C1E")+";box-shadow:0 2px 8px rgba(0,0,0,0.05);";
 B.onmousedown=()=>B.style.transform="scale(0.97)"; B.onmouseup=()=>B.style.transform="scale(1)";
-B.textContent=(A.modo=="reg"?"Ativar Face ID neste aparelho":"Entrar com Face ID");B.onclick=A.modo=="reg"?reg:get;P("streamlit:setFrameHeight",{height:88})});
+B.textContent=(A.modo=="reg"?"Ativar autenticação do dispositivo":"Entrar com biometria");B.onclick=A.modo=="reg"?reg:get;P("streamlit:setFrameHeight",{height:88})});
 P("streamlit:componentReady",{apiVersion:1});</script></body></html>"""
 BACKUP, FACEID = _componente("bak", BAK_HTML), _componente("faceid", FACEID_HTML)
 
@@ -626,7 +626,7 @@ def tela_login():
                 u = fid_entrar(r)
                 if u:
                     entrar(u, "filho")
-                st.error("Face ID não reconhecido.")
+                st.error("Autenticação não reconhecida.")
         st.button("🛡️ Controle parental", key="b_pais", use_container_width=True, on_click=_ir, args=("pais",))
         st.button("Criar nova conta", key="b_criar", use_container_width=True, on_click=_ir, args=("criar",))
         st.caption({"cloud": "☁️ Dados sincronizados na nuvem.", "local-fallback": "⚠️ Usando dados locais (Nuvem offline).",
@@ -754,26 +754,26 @@ def aplicar(t, v, cx=None, obs=""):
         return "Escolha uma caixinha válida."
     if t == "save":
         if S["livre"] - v < reserva - 1e-9:
-            return f"A reserva fixa de {brl(reserva)} está protegida. Você pode guardar até {brl(max(0, S['livre'] - reserva))}."
+            return f"Sua reserva de emergência ({brl(reserva)}) não permite esse aporte. Valor livre: {brl(max(0, S['livre'] - reserva))}."
         S["livre"] -= v
         cxs[cx] += v
     elif t == "take":
         if v > cxs[cx] + 1e-9:
-            return f"Essa caixinha tem só {brl(cxs[cx])}."
+            return f"Saldo insuficiente nesta caixinha (disponível: {brl(cxs[cx])})."
         cxs[cx] -= v
         S["livre"] += v
     elif t == "yld":
         if cxs[cx] <= 0:
-            return "Essa caixinha não tem saldo para render."
+            return "Caixinha vazia, não há saldo para render."
         cxs[cx] += v
     elif t == "out":
         if v > S["livre"] + 1e-9:
-            return f"Saldo livre insuficiente ({brl(S['livre'])})."
+            return f"Você possui apenas {brl(S['livre'])} de saldo disponível."
         S["livre"] -= v
     elif t == "in":
         S["livre"] += v
     else:
-        return "Tipo de lançamento inválido."
+        return "Operação não identificada."
     reg(t, v, cx if t in ("save", "take", "yld") else None, obs)
     if t in ("in", "yld"):
         fx(v)
@@ -786,9 +786,9 @@ def mover(o, d, v, obs=""):
     if v <= 0:
         return "Informe um valor maior que zero."
     if o not in S["caixas"] or d not in S["caixas"] or o == d:
-        return "Escolha duas caixinhas diferentes."
+        return "Escolha caixinhas diferentes."
     if v > S["caixas"][o] + 1e-9:
-        return f"{nome_cx(o)} tem só {brl(S['caixas'][o])}."
+        return f"Saldo insuficiente na {nome_cx(o)}."
     S["caixas"][o] -= v
     S["caixas"][d] += v
     reg("mov", v, o, obs, dest=d)
@@ -800,12 +800,12 @@ def excluir_caixinha(cx, resgatar):
     v, nome = S["caixas"][cx], nome_cx(cx)
     if resgatar:
         S["livre"] += v
-        reg("take", v, cx, "Resgate por exclusão")
+        reg("take", v, cx, "Resgate automático (Exclusão)")
     else:
-        reg("del", v, cx, "Saldo removido do patrimônio")
+        reg("del", v, cx, "Excluída (Dinheiro removido)")
     S["caixas"].pop(cx, None)
     S["caixas_meta"].pop(cx, None)
-    fecha(f"{nome} excluída")
+    fecha(f"Caixinha {nome} excluída com sucesso.")
 
 
 def liberar_sonho():
@@ -835,11 +835,11 @@ def creditar_mes():
             ts = datetime(ano, mes + 1, 1, 0, 0, 0, tzinfo=TZ)
             if renda > 0:
                 S["livre"] += renda
-                reg("in", renda, None, "Renda mensal programada", ts)
+                reg("in", renda, None, "Renda mensal automática", ts)
             gasto = min(gastos, max(0.0, S["livre"]))
             if gasto > 0:
                 S["livre"] -= gasto
-                reg("out", gasto, None, "Gastos fixos do mês" + ("" if gasto >= gastos - 1e-9 else " (parcial: saldo insuficiente)"), ts)
+                reg("out", gasto, None, "Gasto mensal fixo", ts)
             aporte = min(guardar, max(0.0, renda - gasto), max(0.0, S["livre"])) if cx else 0.0
             if aporte > 0:
                 S["livre"] -= aporte
@@ -850,7 +850,7 @@ def creditar_mes():
     if n:
         if renda > 0:
             fx(renda)
-        fecha("Movimentações mensais processadas.")
+        fecha("Atualização financeira do mês concluída.")
     else:
         salvar()
 
@@ -887,7 +887,7 @@ def _limite():
 def periodo_txt():
     h, (idade, b18, meses) = agora().date(), idade_info()
     fim = b18 if meses > 0 else date(h.year + 10, h.month, min(h.day, 28))
-    return f"Período: {h:%d/%m/%Y} até {fim:%d/%m/%Y}" + (" (maioridade)" if meses > 0 else " (próximos 10 anos)")
+    return f"Projeção até: {fim:%d/%m/%Y}" + (" (aos 18 anos)" if meses > 0 else " (próximos 10 anos)")
 
 
 def projetar():
@@ -987,7 +987,7 @@ def _xlsx(titulo, cab, linhas, fmts, larg, notas=(), grafico=False):
             x.number_format = f
     if grafico and linhas:
         ch = BarChart()
-        ch.title, ch.height, ch.width, ch.legend = "Patrimônio projetado", 8, 16, None
+        ch.title, ch.height, ch.width, ch.legend = "Evolução Projetada", 8, 16, None
         ch.add_data(Reference(ws, min_col=4, min_row=4, max_row=4 + len(linhas)), titles_from_data=True)
         ch.set_categories(Reference(ws, min_col=1, min_row=5, max_row=4 + len(linhas)))
         ws.add_chart(ch, col(len(cab) + 2) + "4")
@@ -1009,7 +1009,7 @@ def xlsx_proj():
     return _xlsx("Projeção", ["Ano", "Capital investido", "Juros acumulados", "Patrimônio total", "% da meta"], proj_dados(),
                  [None, MOEDA, MOEDA, MOEDA, "0.0%"], [10, 22, 22, 22, 14],
                  [("Meta (R$)", c["meta"], MOEDA), ("Ponto de partida (R$)", total(), MOEDA), ("Aporte líquido mensal (R$)", max(0.0, c["renda"] - c["gastos"]), MOEDA),
-                  ("CDI estimado (% a.a.)", c["cdi"], None)], True)
+                  ("Rendimento estimado (% a.a.)", c["cdi"], None)], True)
 
 
 def csv_proj():
@@ -1081,13 +1081,13 @@ def pdf_proj():
     fim, c, P = L[-1][3], S["cfg"], _Pdf()
     roxo, cinza, claro, ouro = (0.43, 0.25, 0.88), (0.45, 0.43, 0.55), (0.95, 0.93, 0.99), (0.84, 0.61, 0.0)
     P.rect(0, 722, 595, 120, roxo)
-    P.txt(40, 805, "FUTURE  |  Projeção financeira", 10, (1, 1, 1), True)
+    P.txt(40, 805, "FUTURE  |  Relatório Financeiro", 10, (1, 1, 1), True)
     P.txt(40, 790, f"{CONTA['nome']}  ·  gerado em {agora():%d/%m/%Y}", 9, (0.9, 0.85, 1))
     P.txt(40, 752, brl(fim), 34, (1, 1, 1), True)
     P.txt(40, 735, f"Projeção para {ano_fim}  ·  meta de {brl(meta)}" + (" alcançada" if fim >= meta else f"  ·  faltam {brl(meta - fim)}"), 10, (1, 1, 1))
-    P.txt(40, 700, f"Hoje: {brl(total())}   |   Aporte líquido: {brl(max(0.0, c['renda'] - c['gastos']))}/mês   |   100% do CDI ({str(c['cdi']).replace('.', ',')}% a.a.)", 9, cinza)
+    P.txt(40, 700, f"Hoje: {brl(total())}   |   Aporte: {brl(max(0.0, c['renda'] - c['gastos']))}/mês   |   Rendimento est. ({str(c['cdi']).replace('.', ',')}% a.a.)", 9, cinza)
     P.txt(40, 686, periodo_txt(), 8.5, cinza)
-    P.txt(40, 664, "Evolução do patrimônio", 11, bold=True)
+    P.txt(40, 664, "Evolução", 11, bold=True)
     mx, slot, base = (max([meta] + [x[3] for x in L]) * 1.1) or 1, 515 / len(L), 470
     for i, (a, ap, j, b) in enumerate(L):
         h, x = b / mx * 165, 40 + i * slot + slot * .19
@@ -1099,7 +1099,7 @@ def pdf_proj():
     P.txt(40, ym + 4, "Meta " + kf(meta), 8, ouro, True)
     y = 438
     P.txt(40, y, "Ano", 9, cinza, True)
-    for xr, t in ((215, "Investido"), (335, "Juros"), (455, "Total"), (555, "% da meta")):
+    for xr, t in ((215, "Investido"), (335, "Juros"), (455, "Total"), (555, "% meta")):
         P.txt(xr, y, t, 9, cinza, True, "r")
     y -= 8
     for i, (a, ap, j, b) in enumerate(L):
@@ -1114,7 +1114,7 @@ def pdf_proj():
     y -= 30
     if y > 110:
         P.txt(40, y, f"Onde seu dinheiro estará em {ano_fim}", 11, bold=True)
-        itens = [("Saldo livre", S["livre"], lv)] + [(nome_cx(k), S["caixas"][k], cxf.get(k, 0.0)) for k in S["caixas"]]
+        itens = [("Saldo disponível", S["livre"], lv)] + [(nome_cx(k), S["caixas"][k], cxf.get(k, 0.0)) for k in S["caixas"]]
         for nm, hoje, fut in itens[:5]:
             y -= 16
             if y < 60:
@@ -1140,12 +1140,12 @@ def card(cor, tit, val, sub="", extra=""):
 
 def passos():
     c = S["cfg"]
-    p = [("Definir sua meta e reserva", "Ajuste em ⚙️ no topo", c["ajustado"]),
-         ("Cadastrar renda e gastos mensais", "Ajuste em ⚙️ > Dinheiro", c["renda"] > 0),
-         ("Criar uma caixinha", "Toque em ＋ > Montar Caixinha", bool(S["caixas"])),
-         ("Fazer seu primeiro lançamento", "Toque em ＋", bool(S["extrato"]))]
+    p = [("Definir objetivos", "Configure em ⚙️ > Dinheiro", c["ajustado"]),
+         ("Renda e gastos mensais", "Configure em ⚙️ > Dinheiro", c["renda"] > 0),
+         ("Criar uma caixinha", "Toque em ＋ > Nova Caixinha", bool(S["caixas"])),
+         ("Fazer uma movimentação", "Toque em ＋", bool(S["extrato"]))]
     if HAS_CRYPTO:
-        p.append(("Ativar o Face ID", "⚙️ > Conta > Face ID", bool(CONTA.get("fid"))))
+        p.append(("Ativar biometria", "Configure em ⚙️ > Conta", bool(CONTA.get("fid"))))
     return p
 
 
@@ -1153,66 +1153,37 @@ def v_tutorial():
     idade, b18, meses = idade_info()
     ps = passos()
     feitos = sum(1 for p in ps if p[2])
-    frase = (f"Faltam <b>{prazo_txt(meses)}</b> para os 18 anos." if meses > 0
-             else f"Você já tem {idade} anos. A projeção será para os próximos 10 anos.")
     lis = "".join('<div class="sp' + (" ok" if f else "") + '"><span>' + ("✅" if f else "⭕") + '</span><div><b>' + a + '</b><div class="k">' + b + '</div></div></div>' for a, b, f in ps)
-    tit = "🎉 Tudo pronto!" if feitos == len(ps) else "👋 Olá, " + html.escape(CONTA["nome"]) + "!"
+    tit = "🎉 Tudo configurado!" if feitos == len(ps) else "👋 Bem-vindo(a), " + html.escape(CONTA["nome"])
     return ('<div class="card as" style="border-color:var(--pur)"><div class="lb" style="color:var(--pur);font-size:16px">' + tit + '</div>'
-            '<div class="k" style="margin:4px 0 8px">' + frase + '</div><div class="pg" style="height:6px; background:var(--ln); border-radius:4px;"><i style="width:' + str(feitos / len(ps) * 100) + '%; background:var(--pur);"></i></div>'
-            '<div class="k">' + str(feitos) + ' de ' + str(len(ps)) + ' passos</div><div style="margin-top:8px">' + lis + '</div></div>')
+            '<div class="pg" style="height:4px; background:var(--ln); border-radius:4px;"><i style="width:' + str(feitos / len(ps) * 100) + '%; background:var(--pur);"></i></div>'
+            '<div class="k" style="margin-bottom:8px">' + str(feitos) + ' de ' + str(len(ps)) + ' passos concluídos</div>' + lis + '</div>')
 
 
 def v_home():
     t, f, c = total(), S["livre"], S["cfg"]
     _, _, ano_fim, meta, _ = projetar()
-    idade, b18, meses = idade_info()
     reserva = c["reserva"]
     pc = min(100, t / meta * 100) if meta > 0 else 0
-
-    if f > reserva + .005:
-        msg = f"Você tem {brl(f - reserva)} disponíveis para investir na aba Ideias."
-    elif f < reserva - .005:
-        msg = f"Faltam {brl(reserva - f)} para completar sua reserva fixa."
-    else:
-        msg = "Sua reserva de emergência está completa."
-
     pct = f"{pc:.1f}".replace(".", ",")
-    
-    # Seção 1: Saldo Disponível Principal
+
     out = f'''
-    <div style="text-align:center; padding: 10px 0 24px;">
-        <div style="color:var(--mu); font-size:13px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px;">Saldo Disponível</div>
-        <div style="font-size:46px; font-weight:700; letter-spacing:-0.04em; margin-top:4px;">{brl(f)}</div>
+    <div style="text-align:center; padding: 12px 0 28px;">
+        <div style="color:var(--mu); font-size:14px; font-weight:500;">Patrimônio Total</div>
+        <div style="font-size:40px; font-weight:700; letter-spacing:-0.03em; margin-top:2px;">{brl(t)}</div>
+        <div style="color:var(--mu); font-size:13px; margin-top:6px;">{pct}% do seu objetivo alcançado</div>
     </div>
     '''
 
-    # Seção 2: Informação Financeira Principal (Card de Patrimônio)
-    out += f'''
-    <div class="card" style="padding: 24px; border: 0; background: linear-gradient(135deg, var(--pur), var(--blue)); color: #fff; box-shadow: 0 10px 30px color-mix(in srgb, var(--pur) 20%, transparent);">
-        <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 12px;">
-            <div>
-                <div style="color: rgba(255,255,255,0.8); font-size:13px; font-weight:500; margin-bottom:4px;">Patrimônio Total</div>
-                <div style="font-size:26px; font-weight:700;">{brl(t)}</div>
-            </div>
-            <div style="text-align:right;">
-                <div style="color: #fff; font-size:14px; font-weight:600;">{pct}% da meta</div>
-            </div>
-        </div>
-        <div class="pg" style="height:6px; background:rgba(0,0,0,0.15); border-radius:4px; margin:0;"><i style="width:{pc}%; background:#fff; border-radius:4px;"></i></div>
-    </div>
-    '''
-
-    if msg:
-        out += f'<div style="background:var(--c2); color:var(--tx); border-radius:16px; padding:16px; font-size:14px; display:flex; align-items:center; gap:12px; margin-bottom:16px;"><span style="font-size:18px;">💡</span> <span>{msg}</span></div>'
-
+    out += card("blue", "Saldo Disponível", brl(f), f"Valor protegido: {brl(reserva)}")
     out += v_mes()
 
     if S["caixas"]:
-        out += '<div class="dh" style="margin-top: 24px; margin-bottom: 8px;">MINHAS CAIXINHAS</div>'
+        out += '<div class="dh" style="margin-top: 16px; margin-bottom: 8px;">Caixinhas</div>'
         for k, v in S["caixas"].items():
             if visivel(k):
                 m = S["caixas_meta"].get(k, ["Caixinha", "blue", ""])
-                out += card(m[1], html.escape(m[0]), brl(v), html.escape(m[2]) or "Rende 100% do CDI")
+                out += card(m[1], html.escape(m[0]), brl(v), html.escape(m[2]) or "Rendimento ativo")
 
     return out
 
@@ -1229,8 +1200,8 @@ def v_mes():
                 sd += x["v"]
             elif x["t"] == "yld":
                 r += x["v"]
-    cel = lambda t, v, cor: f'<div style="flex:1; text-align:center;"><div class="k" style="font-size:12px; text-transform:uppercase;">{t}</div><b style="color:var(--{cor}); font-size:16px; font-weight:600;">{brl(v)}</b></div>'
-    return f'<div class="card"><div class="lb" style="margin-bottom:14px;">Resumo · {MESES[h.month - 1]}/{h.year}</div><div class="mes" style="display:flex; justify-content:space-between;">{cel("Entradas", e, "grn")}{cel("Saídas", sd, "tx")}{cel("Rendeu", r, "pur")}</div></div>'
+    cel = lambda t, v, cor: f'<div style="flex:1; text-align:center;"><div class="k" style="font-size:13px; margin-bottom:2px;">{t}</div><b style="color:var(--{cor}); font-size:16px;">{brl(v)}</b></div>'
+    return f'<div class="card" style="padding:16px 20px;"><div class="lb" style="margin-bottom:12px; color:var(--mu);">Neste mês ({MESES[h.month - 1]})</div><div style="display:flex; justify-content:space-between;">{cel("Entrou", e, "grn")}{cel("Saiu", sd, "tx")}{cel("Rendeu", r, "pur")}</div></div>'
 
 
 def dia_rotulo(iso):
@@ -1244,12 +1215,12 @@ def dia_rotulo(iso):
 
 def v_ext():
     if not S["extrato"]:
-        return '<div class="card"><div class="k" style="text-align:center; padding: 20px 0;">🌱 Nenhuma movimentação. Toque em ＋ para adicionar.</div></div>'
+        return '<div class="card"><div class="k" style="text-align:center; padding: 20px 0;">Nenhuma movimentação financeira registrada.</div></div>'
     rows, ult = "", None
     for _, x in sorted(enumerate(S["extrato"]), key=lambda p: (p[1]["ts"], p[0]), reverse=True):
         dia = dia_rotulo(x["ts"])
         if dia != ult:
-            rows, ult = rows + '<div class="dh" style="margin-top:16px;">' + dia + '</div>', dia
+            rows, ult = rows + '<div class="dh" style="margin-top:8px;">' + dia + '</div>', dia
         ic, nome = TIPOS[x["t"]]
         tr, ps = x["t"] in ("save", "take", "mov"), x["t"] in ("in", "yld")
         cor = "tx" if tr else "grn" if ps else "tx"
@@ -1280,24 +1251,23 @@ def v_proj():
     fim, c = L[-1][3], S["cfg"]
     meta_em = mes_meta()
     if fim >= meta:
-        sub = f"Meta de {brl(meta)} alcançada em {fmt_mes(meta_em)}."
+        sub = f"Objetivo de {brl(meta)} será atingido em {fmt_mes(meta_em)}."
     elif meta_em:
-        sub = f"A meta chega em {fmt_mes(meta_em)}."
+        sub = f"Objetivo projetado para {fmt_mes(meta_em)}."
     else:
-        sub = f"Faltará um aporte extra de ~{brl(falta)}/mês para bater a meta no tempo estipulado."
-    topo = card("grn" if fim >= meta else "gold", "Projeção Financeira",
+        sub = f"Para atingir o objetivo no prazo, você precisaria guardar mais ~{brl(falta)}/mês."
+    topo = card("grn" if fim >= meta else "gold", "Visão Futura",
                 brl(fim), sub + "<br>" + periodo_txt())
-    tab = '<table><tr><th>Ano</th><th>Investido</th><th>Juros</th><th>Total</th></tr>'
+    tab = '<table><tr><th>Ano</th><th>Capital Inserido</th><th>Rendimento</th><th>Total Acumulado</th></tr>'
     for a, p, j, b in L:
         tab += '<tr><td>' + str(a) + '</td><td>' + brl(p) + '</td><td style="color:var(--grn)">' + brl(j) + '</td><td><b>' + brl(b) + '</b></td></tr>'
     partes = [("Saldo livre", S["livre"], lv, "blue")] + [(nome_cx(k), S["caixas"][k], cxf.get(k, 0.0), S["caixas_meta"].get(k, ["", "pur"])[1]) for k in S["caixas"]]
-    onde = "".join('<div class="al" style="padding:8px 0; border-bottom: 1px solid var(--ln);"><span class="lb" style="color:var(--' + cor + ')">' + html.escape(nm) + '</span><span class="k">'
+    onde = "".join('<div class="al" style="padding:10px 0; border-bottom: 1px solid var(--ln);"><span class="lb" style="color:var(--' + cor + ')">' + html.escape(nm) + '</span><span class="k">'
                    + brl(h0) + ' → <span style="color:var(--tx);font-weight:600">' + brl(h1) + '</span></span></div>' for nm, h0, h1, cor in partes)
     resto = ('<div class="card">' + svg_barras(L, meta) + '</div>'
-             '<div class="card"><div class="lb" style="margin-bottom:8px">Seu dinheiro em ' + str(ano_fim) + '</div>' + onde + '</div>'
+             '<div class="card"><div class="lb" style="margin-bottom:8px">Onde estará o dinheiro</div>' + onde + '</div>'
              '<div class="card">' + tab + '</table></div>'
-             '<div class="k" style="padding:0 6px">Ponto de partida: ' + brl(total()) + ' · aporte líquido de '
-             + brl(max(0.0, c["renda"] - c["gastos"])) + '/mês · rendimento de 100% do CDI (' + str(c["cdi"]).replace(".", ",") + '% a.a., estimado).</div>')
+             '<div class="k" style="padding:0 6px">Projeção considerando patrimônio atual, aportes mensais fixos e estimativa de ' + str(c["cdi"]).replace(".", ",") + '% de rendimento ao ano.</div>')
     return topo, resto
 
 
@@ -1310,28 +1280,28 @@ def v_idea():
             continue
         m = S["caixas_meta"].get(k, ["Caixinha", "blue", ""])
         if k == main:
-            partes, dica = [("Liquidez diária (100% do CDI)", .4), ("RDB de 2 a 5 anos", .35), ("Tesouro IPCA+", .25)], "Objetivos de longo prazo: separe o que é imediato do que pode ficar investido."
+            partes, dica = [("Liquidez diária (Risco Baixo)", .4), ("Renda Fixa Médio Prazo", .35), ("Renda Fixa IPCA+", .25)], "Divida objetivos longos para equilibrar disponibilidade e rentabilidade."
         else:
-            partes, dica = [("Liquidez diária (100% do CDI)", 1.0)], "Objetivos curtos: resgate imediato e sem risco."
-        linhas = "".join('<div class="al" style="padding:6px 0; border-bottom: 1px solid var(--ln);"><span class="k">' + n + ' · ' + str(round(p * 100)) + '%</span><b style="font-size:15px">' + brl(v * p) + '</b></div>' for n, p in partes)
+            partes, dica = [("Liquidez diária (Risco Baixo)", 1.0)], "Mantenha em liquidez imediata e sem riscos."
+        linhas = "".join('<div class="al" style="padding:8px 0; border-bottom: 1px solid var(--ln);"><span class="k">' + n + ' · ' + str(round(p * 100)) + '%</span><b style="font-size:15px">' + brl(v * p) + '</b></div>' for n, p in partes)
         out += card(m[1], html.escape(m[0]), brl(v), dica, linhas)
-    sub = "Disponível para ir à caixinha principal." if ex else "Seu saldo livre precisa passar de " + brl(reserva + 1) + " para sobrar."
-    out += card("blue", "Saldo acima da reserva", brl(ex), sub)
-    return out + '<div class="k" style="padding:0 6px; margin-top: 20px;">Sugestões educativas. Não são recomendações de investimento direto.</div>'
+    sub = "Disponível para transferir para a caixinha." if ex else f"Requer um valor maior que {brl(reserva)} em caixa livre."
+    out += card("blue", "Dinheiro Disponível na Conta", brl(ex), sub)
+    return out + '<div class="k" style="padding:0 6px; margin-top: 20px;">Estes dados são apenas simulações matemáticas e estruturais, não sendo recomendações formais de investimento.</div>'
 
 
 def tela_ideias():
     ks = list(S["caixas"])
     sig = "|".join(sorted(ks))
     if not ks:
-        st.markdown(card("blue", "Ideias", "Sem caixinhas", "Crie sua primeira caixinha para visualizar sugestões."), unsafe_allow_html=True)
+        st.markdown(card("blue", "Ideias", "Nenhuma caixinha", "Crie um objetivo para ver a organização sugerida."), unsafe_allow_html=True)
         if not SUP and st.button("➕ Criar caixinha", key="b_ic", use_container_width=True):
             dlg_novo()
         return
     if st.session_state.get("ideias_ok") != sig:
         n = len(ks)
         nomes = ", ".join(nome_cx(k).replace("Caixinha ", "") for k in ks)
-        st.markdown('<div class="card as" style="padding:20px; font-size:15px;">🤔 Você possui <b>' + str(n) + (" caixinha" if n == 1 else " caixinhas") + '</b> (' + html.escape(nomes) + '), certo?</div>', unsafe_allow_html=True)
+        st.markdown('<div class="card as" style="padding:20px; font-size:15px;">Você gerencia <b>' + str(n) + (" meta" if n == 1 else " metas") + '</b> (' + html.escape(nomes) + '), certo?</div>', unsafe_allow_html=True)
         with st.container(key="conf"):
             a, b = st.columns(2)
             if a.button("Sim", key="ok_s", type="primary", use_container_width=True):
@@ -1340,24 +1310,24 @@ def tela_ideias():
             if b.button("Não", key="ok_n", use_container_width=True):
                 st.session_state["ideias_no"] = True
         if st.session_state.get("ideias_no"):
-            st.caption("Ajuste as caixinhas antes de prosseguir." if not SUP else "Solicite ao titular o ajuste.")
+            st.caption("Ajuste as caixinhas antes de visualizar a estrutura ideal." if not SUP else "Modo leitura ativado. Operação indisponível.")
             if not SUP:
                 with st.container(key="conf2"):
                     c1, c2 = st.columns(2)
-                    if c1.button("➕ Criar", key="b_ic2", use_container_width=True):
+                    if c1.button("➕ Criar nova", key="b_ic2", use_container_width=True):
                         dlg_novo()
-                    if c2.button("🗑️ Excluir", key="b_ie2", use_container_width=True):
+                    if c2.button("🗑️ Remover atual", key="b_ie2", use_container_width=True):
                         dlg_excluir()
         return
     st.markdown(v_idea(), unsafe_allow_html=True)
     ex = round(max(0.0, S["livre"] - S["cfg"]["reserva"]), 2)
-    if ex >= 1 and not SUP and st.button("🔒 Guardar " + brl(ex) + " na " + nome_cx(ks[0]), key="b_ex", use_container_width=True):
-        e = aplicar("save", ex, ks[0], "Excedente guardado")
+    if ex >= 1 and not SUP and st.button("🔒 Guardar " + brl(ex) + " em " + nome_cx(ks[0]), key="b_ex", use_container_width=True):
+        e = aplicar("save", ex, ks[0], "Transferência do excedente")
         if e:
             st.error(e)
         else:
             st.rerun()
-    if st.button("Revisar caixinhas", key="b_rev", use_container_width=True):
+    if st.button("Revisar estrutura", key="b_rev", use_container_width=True):
         st.session_state["ideias_ok"] = None
         st.rerun()
 
@@ -1366,87 +1336,76 @@ def tela_ideias():
 @st.dialog("Ajustes")
 def dlg_ajustes():
     c = S["cfg"]
-    tem_sonho = "sonho" in S["caixas"] and "futuro" in S["caixas"]
 
     t1, t2, t3, t4 = st.tabs(["Conta", "Dinheiro", "Aparência", "Dados"])
 
     with t1:
         with st.form("f_conta"):
-            st.markdown('<div class="dh">Perfil</div>', unsafe_allow_html=True)
             nome = st.text_input("Como quer ser chamado?", CONTA["nome"], max_chars=24)
-            if st.form_submit_button("Atualizar perfil", type="primary", use_container_width=True):
+            if st.form_submit_button("Salvar Perfil", type="primary", use_container_width=True):
                 CONTA["nome"] = nome.strip() or CONTA["nome"]
                 salvar()
                 st.rerun()
 
-        st.markdown('<div class="dh">Autenticação</div>', unsafe_allow_html=True)
         if HAS_CRYPTO:
             r = FACEID(modo="reg", chal=st.session_state["chal"], user=U, tema=st.session_state["tema"], key="fid_reg", default=None)
             if r and r.get("kind") == "reg" and r["n"] != st.session_state["fid_done"]:
                 st.session_state["fid_done"] = r["n"]
                 if fid_registrar(U, r):
-                    st.session_state["msg"] = "Face ID ativado com sucesso!"
+                    st.session_state["msg"] = "Autenticação vinculada com sucesso ao dispositivo!"
                     st.rerun()
                 st.error("Erro ao configurar biometria.")
 
-        with st.expander("Alterar senha"):
+        with st.expander("Alterar credenciais de acesso"):
             with st.form("f_senha"):
-                nova_senha = st.text_input("Nova senha (mín. 4)", type="password")
-                if st.form_submit_button("Mudar senha", type="primary", use_container_width=True):
+                nova_senha = st.text_input("Nova senha (mín. 4 dígitos)", type="password")
+                if st.form_submit_button("Alterar", type="primary", use_container_width=True):
                     if len(nova_senha) >= 4:
                         CONTA["s"], CONTA["h"] = mk(nova_senha)
                         salvar()
-                        st.success("Sua senha foi atualizada com segurança.")
+                        st.success("Sua senha foi atualizada.")
                     else:
-                        st.error("Digite no mínimo 4 caracteres.")
+                        st.error("Sua senha precisa ter no mínimo 4 caracteres.")
 
-        st.markdown('<div class="dh">Sessão</div>', unsafe_allow_html=True)
         if st.button("Sair do aplicativo", use_container_width=True):
             _sair()
             st.rerun()
 
     with t2:
         with st.form("f_financas"):
-            st.markdown('<div class="dh">Fluxo Mensal (Cai dia 1º)</div>', unsafe_allow_html=True)
-            renda = st.number_input("Entrada de dinheiro (R$)", min_value=0.0, value=float(c["renda"]), step=50.0, format="%.2f")
-            gast = st.number_input("Gastos fixos (R$)", min_value=0.0, value=float(c["gastos"]), step=10.0, format="%.2f")
-            guard = st.number_input("Guardar na caixinha (R$)", min_value=0.0, value=float(c["guardar"]), step=50.0, format="%.2f")
-
-            st.markdown('<div class="dh">Objetivos de Vida</div>', unsafe_allow_html=True)
-            meta = st.number_input("Sua meta principal (R$)", min_value=0.0, value=float(c["meta"]), step=1000.0, format="%.2f")
-            reserva = st.number_input("Reserva de emergência (R$)", min_value=0.0, value=float(c["reserva"]), step=50.0, format="%.2f")
-            cdi = st.number_input("Taxa Selic/CDI estimada (% a.a.)", min_value=0.0, max_value=100.0, value=float(c["cdi"]), step=0.1, format="%.2f")
+            renda = st.number_input("Entradas mensais (R$)", min_value=0.0, value=float(c["renda"]), step=50.0, format="%.2f")
+            gast = st.number_input("Saídas mensais fixas (R$)", min_value=0.0, value=float(c["gastos"]), step=10.0, format="%.2f")
+            guard = st.number_input("Aporte recorrente (R$)", min_value=0.0, value=float(c["guardar"]), step=50.0, format="%.2f")
+            meta = st.number_input("Valor do seu objetivo principal (R$)", min_value=0.0, value=float(c["meta"]), step=1000.0, format="%.2f")
+            reserva = st.number_input("Caixa mínimo para segurança (R$)", min_value=0.0, value=float(c["reserva"]), step=50.0, format="%.2f")
+            cdi = st.number_input("Rendimento estimado (% ao ano)", min_value=0.0, max_value=100.0, value=float(c["cdi"]), step=0.1, format="%.2f")
 
             if st.form_submit_button("Salvar finanças", type="primary", use_container_width=True):
                 S["cfg"].update(renda=renda, gastos=gast, guardar=min(guard, max(0.0, renda - gast)), cdi=cdi, meta=meta, reserva=reserva, ajustado=True)
-                fecha("Valores financeiros atualizados.")
+                fecha("Valores atualizados.")
                 st.rerun()
 
     with t3:
         with st.form("f_aparencia"):
-            st.markdown('<div class="dh">Personalização Visual</div>', unsafe_allow_html=True)
             pal = list(PALETAS)
             paleta = st.selectbox("Cor de Destaque", pal, index=pal.index(S["paleta"]) if S.get("paleta") in pal else 0)
-            tutorial = st.checkbox("Exibir dicas na tela Inicial", value=c["tutorial"])
+            tutorial = st.checkbox("Exibir progresso de configuração inicial", value=c["tutorial"])
 
-            if st.form_submit_button("Aplicar visual", type="primary", use_container_width=True):
+            if st.form_submit_button("Salvar interface", type="primary", use_container_width=True):
                 S["paleta"] = st.session_state["paleta"] = paleta
                 S["cfg"]["tutorial"] = tutorial
-                fecha("Aparência atualizada.")
+                fecha("Visuais salvos.")
                 st.rerun()
 
     with t4:
-        st.markdown('<div class="dh">Nuvem e Armazenamento</div>', unsafe_allow_html=True)
         status_map = {
-            "cloud": "☁️ Sincronizados na nuvem com segurança",
-            "local-fallback": "⚠️ Salvos no aparelho (Nuvem offline)",
-            "local": "💾 Salvos apenas no aparelho local"
+            "cloud": "☁️ Sincronizados na nuvem em tempo real",
+            "local-fallback": "⚠️ Mantidos no aparelho (Nuvem offline)",
+            "local": "💾 Restritos a este aparelho"
         }
-        st.info(status_map.get(st.session_state["storage_mode"], "Status Desconhecido"))
-        st.caption("O FUTURE protege todas as informações em tempo real. Seus dados nunca são exibidos no código e estão seguros por criptografia de ponta a ponta PBKDF2.")
-
-        st.markdown('<div class="dh">Exportação</div>', unsafe_allow_html=True)
-        st.caption("Você pode exportar extratos, PDF e planilhas diretamente através do menu principal nas abas **Extrato** e **Projeção**.")
+        st.info(status_map.get(st.session_state["storage_mode"], "Verificando..."))
+        st.caption("O FUTURE protege a sua privacidade. Suas credenciais são blindadas por derivação segura de chaves (PBKDF2).")
+        st.caption("As planilhas de exportação e recibos em PDF podem ser gerados pelos respectivos botões nas abas **Extrato** e **Projeção**.")
 
 
 def form_op(op):
@@ -1454,20 +1413,20 @@ def form_op(op):
     if op in ("save", "take", "yld", "mov"):
         ops = [k for k in S["caixas"] if op == "save" or S["caixas"][k] > 0]
         if not ops:
-            st.info("Nenhuma caixinha criada ainda." if op == "save" else "Nenhuma caixinha possui saldo disponível.")
+            st.info("Nenhuma caixinha criada ainda." if op == "save" else "Caixinhas sem fundos suficientes para movimentação.")
             return
-        cx = st.selectbox("De" if op == "mov" else "Caixinha", ops, key="c_" + op, format_func=lambda k: nome_cx(k) + " · " + brl(S["caixas"][k]))
+        cx = st.selectbox("Origem" if op == "mov" else "Caixinha", ops, key="c_" + op, format_func=lambda k: nome_cx(k) + " · " + brl(S["caixas"][k]))
         if op == "mov":
             outras = [k for k in S["caixas"] if k != cx]
             if not outras:
-                st.info("É preciso ter pelo menos duas caixinhas para mover saldos.")
+                st.info("Uma transferência exige no mínimo duas caixinhas diferentes.")
                 return
-            cx2 = st.selectbox("Para", outras, key="d_mov", format_func=nome_cx)
-    v = st.number_input("Valor (R$)", min_value=0.0, value=0.0, step=0.10 if op == "yld" else 1.0, format="%.2f", key="v_" + op)
-    if op == "yld" and cx:
-        st.caption(f"Essa caixinha rende cerca de {brl(S['caixas'][cx] * ((1 + S['cfg']['cdi'] / 100) ** (1 / 252) - 1))} por dia útil.")
-    obs = st.text_input("Nota descritiva (Opcional)", max_chars=40, key="o_" + op)
-    if st.button("Confirmar transação", type="primary", use_container_width=True, key="ok_" + op):
+            cx2 = st.selectbox("Destino", outras, key="d_mov", format_func=nome_cx)
+    
+    v = st.number_input("Valor da transação (R$)", min_value=0.0, value=0.0, step=1.0 if op != "yld" else 0.50, format="%.2f", key="v_" + op)
+    obs = st.text_input("Nota descritiva (opcional)", max_chars=40, key="o_" + op)
+    
+    if st.button("Confirmar ação", type="primary", use_container_width=True, key="ok_" + op):
         e = mover(cx, cx2, v, obs.strip()) if op == "mov" else aplicar(op, v, cx, obs.strip())
         if e:
             st.error(e)
@@ -1476,60 +1435,59 @@ def form_op(op):
 
 
 def form_criar_cx():
-    st.caption("Todas as caixinhas rendem 100% do CDI.")
-    nome = st.text_input("Qual o seu objetivo?", max_chars=24)
-    cor = st.selectbox("Identificação Visual", ["pur", "blue", "gold", "grn", "red"], format_func={"pur": "Roxo", "blue": "Azul", "gold": "Dourado", "grn": "Verde", "red": "Vermelho"}.get)
-    desc = st.text_input("Breve descrição (Opcional)", max_chars=40)
-    if st.button("Criar objetivo", type="primary", use_container_width=True):
+    nome = st.text_input("Objetivo ou finalidade", max_chars=24)
+    cor = st.selectbox("Cor de identificação", ["pur", "blue", "gold", "grn", "red"], format_func={"pur": "Roxo", "blue": "Azul", "gold": "Dourado", "grn": "Verde", "red": "Vermelho"}.get)
+    desc = st.text_input("Descrição complementar (opcional)", max_chars=40)
+    if st.button("Confirmar criação", type="primary", use_container_width=True):
         if not nome.strip():
-            st.error("Dê um nome para a caixinha.")
+            st.error("Insira o nome do seu objetivo.")
         else:
             k = chave(nome) + "-" + secrets.token_hex(2)
             S["caixas"][k] = 0.0
             S["caixas_meta"][k] = [nome.strip(), cor, desc.strip()]
-            fecha("Pronto! Agora você já pode adicionar saldo nela.")
+            fecha("O objetivo foi adicionado!")
             st.rerun()
 
 
-@st.dialog("Nova transação")
+@st.dialog("Transacionar")
 def dlg_novo():
-    t1, t2, t3 = st.tabs(["Conta", "Caixinhas", "Nova Caixinha"])
+    t1, t2, t3 = st.tabs(["Lançamentos", "Minhas Caixas", "Novo Objetivo"])
     with t1:
-        form_op(st.radio("Conta", ["in", "out"], horizontal=True, format_func=CURTO.get, label_visibility="collapsed", key="r1"))
+        form_op(st.radio("Fluxo", ["in", "out"], horizontal=True, format_func=CURTO.get, label_visibility="collapsed", key="r1"))
     with t2:
-        form_op(st.radio("Caixinhas", ["save", "take", "yld", "mov"], horizontal=True, format_func=CURTO.get, label_visibility="collapsed", key="r2"))
+        form_op(st.radio("Movimentação interna", ["save", "take", "yld", "mov"], horizontal=True, format_func=CURTO.get, label_visibility="collapsed", key="r2"))
     with t3:
         form_criar_cx()
 
 
-@st.dialog("Excluir Caixinha")
+@st.dialog("Ajuste Estrutural")
 def dlg_excluir():
     ops = list(S["caixas"])
     if not ops:
-        st.info("Nenhuma caixinha para excluir.")
+        st.info("Não há caixinhas registradas.")
         return
-    cx = st.selectbox("Selecione a caixinha", ops, format_func=lambda k: nome_cx(k) + " · " + brl(S["caixas"][k]))
-    modo = st.radio("Destino do Saldo", ["Resgatar para a Conta (Saldo Livre)", "Zerar valor (Sai do patrimônio)"])
-    if st.button("Excluir definitivamente", type="primary", use_container_width=True):
-        excluir_caixinha(cx, modo.startswith("Resgatar"))
+    cx = st.selectbox("Qual caixinha será removida?", ops, format_func=lambda k: nome_cx(k) + " · " + brl(S["caixas"][k]))
+    modo = st.radio("Se houver dinheiro lá dentro, o que acontece?", ["Retorna para a conta principal", "Apaga o valor existente"])
+    if st.button("Desvincular caixinha", type="primary", use_container_width=True):
+        excluir_caixinha(cx, modo.startswith("Retorna"))
         st.rerun()
 
 
-@st.dialog("Painel Parental")
+@st.dialog("Visão de Auditoria")
 def dlg_pais():
-    st.caption("Você está no modo de auditoria. Lançamentos ficam bloqueados aqui.")
-    senha = st.text_input("Nova senha da conta (mín. 4)", type="password")
-    pin = st.text_input("Novo PIN de supervisão (4 dígitos)", type="password", max_chars=4)
-    if st.button("Atualizar credenciais", type="primary", use_container_width=True):
+    st.caption("Acesso de acompanhamento ativo. Para realizar movimentações, saia e utilize as credenciais principais.")
+    senha = st.text_input("Alterar a senha da conta ativa (mín. 4)", type="password")
+    pin = st.text_input("Alterar o PIN parental (4 dígitos)", type="password", max_chars=4)
+    if st.button("Aplicar credenciais", type="primary", use_container_width=True):
         if (senha and len(senha) < 4) or (pin and not (pin.isdigit() and len(pin) == 4)):
-            st.error("Preencha corretamente os campos para atualizar.")
+            st.error("Valores de credenciais fora dos limites mínimos aceitáveis.")
         else:
             if senha:
                 CONTA["s"], CONTA["h"] = mk(senha)
             if pin:
                 CONTA["ps"], CONTA["ph"] = mk(pin)
             salvar()
-            st.session_state["msg"] = "Credenciais alteradas com sucesso."
+            st.session_state["msg"] = "Os dados de acesso foram modificados."
             st.rerun()
 
 
@@ -1583,20 +1541,18 @@ if idx != tab:
     st.session_state.update(dir="R" if idx > tab else "L", tab=idx)
 
 st.markdown('<div class="hd"><div class="k">' + TITULOS[idx] + ' · ' + hoje_txt() + '</div><h1>' + html.escape(CONTA["nome"]) + '</h1></div>', unsafe_allow_html=True)
-if SUP:
-    st.markdown('<div class="sup">🔐 <b>Modo Segurança</b> Lançamentos desativados. Visão de auditoria ativada.</div>', unsafe_allow_html=True)
 
 with st.container(key=f"view_{idx}_from{st.session_state['dir']}"):
     if idx == 0:
         if S["cfg"]["tutorial"] and not SUP:
             st.markdown(v_tutorial(), unsafe_allow_html=True)
-            if st.button("Dispensar dicas", key="b_tut", use_container_width=True):
+            if st.button("Ocultar progresso", key="b_tut", use_container_width=True):
                 S["cfg"]["tutorial"] = False
-                fecha("Dicas ocultadas. Você pode ativá-las novamente nos Ajustes.")
+                fecha("As configurações foram ocultadas. Acesse 'Ajustes' quando quiser revisá-las.")
                 st.rerun()
         st.markdown(v_home(), unsafe_allow_html=True)
         if not SUP and S["caixas"]:
-            if st.button("🗑️ Gerenciar Caixinhas", key="b_del", use_container_width=True):
+            if st.button("🗑️ Remover ou editar caixinhas", key="b_del", use_container_width=True):
                 dlg_excluir()
     elif idx == 1:
         st.markdown(v_ext(), unsafe_allow_html=True)
@@ -1605,24 +1561,24 @@ with st.container(key=f"view_{idx}_from{st.session_state['dir']}"):
             with st.container(key="dl"):
                 c1, c2 = st.columns(2)
                 if x:
-                    c1.download_button("📊 Excel", x, file_name=f"extrato_future_{hoje}.xlsx", mime=XL, use_container_width=True)
-                c2.download_button("📄 CSV", csv_ext(), file_name=f"extrato_future_{hoje}.csv", mime="text/csv", use_container_width=True)
+                    c1.download_button("📊 Baixar Excel", x, file_name=f"extrato_future_{hoje}.xlsx", mime=XL, use_container_width=True)
+                c2.download_button("📄 Baixar CSV", csv_ext(), file_name=f"extrato_future_{hoje}.csv", mime="text/csv", use_container_width=True)
     elif idx == 2:
         topo, resto = v_proj()
         st.markdown(topo, unsafe_allow_html=True)
-        extra = st.slider("Investimento Adicional (R$/mês)", 0, 1000, 0, 50, key="sl_extra")
+        extra = st.slider("Simulador de Aporte Adicional (R$/mês)", 0, 1000, 0, 50, key="sl_extra")
         if extra:
-            st.markdown(card("pur", "Com +" + brl(extra) + "/mês", brl(final_com(extra)),
-                             "A meta seria batida em: " + fmt_mes(mes_meta(extra)) + " (atual: " + fmt_mes(mes_meta()) + ").", bg_fill=False), unsafe_allow_html=True)
+            st.markdown(card("pur", "Se você adicionar " + brl(extra) + "/mês", brl(final_com(extra)),
+                             "Conseguirá bater a meta no momento de: " + fmt_mes(mes_meta(extra)) + " (Ao invés de " + fmt_mes(mes_meta()) + ").", bg_fill=False), unsafe_allow_html=True)
         st.markdown(resto, unsafe_allow_html=True)
         hoje, x = f"{agora():%Y-%m-%d}", xlsx_proj()
         with st.container(key="dl2"):
             c1, c2 = st.columns(2)
             if x:
-                c1.download_button("📊 Planilha Excel", x, file_name=f"projecao_future_{hoje}.xlsx", mime=XL, use_container_width=True)
+                c1.download_button("📊 Relatório Excel", x, file_name=f"projecao_future_{hoje}.xlsx", mime=XL, use_container_width=True)
             else:
-                c1.download_button("📄 Dados CSV", csv_proj(), file_name=f"projecao_future_{hoje}.csv", mime="text/csv", use_container_width=True)
-            c2.download_button("📄 Relatório PDF", pdf_proj(), file_name=f"projecao_future_{hoje}.pdf", mime="application/pdf", use_container_width=True)
+                c1.download_button("📄 Dados Brutos", csv_proj(), file_name=f"projecao_future_{hoje}.csv", mime="text/csv", use_container_width=True)
+            c2.download_button("📄 Salvar em PDF", pdf_proj(), file_name=f"projecao_future_{hoje}.pdf", mime="application/pdf", use_container_width=True)
     else:
         tela_ideias()
 
